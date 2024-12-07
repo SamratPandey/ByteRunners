@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const crypto = require('crypto');
 const sendEmail = require('../controllers/sendMail');
+require('dotenv').config();
 
 // Register User
 const registerUser = async (req, res) => {
@@ -19,7 +20,6 @@ const registerUser = async (req, res) => {
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
     res.status(201).json({ token });
   } catch (error) {
-    console.error("Error during registration:", error);
     res.status(500).json({ message: "Server Error" });
   }
 };
@@ -42,7 +42,6 @@ const loginUser = async (req, res) => {
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
     res.json({ token });
   } catch (error) {
-    console.error("Error during login:", error);
     res.status(500).json({ message: "Server Error" });
   }
 };
@@ -79,25 +78,25 @@ const forgotPassword = async (req, res) => {
   }
 };
 
-// Reset Password - Set New Password
+// Reset Password - Set New Password (Without Hashing)
 const resetPassword = async (req, res) => {
   const { resetToken, password } = req.body;
 
   try {
-    // Find user by reset token and check if the token is valid (not expired)
-    const user = await User.findOne({ 
-      resetPasswordToken: resetToken, 
-      resetPasswordExpire: { $gt: Date.now() } 
+    // Find user by reset token and check if the token is valid and not expired
+    const user = await User.findOne({
+      resetPasswordToken: resetToken,
+      resetPasswordExpire: { $gt: Date.now() },  // Check if the token has expired
     });
 
     if (!user) {
       return res.status(400).json({ message: "Invalid or expired reset token" });
     }
 
-    // Update the user's password
-    user.password = password;
-    user.resetPasswordToken = undefined; 
-    user.resetPasswordExpire = undefined; 
+    // Update the user's password (no encryption here)
+    user.password = password;  // Directly update password without hashing
+    user.resetPasswordToken = undefined; // Clear the token
+    user.resetPasswordExpire = undefined; // Clear the expiry time
     await user.save();
 
     res.status(200).json({ message: 'Password has been reset successfully' });
@@ -106,5 +105,6 @@ const resetPassword = async (req, res) => {
     res.status(500).json({ message: "Server Error" });
   }
 };
+
 
 module.exports = { registerUser, loginUser, forgotPassword, resetPassword };

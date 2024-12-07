@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { useNavigate, Link } from 'react-router-dom'; 
 import { toast, ToastContainer } from 'react-toastify'; 
 import 'react-toastify/dist/ReactToastify.css'; 
-
+import axios from 'axios';  // Import Axios for the API request
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
@@ -19,28 +19,22 @@ const ForgotPassword = () => {
     setIsSubmitting(true);
 
     try {
-      const response = await fakePasswordResetAPI(email);
+      // Send request to the backend API
+      const response = await axios.post('http://localhost:3001/api/auth/forgot-password', { email });
+
+      // Show success toast
       toast.success('Password reset link sent to your email!');
 
+      // Redirect to login after a few seconds
       setTimeout(() => {
         navigate('/login');
       }, 2000);
       
     } catch (error) {
-        console.log(error);
-        toast.error('Something went wrong. Please try again later.');
+      toast.error('Something went wrong. Please try again later.');
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const fakePasswordResetAPI = async (email) => {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        if (email) resolve('Success');
-        else reject('Error');
-      }, 2000);
-    });
   };
 
   return (

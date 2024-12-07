@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input'; 
 import { Label } from '@/components/ui/label'; 
-import { useNavigate, useParams, Link} from 'react-router-dom';
+import { useNavigate, useParams, Link } from 'react-router-dom';
 import axios from 'axios'; 
 import { toast, ToastContainer } from 'react-toastify'; 
 
@@ -12,36 +12,39 @@ const ResetPassword = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const navigate = useNavigate();
-  const { resetToken } = useParams();
+  const { resetToken } = useParams(); 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     if (password !== confirmPassword) {
       setErrorMessage("Passwords do not match");
       return;
     }
-
+  
     setIsSubmitting(true);
     setErrorMessage('');
-
+  
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/reset-password', {
-        resetToken,
-        password,
+      const response = await axios.post('http://localhost:3001/api/auth/reset-password', {
+        resetToken,  
+        password,   
       });
-
+  
+      
       toast.success(response.data.message);
-
+  
       setTimeout(() => {
-        navigate('/login');
+        navigate('/login'); 
       }, 2000);
     } catch (error) {
-      toast.error(error.response.data.message || 'Error resetting password');
+      console.log('Error:', error.response ? error.response.data.message : error.message);
+      toast.error(error.response?.data?.message || 'Error resetting password');
     } finally {
       setIsSubmitting(false);
     }
   };
+  
 
   return (
     <div className="bg-background min-h-screen flex justify-center items-center">
