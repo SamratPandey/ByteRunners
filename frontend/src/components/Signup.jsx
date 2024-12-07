@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';  // Custom Button Component
-import { Input } from '@/components/ui/input';    // Custom Input Component
-import { Label } from '@/components/ui/label';    // Custom Label Component
+import { Button } from '@/components/ui/button';  
+import { Input } from '@/components/ui/input';    
+import { Label } from '@/components/ui/label';    
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { signup } from '../redux/actions/authActions';  // Import the signup action
-import { ClipLoader } from 'react-spinners';  // Importing ClipLoader for spinner
-import { toast, ToastContainer } from 'react-toastify';  // Import Toastify
-import 'react-toastify/dist/ReactToastify.css'; // Import Toastify CSS
+import { signup } from '../redux/actions/authActions';  
+import { ClipLoader } from 'react-spinners'; 
+import { toast, ToastContainer } from 'react-toastify';  
+import 'react-toastify/dist/ReactToastify.css'; 
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -19,10 +19,9 @@ const Signup = () => {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const dispatch = useDispatch();  // Accessing dispatch
-  const navigate = useNavigate();  // For navigating after successful signup
+  const dispatch = useDispatch(); 
+  const navigate = useNavigate();  
 
-  // Getting error from Redux state
   const error = useSelector((state) => state.auth.error);
 
   const validateForm = () => {
@@ -54,10 +53,7 @@ const Signup = () => {
     setErrors({});
 
     try {
-      // Dispatch the signup action to Redux
       await dispatch(signup(formData.name, formData.email, formData.password));
-
-      // Display success toast
       toast.success('Account created successfully! You can now log in.');
 
       setFormData({
@@ -66,8 +62,6 @@ const Signup = () => {
         password: '',
         confirmPassword: '',
       });
-
-      // Redirect to login page after successful signup
       setTimeout(() => {
         navigate('/login');
       }, 2000);
@@ -90,7 +84,6 @@ const Signup = () => {
         {error && <p className="text-red-500 text-center mb-4">{error}</p>}
 
         <form onSubmit={handleSubmit}>
-          {/* Name Input */}
           <div className="mb-4">
             <Label htmlFor="name" className="text-foreground">Full Name</Label>
             <Input
@@ -104,8 +97,6 @@ const Signup = () => {
             />
             {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
           </div>
-
-          {/* Email Input */}
           <div className="mb-4">
             <Label htmlFor="email" className="text-foreground">Email Address</Label>
             <Input
@@ -119,8 +110,6 @@ const Signup = () => {
             />
             {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
           </div>
-
-          {/* Password Input */}
           <div className="mb-4">
             <Label htmlFor="password" className="text-foreground">Password</Label>
             <Input
@@ -134,8 +123,6 @@ const Signup = () => {
             />
             {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
           </div>
-
-          {/* Confirm Password Input */}
           <div className="mb-6">
             <Label htmlFor="confirmPassword" className="text-foreground">Confirm Password</Label>
             <Input
@@ -149,8 +136,6 @@ const Signup = () => {
             />
             {errors.confirmPassword && <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>}
           </div>
-
-          {/* Signup Button */}
           <Button
             type="submit"
             disabled={isSubmitting}
@@ -159,8 +144,6 @@ const Signup = () => {
             {isSubmitting ? <ClipLoader color="#fff" size={20} /> : 'Sign Up'}
           </Button>
         </form>
-
-        {/* Login Prompt */}
         <div className="mt-4 text-center text-foreground">
           <p className="text-sm">
             Already have an account? 
@@ -168,8 +151,6 @@ const Signup = () => {
           </p>
         </div>
       </div>
-
-      {/* ToastContainer for notifications */}
       <ToastContainer />
     </div>
   );

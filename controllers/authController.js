@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const crypto = require('crypto');
-const sendEmail = require('../controllers/sendMail');  // Import the sendEmail function
+const sendEmail = require('../controllers/sendMail');
 
 // Register User
 const registerUser = async (req, res) => {
@@ -96,8 +96,8 @@ const resetPassword = async (req, res) => {
 
     // Update the user's password
     user.password = password;
-    user.resetPasswordToken = undefined; // Clear the reset token
-    user.resetPasswordExpire = undefined; // Clear the expiry time
+    user.resetPasswordToken = undefined; 
+    user.resetPasswordExpire = undefined; 
     await user.save();
 
     res.status(200).json({ message: 'Password has been reset successfully' });

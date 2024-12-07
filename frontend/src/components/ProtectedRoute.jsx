@@ -6,11 +6,10 @@ const ProtectedRoute = ({ children }) => {
   const token = useSelector((state) => state.auth.token);
 
   if (!token) {
-    // If there's no token, redirect to login page
     return <Navigate to="/login" />;
   }
 
-  return children; // Allow access to the protected route
+  return children;
 };
 
 export default ProtectedRoute;

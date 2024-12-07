@@ -6,21 +6,17 @@ require('dotenv').config();
 
 const app = express();
 
-// Connect to the database
 connectDB();
 
-// Enable CORS for specific origin (your frontend URL)
 app.use(cors({
-  origin: 'http://localhost:5173',  // Allow requests from the frontend
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],  // Allow methods
-  allowedHeaders: ['Content-Type', 'Authorization'],  // Allow headers
-  credentials: true,  // Allow cookies and credentials
+  origin: 'http://localhost:5173',  
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],  
+  allowedHeaders: ['Content-Type', 'Authorization'],  
+  credentials: true,  
 }));
 
-// Parse JSON requests
 app.use(express.json());
 
-// Authentication routes
 app.use('/api/auth', authRoutes);
 
 const PORT = process.env.PORT || 3001;

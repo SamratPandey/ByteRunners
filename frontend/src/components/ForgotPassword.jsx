@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button'; // Custom Button Component
-import { Input } from '@/components/ui/input';   // Custom Input Component
-import { Label } from '@/components/ui/label';  // Custom Label Component
-import { useNavigate } from 'react-router-dom'; // For redirection after success
-import { toast, ToastContainer } from 'react-toastify'; // Import Toastify
-import 'react-toastify/dist/ReactToastify.css'; // Import Toastify CSS
+import { Button } from '@/components/ui/button'; 
+import { Input } from '@/components/ui/input';   
+import { Label } from '@/components/ui/label';  
+import { useNavigate, Link } from 'react-router-dom'; 
+import { toast, ToastContainer } from 'react-toastify'; 
+import 'react-toastify/dist/ReactToastify.css'; 
+
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const navigate = useNavigate(); // Navigate to another page
+  const navigate = useNavigate(); 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -18,32 +19,22 @@ const ForgotPassword = () => {
     setIsSubmitting(true);
 
     try {
-      // Simulating a fake password reset API call (replace with real API call)
       const response = await fakePasswordResetAPI(email);
-      
-      // Show success notification using Toastify
-      toast.success('Password reset link sent to your email!', {
-        position: toast.POSITION.TOP_CENTER,
-      });
+      toast.success('Password reset link sent to your email!');
 
-      // Redirect to the login page after a successful request
       setTimeout(() => {
         navigate('/login');
       }, 2000);
       
     } catch (error) {
-      // Show error notification using Toastify
-      toast.error('Something went wrong. Please try again later.', {
-        position: toast.POSITION.TOP_CENTER,
-      });
+        console.log(error);
+        toast.error('Something went wrong. Please try again later.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const fakePasswordResetAPI = async (email) => {
-    // This is a placeholder for an actual API call.
-    // Normally, you would make an API request to send a reset password email.
     return new Promise((resolve, reject) => {
       setTimeout(() => {
         if (email) resolve('Success');
@@ -57,7 +48,6 @@ const ForgotPassword = () => {
       <div className="w-full max-w-md p-8 bg-white rounded-xl shadow-lg border border-border">
         <h2 className="text-3xl font-semibold text-center text-primary mb-6">Forgot Password</h2>
 
-        {/* Form */}
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <Label htmlFor="email" className="text-foreground">Email Address</Label>
@@ -70,8 +60,6 @@ const ForgotPassword = () => {
               className="mt-2 w-full bg-input text-foreground border border-border rounded-lg p-2"
             />
           </div>
-
-          {/* Submit Button */}
           <Button
             type="submit"
             disabled={isSubmitting}
@@ -80,8 +68,6 @@ const ForgotPassword = () => {
             {isSubmitting ? 'Sending...' : 'Send Reset Link'}
           </Button>
         </form>
-
-        {/* Go Back to Login */}
         <div className="mt-4 text-center text-foreground">
           <p className="text-sm">
             Remembered your password? 
@@ -89,8 +75,6 @@ const ForgotPassword = () => {
           </p>
         </div>
       </div>
-
-      {/* Toast Container */}
       <ToastContainer />
     </div>
   );

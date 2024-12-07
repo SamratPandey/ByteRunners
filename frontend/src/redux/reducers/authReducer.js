@@ -1,25 +1,25 @@
 const initialState = {
-  token: localStorage.getItem('token') || null,  // Get token from localStorage (if available)
-  error: null,  // Store error message from failed login or signup attempts
+  token: localStorage.getItem('token') || null,
+  error: null,
 };
 
 const authReducer = (state = initialState, action) => {
   switch (action.type) {
     case 'LOGIN_SUCCESS':
     case 'REGISTER_SUCCESS':
-      localStorage.setItem('token', action.payload);  // Save JWT token to localStorage
-      return { ...state, token: action.payload, error: null };  // Store token in state
+      localStorage.setItem('token', action.payload); 
+      return { ...state, token: action.payload, error: null };  
 
     case 'LOGIN_FAILURE':
     case 'REGISTER_FAILURE':
-      return { ...state, error: action.payload };  // Store error message in state
+      return { ...state, error: action.payload }; 
 
-    case 'LOGOUT':  // Optional action for logout
-      localStorage.removeItem('token');  // Remove token from localStorage
-      return { ...state, token: null, error: null };  // Reset token and error in state
+    case 'LOGOUT': 
+      localStorage.removeItem('token'); 
+      return { ...state, token: null, error: null }; 
 
     default:
-      return state;  // Return the state if no relevant action is found
+      return state; 
   }
 };
 

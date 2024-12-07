@@ -1,7 +1,6 @@
-// Dashboard.jsx
 import React from 'react';
 import { useDispatch } from 'react-redux';
-import { logout } from '../redux/actions/authActions'; // Import logout action
+import { logout } from '../redux/actions/authActions'; 
 import { useNavigate } from 'react-router-dom';
 
 const Dashboard = () => {
@@ -10,7 +9,7 @@ const Dashboard = () => {
 
   const handleLogout = () => {
     dispatch(logout()); 
-    navigate('/');   // Redirect to login page after logout
+    navigate('/');   
   };
 
   return (

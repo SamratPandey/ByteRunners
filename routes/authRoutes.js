@@ -4,7 +4,7 @@ const router = express.Router();
 
 router.post('/register', registerUser);
 router.post('/login', loginUser);
-router.post('/forgot-password', forgotPassword);  // Forgot Password route
-router.post('/reset-password', resetPassword);  // Reset Password route
+router.post('/forgot-password', forgotPassword);  
+router.post('/reset-password', resetPassword);  
 
 module.exports = router;

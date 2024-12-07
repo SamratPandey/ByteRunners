@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button'; // Custom Button Component
-import { Input } from '@/components/ui/input';   // Custom Input Component
-import { Label } from '@/components/ui/label';  // Custom Label Component
-import { useNavigate, useParams } from 'react-router-dom'; // For URL parameters
-import axios from 'axios'; // For API call
-import { toast, ToastContainer } from 'react-toastify'; // For Toastify notifications
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input'; 
+import { Label } from '@/components/ui/label'; 
+import { useNavigate, useParams, Link} from 'react-router-dom';
+import axios from 'axios'; 
+import { toast, ToastContainer } from 'react-toastify'; 
 
 const ResetPassword = () => {
   const [password, setPassword] = useState('');
@@ -12,7 +12,7 @@ const ResetPassword = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const navigate = useNavigate();
-  const { resetToken } = useParams(); // Get the reset token from the URL
+  const { resetToken } = useParams();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -31,17 +31,13 @@ const ResetPassword = () => {
         password,
       });
 
-      toast.success(response.data.message, {
-        position: toast.POSITION.TOP_CENTER,
-      });
+      toast.success(response.data.message);
 
       setTimeout(() => {
-        navigate('/login'); // Redirect to login page after password reset
+        navigate('/login');
       }, 2000);
     } catch (error) {
-      toast.error(error.response.data.message || 'Error resetting password', {
-        position: toast.POSITION.TOP_CENTER,
-      });
+      toast.error(error.response.data.message || 'Error resetting password');
     } finally {
       setIsSubmitting(false);
     }
