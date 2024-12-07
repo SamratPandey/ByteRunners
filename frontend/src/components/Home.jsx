@@ -17,7 +17,7 @@ const Home = () => {
       {/* Navigation Bar */}
       <nav className="bg-primary py-4 shadow-lg">
         <div className="container mx-auto flex justify-between items-center px-6">
-          <Link to="/" className="text-white text-3xl font-semibold">YourApp</Link>
+          <Link to="/" className="text-white text-3xl font-semibold">OurApp Logo</Link>
           <div className="space-x-6">
             {isLoggedIn ? (
               <>

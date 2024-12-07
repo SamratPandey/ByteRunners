@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const crypto = require('crypto');
-const sendEmail = require('../controller/sendMail');  // Import the sendEmail function
+const sendEmail = require('../controllers/sendMail');  // Import the sendEmail function
 
 // Register User
 const registerUser = async (req, res) => {
