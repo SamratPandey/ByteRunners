@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Light Mode Colors */
+    --background: 0 0% 100%;  /* White */
+    --foreground: 222.2 84% 4.9%;  /* Dark text */
+    --card: 0 0% 100%;  /* White for card */
+    --card-foreground: 222.2 84% 4.9%;  /* Dark text for card */
+    --popover: 0 0% 100%;  /* Light for popover */
+    --popover-foreground: 222.2 84% 4.9%;  /* Dark text for popover */
+    --primary: 222.2 47.4% 11.2%;  /* Primary color */
+    --primary-foreground: 210 40% 98%;  /* Light text for primary color */
+    --secondary: 210 40% 96.1%;  /* Secondary color */
+    --secondary-foreground: 222.2 47.4% 11.2%;  /* Dark text for secondary */
+    --muted: 210 40% 96.1%;  /* Muted color */
+    --muted-foreground: 215.4 16.3% 46.9%;  /* Muted text */
+    --accent: 210 40% 96.1%;  /* Accent color */
+    --accent-foreground: 222.2 47.4% 11.2%;  /* Accent text */
+    --destructive: 0 84.2% 60.2%;  /* Destructive color */
+    --destructive-foreground: 210 40% 98%;  /* Destructive text */
+    --border: 214.3 31.8% 91.4%;  /* Border color */
+    --input: 214.3 31.8% 91.4%;  /* Input background */
+    --ring: 222.2 84% 4.9%;  /* Ring color */
+    --focus-ring: 210 100% 80%; /* Focus outline */
+    --chart-1: 12 76% 61%;  /* Chart color */
+    --chart-2: 173 58% 39%;  /* Chart color */
+    --chart-3: 197 37% 24%;  /* Chart color */
+    --chart-4: 43 74% 66%;  /* Chart color */
+    --chart-5: 27 87% 67%;  /* Chart color */
+    --radius: 0.5rem;  /* Border radius */
+  }
+
+  /* Dark Mode Colors */
+  .dark {
+    --background: 222.2 84% 4.9%;  /* Dark background */
+    --foreground: 210 40% 98%;  /* Light text */
+    --card: 222.2 84% 4.9%;  /* Dark card */
+    --card-foreground: 210 40% 98%;  /* Light text for card */
+    --popover: 222.2 84% 4.9%;  /* Dark popover */
+    --popover-foreground: 210 40% 98%;  /* Light text for popover */
+    --primary: 210 40% 98%;  /* Light primary color */
+    --primary-foreground: 222.2 47.4% 11.2%;  /* Dark text for primary */
+    --secondary: 217.2 32.6% 17.5%;  /* Secondary color for dark mode */
+    --secondary-foreground: 210 40% 98%;  /* Light text for secondary */
+    --muted: 217.2 32.6% 17.5%;  /* Muted color */
+    --muted-foreground: 215 20.2% 65.1%;  /* Muted text */
+    --accent: 217.2 32.6% 17.5%;  /* Accent color */
+    --accent-foreground: 210 40% 98%;  /* Accent text */
+    --destructive: 0 62.8% 30.6%;  /* Destructive color */
+    --destructive-foreground: 210 40% 98%;  /* Destructive text */
+    --border: 217.2 32.6% 17.5%;  /* Border color */
+    --input: 217.2 32.6% 17.5%;  /* Dark input background */
+    --ring: 212.7 26.8% 83.9%;  /* Ring color for dark mode */
+    --focus-ring: 220 90% 60%; /* Focus outline in dark mode */
+  }
+
+  /* Apply global styles */
+  body {
+    @apply bg-background text-foreground transition-colors;
+  }
+
+  input:focus {
+    @apply outline-none ring-[hsl(var(--focus-ring))] ring-2;
+  }
+
+  * {
+    @apply border-border;
+  }
+}
