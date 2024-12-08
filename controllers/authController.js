@@ -106,5 +106,29 @@ const resetPassword = async (req, res) => {
   }
 };
 
+const getDashboardData = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id); // Use the decoded user ID from the token
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
 
-module.exports = { registerUser, loginUser, forgotPassword, resetPassword };
+    // Return user data (you can modify this as needed)
+    res.status(200).json({
+      name: user.name,
+      rank: user.rank,
+      problemsSolved: user.problemsSolved,
+      totalSubmissions: user.totalSubmissions,
+      accuracy: user.accuracy,
+      recentActivity: user.recentActivity,
+      avatar: user.avatar,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+
+module.exports = { registerUser, loginUser, forgotPassword, resetPassword, getDashboardData};
