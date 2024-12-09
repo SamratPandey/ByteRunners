@@ -3,32 +3,32 @@ import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import axios from 'axios';
-import { ClipLoader } from 'react-spinners';
 
 const Dashboard = () => {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
+  const token = localStorage.getItem('token');
+  
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    
     if (!token) {
-      toast.error('Please login to access the dashboard');
-      navigate('/login');
+      navigate('/login', { replace: true });
       return;
     }
-  
+
     const fetchUserData = async () => {
       try {
         const response = await axios.get('http://localhost:3001/api/auth/dashboard', {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {
+            Authorization: `Bearer ${token}`, 
+          },
         });
-        setUser(response.data);
+        setUser(response.data); 
       } catch (error) {
-        if (error.response && error.response.status === 401) {
+        if (error.response?.status === 401) {
           toast.error('Please login to access the dashboard');
-          navigate('/login');
+          navigate('/login', { replace: true });
         } else {
           toast.error('Failed to fetch user data');
         }
@@ -36,29 +36,28 @@ const Dashboard = () => {
         setIsLoading(false);
       }
     };
-  
+
     fetchUserData();
-  }, [navigate]);
-  
+  }, [navigate, token]); 
 
   const handleLogout = () => {
     localStorage.removeItem('token');
     setUser(null);
     toast.success('Logged out successfully!');
-    navigate('/');
+
+    navigate('/login', { replace: true });
   };
-  
 
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <ClipLoader size={50} color={"#36d7b7"} /> 
+        <p>Loading...</p>
       </div>
     );
   }
 
   if (!user) {
-    return null; // If no user, don't render dashboard
+    return null; // Don't render the dashboard if no user data is available
   }
 
   return (
