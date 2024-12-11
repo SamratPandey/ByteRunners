@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { Navigate, BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Home from './components/Home';  
 import Login from './components/Login';  
 import ForgotPassword from './components/ForgotPassword'; 
@@ -25,6 +25,7 @@ function App() {
             </ProtectedRoute>
           } 
         />
+         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>
   );

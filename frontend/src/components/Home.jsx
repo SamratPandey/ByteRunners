@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button'; 
 import { useDispatch, useSelector } from 'react-redux'; 
 import { ClipLoader } from 'react-spinners';  
+import Nav from './Nav';
 
 const Home = () => {
   const dispatch = useDispatch();
@@ -14,7 +15,7 @@ const Home = () => {
     <div className="bg-background min-h-screen flex flex-col">
       <nav className="bg-primary py-4 shadow-lg">
         <div className="container mx-auto flex justify-between items-center px-6">
-          <Link to="/" className="text-white text-3xl font-semibold">OurApp Logo</Link>
+          <Nav/>
           <div className="space-x-6">
             {isLoggedIn ? (
               <>

@@ -1,5 +1,5 @@
 /** @type {import('tailwindcss').Config} */
-module.exports = {
+export default {
 	darkMode: ['class'], // Enables dark mode based on the "dark" class
 	content: ["./index.html", "./src/**/*.{ts,tsx,js,jsx}"], // Define your content paths
 	theme: {
@@ -16,9 +16,10 @@ module.exports = {
 			foreground: 'hsl(var(--popover-foreground, 222.2 84% 4.9%))',
 		  },
 		  primary: {
-			DEFAULT: 'hsl(var(--primary, 222.2 47.4% 11.2%))',
+			DEFAULT: 'hsl(var(--primary, 192 20 5 ))',
 			foreground: 'hsl(var(--primary-foreground, 210 40% 98%))',
 		  },
+		  ourgreen:'#86C232',
 		  secondary: {
 			DEFAULT: 'hsl(var(--secondary, 210 40% 96.1%))',
 			foreground: 'hsl(var(--secondary-foreground, 222.2 47.4% 11.2%))',

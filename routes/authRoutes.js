@@ -12,4 +12,7 @@ router.post('/forgot-password', forgotPassword);
 router.post('/reset-password', resetPassword);  
 router.get('/dashboard', protect, getDashboardData); 
 
+router.get('/profile', protect, getDashboardData); 
+
+
 module.exports = router;
