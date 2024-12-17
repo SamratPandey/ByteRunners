@@ -131,7 +131,7 @@ const Login = () => {
         </Button>
         <div className="mt-4 text-center text-white">
           <p className="text-sm">
-            New to ByteRunners? 
+            New at ByteRunners? 
             <Link to="/signup" className="text-white font-bold hover:text-primary-400"> Create an account</Link>
           </p>
         </div>

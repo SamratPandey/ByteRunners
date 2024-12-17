@@ -21,7 +21,7 @@ const Profile = () => {
 
     const fetchUserData = async () => {
       try {
-        const response = await axios.get('http://localhost:3001/api/auth/profile', {
+        const response = await axios.get(`${process.env.BACKEND_URL}/profile`, {
           headers: {
             Authorization: `Bearer ${token}`, 
           },

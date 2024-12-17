@@ -175,7 +175,7 @@ const Signup = () => {
 
         <div className="mt-4 text-center text-white">
           <p className="text-sm">
-            Already a ByteRunners? 
+            Already on ByteRunners? 
             <Link to="/login" className="text-white font-bold hover:text-primary-400"> Login</Link>
           </p>
         </div>

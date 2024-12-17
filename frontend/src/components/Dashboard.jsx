@@ -22,7 +22,7 @@ const Dashboard = () => {
 
     const fetchUserData = async () => {
       try {
-        const response = await axios.get('http://localhost:3001/api/auth/dashboard', {
+        const response = await axios.get(`${import.meta.env.BACKEND_URL}/dashboard`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

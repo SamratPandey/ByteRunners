@@ -155,4 +155,4 @@ const getProfileData = async (req, res) => {
 };
 
 
-module.exports = { registerUser, loginUser, forgotPassword, resetPassword, getDashboardData};
+module.exports = { registerUser, loginUser, forgotPassword, resetPassword, getDashboardData,getProfileData};
