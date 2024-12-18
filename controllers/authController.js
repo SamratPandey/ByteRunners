@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const crypto = require('crypto');
 const sendEmail = require('../controllers/sendMail');
+
 require('dotenv').config();
 
 // Register User  
@@ -155,4 +156,5 @@ const getProfileData = async (req, res) => {
 };
 
 
-module.exports = { registerUser, loginUser, forgotPassword, resetPassword, getDashboardData,getProfileData};
+
+module.exports = { registerUser, loginUser, forgotPassword, resetPassword, getDashboardData, getProfileData};
