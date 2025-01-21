@@ -42,12 +42,12 @@ export default {
 		  focusRing: 'hsl(var(--focus-ring, 210 100% 80%))',
 		},
 		borderRadius: {
-		  xl: '1rem', // Add extra border radius
+		  xl: '1rem',
 		},
 	  },
 	},
 	plugins: [
-	  require("tailwindcss-animate"), // Include any necessary plugins
+	  require("tailwindcss-animate"), 
 	],
   };
   

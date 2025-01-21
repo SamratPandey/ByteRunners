@@ -3,34 +3,38 @@ const Admin = require('../models/Admin');
 
 exports.adminProtect = async (req, res, next) => {
   let token;
+
+  // Check if authorization header is present and properly formatted
   if (
-    req.headers.authorization && 
-    req.headers.authorization.startsWith('Bearer')
+    req.headers.authorization &&
+    req.headers.authorization.startsWith('Bearer ')
   ) {
-    try {
-      // Get token from header
-      token = req.headers.authorization.split(' ')[1];
-
-      // Verify token
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-      // Find admin by ID and exclude password
-      req.admin = await Admin.findById(decoded.id).select('-password');
-
-      // Check if admin exists and is active
-      if (!req.admin || !req.admin.isActive) {
-        return res.status(401).json({ message: 'Not authorized' });
-      }
-
-      next();
-    } catch (error) {
-      console.error(error);
-      res.status(401).json({ message: 'Not authorized' });
-    }
+    token = req.headers.authorization.split(' ')[1];
+  } else {
+    return res.status(400).json({ message: 'Authorization header is malformed or missing' });
   }
 
-  // If no token
+  // Ensure token is not empty
   if (!token) {
-    res.status(401).json({ message: 'No token, authorization denied' });
+    return res.status(400).json({ message: 'Token is missing' });
+  }
+
+  try {
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log('Decoded Token:', decoded);
+
+    // Find admin by ID and exclude password
+    req.admin = await Admin.findById(decoded.id).select('-password');
+
+    // Check if admin exists and is active
+    if (!req.admin || !req.admin.isActive) {
+      return res.status(401).json({ message: 'Not authorized to access this resource' });
+    }
+
+    next();
+  } catch (error) {
+    console.error(`Token verification error: ${error.message}`);
+    return res.status(401).json({ message: 'Token is invalid or expired' });
   }
 };

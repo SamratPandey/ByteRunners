@@ -6,52 +6,47 @@ const jwt = require('jsonwebtoken');
 
 exports.registerAdmin = async (req, res) => {
   try {
-    const { username, email, password, role, permissions } = req.body;
-    
-    // Check if admin already exists
-    const existingAdmin = await Admin.findOne({ 
-      $or: [{ email }, { username }] 
-    });
-    
-    if (existingAdmin) {
-      return res.status(400).json({ 
-        message: 'Admin already exists' 
+    const existingAdmin = await Admin.findOne({});
+
+    if (!existingAdmin) {
+      const defaultAdmin = new Admin({
+        username: 'admin', // default admin username
+        email: 'admin@gmail.com', // default admin email
+        password: 'admin', // default admin password
+        role: 'superAdmin', // super admin role
+        permissions: {
+          manageUsers: true,
+          manageCodingProblems: true,
+          manageCodeExecutionSettings: true,
+          viewAnalytics: true
+        }
+      });
+
+      // Hash password before saving
+      const salt = await bcrypt.genSalt(10);
+      defaultAdmin.password = await bcrypt.hash(defaultAdmin.password, salt);
+
+      // Save the default admin to the database
+      await defaultAdmin.save();
+
+      return res.status(201).json({
+        message: 'Default admin created successfully',
+        admin: {
+          id: defaultAdmin._id,
+          username: defaultAdmin.username,
+          email: defaultAdmin.email,
+          role: defaultAdmin.role
+        }
+      });
+    } else {
+      return res.status(400).json({
+        message: 'Admin already exists'
       });
     }
-
-    // Hash password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    // Create new admin
-    const newAdmin = new Admin({
-      username,
-      email,
-      password: hashedPassword,
-      role: role || 'moderator',
-      permissions: permissions || {
-        manageUsers: false,
-        manageCodingProblems: false,
-        manageCodeExecutionSettings: false,
-        viewAnalytics: false
-      }
-    });
-
-    await newAdmin.save();
-    
-    res.status(201).json({ 
-      message: 'Admin created successfully',
-      admin: {
-        id: newAdmin._id,
-        username: newAdmin.username,
-        email: newAdmin.email,
-        role: newAdmin.role
-      }
-    });
   } catch (error) {
-    res.status(500).json({ 
-      message: 'Server error', 
-      error: error.message 
+    res.status(500).json({
+      message: 'Server error',
+      error: error.message
     });
   }
 };
@@ -108,143 +103,140 @@ exports.loginAdmin = async (req, res) => {
   }
 };
 
+
+
+// Get all users
 exports.getAllUsers = async (req, res) => {
   try {
-    // Check if admin has permission to manage users
-    if (!req.admin.permissions.manageUsers) {
-      return res.status(403).json({ 
-        message: 'Insufficient permissions' 
-      });
-    }
-
-    // Fetch users (excluding sensitive information)
     const users = await User.find()
-      .select('-password')
-      .sort({ createdAt: -1 });
-    
-    res.json(users);
+      .select('name email problemsSolved totalSubmissions accuracy rank score bio avatar')
+      .lean();
+
+    res.status(200).json({
+      success: true,
+      data: users
+    });
   } catch (error) {
-    res.status(500).json({ 
-      message: 'Error fetching users', 
-      error: error.message 
+    res.status(500).json({
+      success: false,
+      error: 'Server Error'
     });
   }
 };
 
+// Get single user
+exports.getUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id)
+      .select('name email problemsSolved totalSubmissions accuracy rank score bio avatar recentActivity solvedProblems')
+      .populate('solvedProblems', 'title difficulty');
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: user
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Server Error'
+    });
+  }
+};
+
+// Update user
+exports.updateUser = async (req, res) => {
+  try {
+    const allowedFields = ['name', 'email', 'rank', 'score', 'bio', 'avatar'];
+    const filteredBody = {};
+    
+    Object.keys(req.body).forEach(key => {
+      if (allowedFields.includes(key)) {
+        filteredBody[key] = req.body[key];
+      }
+    });
+
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      filteredBody,
+      {
+        new: true,
+        runValidators: true
+      }
+    );
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: user
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Server Error'
+    });
+  }
+};
+
+// Delete user
 exports.deleteUser = async (req, res) => {
   try {
-    // Check if admin has permission to manage users
-    if (!req.admin.permissions.manageUsers) {
-      return res.status(403).json({ 
-        message: 'Insufficient permissions' 
+    const user = await User.findByIdAndDelete(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
       });
     }
 
-    await User.findByIdAndDelete(req.params.id);
-    
-    res.json({ 
-      message: 'User deleted successfully' 
+    res.status(204).json({
+      success: true,
+      data: null
     });
   } catch (error) {
-    res.status(500).json({ 
-      message: 'Error deleting user', 
-      error: error.message 
+    res.status(500).json({
+      success: false,
+      error: 'Server Error'
     });
   }
 };
 
-exports.createProblem = async (req, res) => {
+// Get user statistics
+exports.getUserStats = async (req, res) => {
   try {
-    // Check if admin has permission to manage problems
-    if (!req.admin.permissions.manageCodingProblems) {
-      return res.status(403).json({ 
-        message: 'Insufficient permissions' 
-      });
-    }
-
-    const { title, description, difficulty, testCases } = req.body;
-    
-    const newProblem = new Problem({
-      title,
-      description,
-      difficulty,
-      testCases,
-      createdBy: req.admin._id
-    });
-
-    await newProblem.save();
-    
-    res.status(201).json({ 
-      message: 'Problem created successfully', 
-      problem: newProblem 
-    });
-  } catch (error) {
-    res.status(500).json({ 
-      message: 'Error creating problem', 
-      error: error.message 
-    });
-  }
-};
-
-exports.updateProblem = async (req, res) => {
-  try {
-    // Check if admin has permission to manage problems
-    if (!req.admin.permissions.manageCodingProblems) {
-      return res.status(403).json({ 
-        message: 'Insufficient permissions' 
-      });
-    }
-
-    const updatedProblem = await Problem.findByIdAndUpdate(
-      req.params.id, 
-      req.body, 
-      { new: true }
-    );
-    
-    res.json({ 
-      message: 'Problem updated successfully', 
-      problem: updatedProblem 
-    });
-  } catch (error) {
-    res.status(500).json({ 
-      message: 'Error updating problem', 
-      error: error.message 
-    });
-  }
-};
-
-exports.getAnalytics = async (req, res) => {
-  try {
-    // Check if admin has permission to view analytics
-    if (!req.admin.permissions.viewAnalytics) {
-      return res.status(403).json({ 
-        message: 'Insufficient permissions' 
-      });
-    }
-
-    const totalUsers = await User.countDocuments();
-    const totalProblems = await Problem.countDocuments();
-    
-    // User growth by day
-    const usersByDay = await User.aggregate([
+    const stats = await User.aggregate([
       {
         $group: {
-          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
-          count: { $sum: 1 }
+          _id: null,
+          totalUsers: { $sum: 1 },
+          averageScore: { $avg: '$score' },
+          averageProblemsCompleted: { $avg: '$problemsSolved' },
+          averageAccuracy: { $avg: '$accuracy' }
         }
-      },
-      { $sort: { _id: 1 } }
+      }
     ]);
 
-    res.json({
-      totalUsers,
-      totalProblems,
-      usersByDay
+    res.status(200).json({
+      success: true,
+      data: stats[0]
     });
   } catch (error) {
-    res.status(500).json({ 
-      message: 'Error fetching analytics', 
-      error: error.message 
+    res.status(500).json({
+      success: false,
+      error: 'Server Error'
     });
   }
 };

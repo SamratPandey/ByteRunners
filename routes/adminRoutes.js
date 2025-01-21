@@ -1,30 +1,29 @@
+
+
 const express = require('express');
 const { 
-  registerAdmin, 
-  loginAdmin, 
-  getAllUsers, 
-  deleteUser, 
-  createProblem, 
-  updateProblem, 
-  getAnalytics 
+  loginAdmin,
+  getAllUsers,
+  getUser,
+  updateUser,
+  deleteUser,
+  getUserStats
 } = require('../controllers/adminController');
 const { adminProtect } = require('../middleware/adminAuth');
 
 const router = express.Router();
 
-// Authentication Routes
-router.post('/register', registerAdmin);
+// Public routes
 router.post('/login', loginAdmin);
 
-// User Management Routes
-router.get('/users', adminProtect, getAllUsers);
-router.delete('/users/:id', adminProtect, deleteUser);
+// Protected routes - require admin authentication
+router.use(adminProtect);
 
-// Problem Management Routes
-router.post('/problems', adminProtect, createProblem);
-router.put('/problems/:id', adminProtect, updateProblem);
-
-// Analytics Route
-router.get('/analytics', adminProtect, getAnalytics);
+// User management routes
+router.get('/users', getAllUsers);
+router.get('/users/:id', getUser);
+router.put('/users/:id', updateUser);
+router.delete('/users/:id', deleteUser);
+router.get('/user-stats', getUserStats);
 
 module.exports = router;

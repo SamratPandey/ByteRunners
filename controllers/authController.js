@@ -28,7 +28,6 @@ const registerUser = async (req, res) => {
 // Login User
 const loginUser = async (req, res) => {
   const { email, password } = req.body;
-
   try {
     const user = await User.findOne({ email });
     if (!user) {
@@ -87,17 +86,16 @@ const resetPassword = async (req, res) => {
     // Find user by reset token and check if the token is valid and not expired
     const user = await User.findOne({
       resetPasswordToken: resetToken,
-      resetPasswordExpire: { $gt: Date.now() },  // Check if the token has expired
+      resetPasswordExpire: { $gt: Date.now() },  
     });
 
     if (!user) {
       return res.status(400).json({ message: "Invalid or expired reset token" });
     }
 
-    // Update the user's password (no encryption here)
-    user.password = password;  // Directly update password without hashing
-    user.resetPasswordToken = undefined; // Clear the token
-    user.resetPasswordExpire = undefined; // Clear the expiry time
+    user.password = password; 
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined; 
     await user.save();
 
     res.status(200).json({ message: 'Password has been reset successfully' });
@@ -114,8 +112,6 @@ const getDashboardData = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-
-    // Return user data (you can modify this as needed)
     res.status(200).json({
       name: user.name,
       rank: user.rank,
