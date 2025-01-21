@@ -7,14 +7,33 @@ import ResetPassword from './components/ResetPassword';
 import Signup from './components/Signup';  
 import Dashboard from './components/Dashboard';  
 import ProtectedRoute from './components/ProtectedRoute'; 
+import PublicRoute from './components/PublicRoute';
+
+import AdminProtectedRouter from './components/admin/AdminProtectedRouter';
+import AdminPublicRoute from './components/admin/AdminPublicRoute';
+
+import AdminLogin from './components/admin/AdminLogin';
+import IDELayout from './components/IDELayout';
+import Problems from './components/Problems';
+import AdminDashboard from './components/admin/AdminDashboard';
 
 function App() {
   return (
     <Router>
       <Routes>
         <Route path="/" element={<Home />} /> 
-        <Route path="/login" element={<Login />} /> 
-        <Route path="/signup" element={<Signup />} /> 
+        <Route path="/login" 
+        element={
+          <PublicRoute>
+            <Login />
+          </PublicRoute>
+        } /> 
+        <Route path="/signup" 
+        element={
+          <PublicRoute>
+            <Signup />
+          </PublicRoute>
+        } /> 
         <Route path="/forgot-password" element={<ForgotPassword />} /> 
         <Route path="/reset-password/:resetToken" element={<ResetPassword />} /> 
         <Route 
@@ -25,7 +44,25 @@ function App() {
             </ProtectedRoute>
           } 
         />
-         <Route path="*" element={<Navigate to="/login" replace />} />
+        
+        {/* Problem page to list problems and handle Solve button */}
+        <Route path="/problems" element={<Problems />} />
+        
+        {/* Problem-solving IDE Layout (for solving the problem) */}
+        <Route path="/solve/:id" element={<IDELayout />} />
+        
+        <Route path="*" element={<Navigate to="/login" replace />} />
+        
+
+        {/* Admin routes */}
+        <Route path="/admin/login" 
+          element={
+          <AdminPublicRoute>
+            <AdminLogin />
+          </AdminPublicRoute>
+          
+          } />
+        <Route path='/admin-dashboard' element={<AdminProtectedRouter><AdminDashboard /></AdminProtectedRouter>}/>
       </Routes>
     </Router>
   );

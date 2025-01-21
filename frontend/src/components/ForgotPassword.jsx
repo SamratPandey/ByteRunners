@@ -30,6 +30,7 @@ const ForgotPassword = () => {
       }, 2000);
     } catch (error) {
       toast.error('Check your email. Please try again later.');
+      console.log(error);
     } finally {
       setIsSubmitting(false);
     }

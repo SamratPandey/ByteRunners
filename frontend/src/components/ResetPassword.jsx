@@ -28,7 +28,6 @@ const ResetPassword = () => {
         resetToken,
         password,
       });
-
       toast.success(response.data.message);
       setTimeout(() => {
         navigate('/login');

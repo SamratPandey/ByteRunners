@@ -8,6 +8,9 @@ const problemSchema = new mongoose.Schema({
   outputFormat: { type: String, required: true },
   examples: { type: [Object], required: true }, // [{ input: String, output: String }]
   tags: { type: [String], default: [] },
+  premium: { type: Boolean, default: false },
+  acceptanceRate: { type: Number, default: 0 },
+  companies: { type: [String], default: [] },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Problem', problemSchema);
