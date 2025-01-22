@@ -15,7 +15,13 @@ import AdminPublicRoute from './components/admin/AdminPublicRoute';
 import AdminLogin from './components/admin/AdminLogin';
 import IDELayout from './components/IDELayout';
 import Problems from './components/Problems';
+import Interview from './components/Interview';
+import Job from './components/Job';
+import Courses from './components/Courses';
 import AdminDashboard from './components/admin/AdminDashboard';
+import Profile from './components/Profile';
+import Leaderboard from './components/LeaderBoard';
+import MyCourses from './components/MyCourses';
 
 function App() {
   return (
@@ -44,9 +50,17 @@ function App() {
             </ProtectedRoute>
           } 
         />
+
+        {/*User Routes*/}
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/leaderboard" element={<Leaderboard />} />
+        <Route path="/my-courses" element={<MyCourses />} />
         
-        {/* Problem page to list problems and handle Solve button */}
+        {/*Nav  page to list  and handle Solve button */}
         <Route path="/problems" element={<Problems />} />
+        <Route path="/job" element={<Job />} />
+        <Route path="/interview" element={<Interview />} />
+        <Route path="/courses" element={<Courses />} />
         
         {/* Problem-solving IDE Layout (for solving the problem) */}
         <Route path="/solve/:id" element={<IDELayout />} />

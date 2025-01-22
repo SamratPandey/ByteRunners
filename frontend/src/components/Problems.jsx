@@ -1,261 +1,390 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Card, CardContent } from '@/components/ui/card';
+import React, { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Progress } from '@/components/ui/progress';
-import { Check, Star, ArrowUpDown } from 'lucide-react';
-import axios from 'axios';
-import { debounce } from 'lodash';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Search, Filter, ArrowUpDown, BookOpen, Star, Clock, Trophy, ChevronLeft, ChevronRight, Tag } from 'lucide-react';
+import Nav from './Nav';
 
 const Problems = () => {
-  const [problems, setProblems] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [selectedDifficulty, setSelectedDifficulty] = useState('All');
+  const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
-  const [difficulty, setDifficulty] = useState('all');
-  const [category, setCategory] = useState('all');
-  const [sortBy, setSortBy] = useState('default');
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const [stats, setStats] = useState({
-    totalSolved: 0,
-    easySolved: 0,
-    mediumSolved: 0,
-    hardSolved: 0,
-    totalProblems: 0,
-    easyTotal: 0,
-    mediumTotal: 0,
-    hardTotal: 0
-  });
-  const navigate = useNavigate();
-  const limit = 10;
+  const [currentPage, setCurrentPage] = useState(1);
+  const [sortBy, setSortBy] = useState({ field: 'id', direction: 'asc' });
+  const [selectedProblem, setSelectedProblem] = useState(null);
+  const itemsPerPage = 10;
 
-  // Fetch problems with all params
-  const fetchProblems = async (pageNum, shouldAppend = false) => {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem('token');
-      if (!token) {
-        navigate('/login', { replace: true });
-        return;
-      }
+  // Extended mock problems data
+  const problems = [
+    {
+      id: 1,
+      title: "Two Sum",
+      difficulty: "Easy",
+      acceptance: "54.7%",
+      isLocked: false,
+      status: "solved",
+      category: "Array",
+      likes: 15420,
+      dislikes: 742,
+      submissions: 24680,
+      description: "Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.",
+      examples: [
+        {
+          input: "nums = [2,7,11,15], target = 9",
+          output: "[0,1]",
+          explanation: "Because nums[0] + nums[1] == 9, we return [0, 1]."
+        }
+      ],
+      companies: ["Amazon", "Google", "Apple"],
+      timeComplexity: "O(n)",
+      spaceComplexity: "O(n)",
+      lastAttempted: "2024-01-20"
+    },
+    // Add more problems with similar structure
+  ];
 
-      const response = await axios.get(`${import.meta.env.BACKEND_URL}/problems`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        params: {
-          page: pageNum,
-          limit,
-          search: searchQuery,
-          difficulty: difficulty !== 'all' ? difficulty : undefined,
-          category: category !== 'all' ? category : undefined,
-          sortBy
-        },
-      });
+  // Categories with counts
+  const categories = [
+    { name: 'Array', count: 1827 },
+    { name: 'String', count: 755 },
+    { name: 'Hash Table', count: 661 },
+    { name: 'Dynamic Programming', count: 561 },
+    { name: 'Math', count: 554 },
+    { name: 'Sorting', count: 433 },
+  ];
 
-      const { problems: newProblems, stats: newStats } = response.data;
-      setHasMore(newProblems.length === limit);
-      setStats(newStats);
-      
-      if (shouldAppend) {
-        setProblems(prev => [...prev, ...newProblems]);
-      } else {
-        setProblems(newProblems);
-      }
-    } catch (error) {
-      console.error('Error fetching problems:', error);
-    } finally {
-      setLoading(false);
+  const getDifficultyColor = (difficulty) => {
+    switch (difficulty.toLowerCase()) {
+      case 'easy':
+        return 'text-green-500';
+      case 'medium':
+        return 'text-yellow-500';
+      case 'hard':
+        return 'text-red-500';
+      default:
+        return 'text-gray-500';
     }
   };
 
-  const debouncedSearch = useCallback(
-    debounce(() => {
-      setPage(1);
-      fetchProblems(1, false);
-    }, 500),
-    [searchQuery, difficulty, category, sortBy]
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'solved':
+        return <Trophy className="w-4 h-4 text-green-500" />;
+      case 'attempted':
+        return <Clock className="w-4 h-4 text-yellow-500" />;
+      default:
+        return <BookOpen className="w-4 h-4 text-gray-400" />;
+    }
+  };
+
+  const handleSort = (field) => {
+    setSortBy(prev => ({
+      field,
+      direction: prev.field === field && prev.direction === 'asc' ? 'desc' : 'asc'
+    }));
+  };
+
+  const filteredAndSortedProblems = problems
+    .filter(problem => {
+      const matchesDifficulty = selectedDifficulty === 'All' || problem.difficulty === selectedDifficulty;
+      const matchesCategory = selectedCategory === 'All' || problem.category === selectedCategory;
+      const matchesSearch = problem.title.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesDifficulty && matchesCategory && matchesSearch;
+    })
+    .sort((a, b) => {
+      const direction = sortBy.direction === 'asc' ? 1 : -1;
+      if (typeof a[sortBy.field] === 'string') {
+        return direction * a[sortBy.field].localeCompare(b[sortBy.field]);
+      }
+      return direction * (a[sortBy.field] - b[sortBy.field]);
+    });
+
+  const pageCount = Math.ceil(filteredAndSortedProblems.length / itemsPerPage);
+  const currentProblems = filteredAndSortedProblems.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
   );
 
-  useEffect(() => {
-    debouncedSearch();
-    return () => debouncedSearch.cancel();
-  }, [searchQuery, difficulty, category, sortBy]);
-
-  const handleScroll = useCallback((event) => {
-    const { scrollTop, clientHeight, scrollHeight } = event.target;
-    if (scrollHeight - scrollTop <= clientHeight * 1.5 && !loading && hasMore) {
-      setPage(prev => prev + 1);
-      fetchProblems(page + 1, true);
-    }
-  }, [loading, hasMore, page]);
-
-  const getDifficultyColor = (difficulty) => ({
-    Easy: 'bg-green-500',
-    Medium: 'bg-yellow-500',
-    Hard: 'bg-red-500'
-  }[difficulty]);
-
-  const categories = [
-    { id: 'all', name: 'All Problems' },
-    { id: 'arrays', name: 'Arrays & Strings' },
-    { id: 'linkedlist', name: 'Linked Lists' },
-    { id: 'trees', name: 'Trees & Graphs' },
-    { id: 'dp', name: 'Dynamic Programming' }
-  ];
-
-  const sortOptions = [
-    { value: 'default', label: 'Default' },
-    { value: 'acceptance', label: 'Acceptance Rate' },
-    { value: 'difficulty', label: 'Difficulty' },
-    { value: 'newest', label: 'Newest' }
-  ];
-
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
-      {/* Stats Section */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold dark:text-white mb-4">Problem Set</h1>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-sm text-gray-600 dark:text-gray-400">Overall Progress</div>
-              <div className="text-2xl font-bold mb-2">{stats.totalSolved}/{stats.totalProblems}</div>
-              <Progress value={(stats.totalSolved / stats.totalProblems) * 100} />
-            </CardContent>
-          </Card>
-          {['Easy', 'Medium', 'Hard'].map((diff) => (
-            <Card key={diff}>
-              <CardContent className="p-4">
-                <div className="text-sm text-gray-600 dark:text-gray-400">{diff}</div>
-                <div className="text-2xl font-bold mb-2">
-                  {stats[`${diff.toLowerCase()}Solved`]}/{stats[`${diff.toLowerCase()}Total`]}
+    <div className="min-h-screen bg-black text-white">
+      <Nav />
+      <main className="container mx-auto px-4 py-8 pt-20">
+        {/* Top Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          {[
+            { label: 'Total Problems', value: problems.length, icon: BookOpen },
+            { label: 'Solved', value: problems.filter(p => p.status === 'solved').length, icon: Trophy },
+            { label: 'Acceptance Rate', value: '67.8%', icon: Star },
+            { label: 'Submissions', value: '24.6K', icon: Clock }
+          ].map((stat, index) => (
+            <Card key={index} className="bg-gray-900/50 border-gray-800 hover:border-green-500/50 transition-colors">
+              <CardContent className="flex items-center justify-between p-4">
+                <div>
+                  <p className="text-gray-400 text-sm">{stat.label}</p>
+                  <p className="text-2xl font-bold text-white">{stat.value}</p>
                 </div>
-                <Progress 
-                  value={(stats[`${diff.toLowerCase()}Solved`] / stats[`${diff.toLowerCase()}Total`]) * 100}
-                  className={getDifficultyColor(diff)}
-                />
+                <stat.icon className="w-8 h-8 text-green-500 opacity-75" />
               </CardContent>
             </Card>
           ))}
         </div>
-      </div>
 
-      {/* Filters Section */}
-      <div className="mb-6 flex flex-wrap gap-4">
-        <Input
-          placeholder="Search problems..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="md:w-64"
-        />
-        
-        <Select value={difficulty} onValueChange={setDifficulty}>
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="Difficulty" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All</SelectItem>
-            <SelectItem value="Easy">Easy</SelectItem>
-            <SelectItem value="Medium">Medium</SelectItem>
-            <SelectItem value="Hard">Hard</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Select value={sortBy} onValueChange={setSortBy}>
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="Sort By" />
-          </SelectTrigger>
-          <SelectContent>
-            {sortOptions.map(option => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
-              </SelectItem>
+        {/* Filters Section */}
+        <div className="space-y-4 mb-8">
+        <div className="flex flex-wrap items-center gap-4">
+            {['All', 'Easy', 'Medium', 'Hard'].map((difficulty) => (
+              <Button
+                key={difficulty}
+                variant={selectedDifficulty === difficulty ? 'default' : 'outline'}
+                onClick={() => setSelectedDifficulty(difficulty)}
+                className={`
+                  ${selectedDifficulty === difficulty
+                    ? 'bg-green-500 hover:bg-green-600 text-white border-green-500'
+                    : 'bg-gray-900/50 text-gray-400 border-gray-700 hover:bg-green-500/10 hover:text-green-400 hover:border-green-500/50'
+                  } transition-all duration-200
+                `}
+              >
+                {difficulty}
+              </Button>
             ))}
-          </SelectContent>
-        </Select>
-      </div>
+          </div>
 
-      {/* Categories Tabs */}
-      <Tabs defaultValue="all" className="mb-6" onValueChange={setCategory}>
-        <TabsList className="w-full overflow-x-auto">
-          {categories.map(cat => (
-            <TabsTrigger key={cat.id} value={cat.id} className="min-w-fit">
-              {cat.name}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
+          <div className="flex flex-wrap items-center gap-4">
+            {categories.map((category) => (
+              <Button
+                key={category.name}
+                variant="ghost"
+                onClick={() => setSelectedCategory(category.name)}
+                className={`${
+                  selectedCategory === category.name
+                    ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
+                    : 'text-gray-400 hover:bg-green-500/10 hover:text-green-400'
+                } transition-colors`}
+              >
+                {category.name}
+                <Badge className="ml-2 bg-gray-800">{category.count}</Badge>
+              </Button>
+            ))}
+          </div>
 
-      {/* Problems List */}
-      <div 
-        className="space-y-4 overflow-auto max-h-[calc(100vh-480px)]" 
-        onScroll={handleScroll}
-      >
-        {problems.map((problem) => (
-          <Card 
-            key={problem._id}
-            className="cursor-pointer hover:shadow-lg transition-shadow border-l-4"
-            style={{
-              borderLeftColor: problem.solved ? '#22c55e' : 'transparent'
-            }}
-            onClick={() => navigate(`/problems/${problem._id}`)}
-          >
-            <CardContent className="p-4">
-              <div className="flex justify-between items-start">
-                <div className="flex-grow">
-                  <div className="flex items-center gap-2 mb-2">
-                    <h3 className="text-lg font-semibold dark:text-white">
-                      {problem.title}
-                    </h3>
-                    {problem.solved && (
-                      <Check className="w-5 h-5 text-green-500" />
-                    )}
-                    {problem.premium && (
-                      <Star className="w-5 h-5 text-yellow-500" />
-                    )}
-                  </div>
-                  <div className="flex flex-wrap gap-2 items-center">
-                    <Badge className={`${getDifficultyColor(problem.difficulty)} text-white`}>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <input
+              type="text"
+              placeholder="Search problems by title, tag, or company..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-gray-900/50 border border-gray-800 rounded-lg px-4 py-2 pl-10 
+                focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500/50
+                hover:border-gray-700 transition-colors text-gray-300"
+            />
+          </div>
+        </div>
+
+        {/* Problems Table */}
+        <div className="overflow-x-auto rounded-lg border border-gray-800">
+          <table className="w-full">
+            <thead className="bg-gray-900/50">
+              <tr>
+                <th className="px-6 py-3 text-left text-gray-400">Status</th>
+                <th className="px-6 py-3 text-left text-gray-400">
+                  <button
+                    className="flex items-center gap-2 hover:text-green-400 transition-colors"
+                    onClick={() => handleSort('title')}
+                  >
+                    Title
+                    <ArrowUpDown className="w-4 h-4" />
+                  </button>
+                </th>
+                <th className="px-6 py-3 text-left text-gray-400">
+                  <button
+                    className="flex items-center gap-2 hover:text-green-400 transition-colors"
+                    onClick={() => handleSort('acceptance')}
+                  >
+                    Acceptance
+                    <ArrowUpDown className="w-4 h-4" />
+                  </button>
+                </th>
+                <th className="px-6 py-3 text-left text-gray-400">Difficulty</th>
+                <th className="px-6 py-3 text-left text-gray-400">Category</th>
+              </tr>
+            </thead>
+            <tbody>
+              {currentProblems.map((problem) => (
+                <tr
+                  key={problem.id}
+                  onClick={() => setSelectedProblem(problem)}
+                  className="border-t border-gray-800/50 hover:bg-green-500/5 transition-colors cursor-pointer"
+                >
+                  <td className="px-6 py-4">
+                    {getStatusIcon(problem.status)}
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-2">
+                      <span className="text-white hover:text-green-500">
+                        {problem.title}
+                      </span>
+                      {problem.isLocked && (
+                        <Badge className="bg-yellow-500/20 text-yellow-500">Premium</Badge>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-gray-400">{problem.acceptance}</td>
+                  <td className="px-6 py-4">
+                    <span className={getDifficultyColor(problem.difficulty)}>
                       {problem.difficulty}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <Badge className="bg-gray-800 text-gray-300">
+                      {problem.category}
                     </Badge>
-                    {problem.tags.map((tag, index) => (
-                      <Badge key={index} variant="secondary">
-                        {tag}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination */}
+        <div className="flex items-center justify-between mt-4">
+          <div className="text-sm text-gray-400">
+            Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredAndSortedProblems.length)} of {filteredAndSortedProblems.length} problems
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="text-gray-300 hover:bg-green-500/20 hover:border-green-500 disabled:text-gray-600"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            {Array.from({ length: Math.min(5, pageCount) }, (_, i) => {
+              const pageNum = i + 1;
+              return (
+                <Button
+                  key={pageNum}
+                  variant={currentPage === pageNum ? 'default' : 'outline'}
+                  onClick={() => setCurrentPage(pageNum)}
+                  className={currentPage === pageNum 
+                    ? 'bg-green-500 hover:bg-green-600 text-white' 
+                    : 'text-gray-300 hover:bg-green-500/20 hover:border-green-500'
+                  }
+                >
+                  {pageNum}
+                </Button>
+              );
+            })}
+            <Button
+              variant="outline"
+              onClick={() => setCurrentPage(p => Math.min(pageCount, p + 1))}
+              disabled={currentPage === pageCount}
+              className="text-gray-300 hover:bg-green-500/20 hover:border-green-500 disabled:text-gray-600"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Problem Details Modal */}
+        {selectedProblem && (
+          <div className="fixed inset-0 bg-black/90 flex items-center justify-center p-4 z-50">
+            <div className="bg-gray-900 rounded-lg max-w-3xl w-full max-h-[80vh] overflow-y-auto mt-16">
+              <div className="p-6">
+                <div className="flex justify-between items-start mb-6">
+                  <div>
+                    <h2 className="text-2xl font-bold text-white mb-2">
+                      {selectedProblem.title}
+                    </h2>
+                    <div className="flex items-center gap-4">
+                      <Badge className={getDifficultyColor(selectedProblem.difficulty)}>
+                        {selectedProblem.difficulty}
                       </Badge>
+                      <span className="text-gray-400">
+                        Acceptance: {selectedProblem.acceptance}
+                      </span>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    onClick={() => setSelectedProblem(null)}
+                    className="text-gray-400 hover:bg-gray-800 hover:text-gray-300 transition-colors"
+                  >
+                    ✕
+                  </Button>
+                </div>
+
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">Description</h3>
+                    <p className="text-gray-300">{selectedProblem.description}</p>
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">Examples</h3>
+                    {selectedProblem.examples.map((example, index) => (
+                      <div key={index} className="bg-black/50 rounded-lg p-4 mb-4">
+                        <p className="text-gray-300">Input: {example.input}</p>
+                        <p className="text-gray-300">Output: {example.output}</p>
+                        {example.explanation && (
+                          <p className="text-gray-400 mt-2">
+                            Explanation: {example.explanation}
+                          </p>
+                        )}
+                      </div>
                     ))}
                   </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
-                    Acceptance: {problem.acceptanceRate}%
-                  </div>
-                  {problem.companies && (
-                    <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                      {problem.companies.join(', ')}
+
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">Companies</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedProblem.companies.map((company) => (
+                        <Badge
+                          key={company}
+                          className="bg-gray-800 text-gray-300 hover:bg-gray-700"
+                        >
+                          {company}
+                        </Badge>
+                      ))}
                     </div>
-                  )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <h3 className="text-lg font-semibold mb-2">Time Complexity</h3>
+                      <Badge className="bg-gray-800 text-gray-300">
+                        {selectedProblem.timeComplexity}
+                      </Badge>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold mb-2">Space Complexity</h3>
+                      <Badge className="bg-gray-800 text-gray-300">
+                        {selectedProblem.spaceComplexity}
+                      </Badge>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end gap-4 mt-8">
+                    <Button
+                      variant="outline"
+                      className="text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
+                      onClick={() => setSelectedProblem(null)}
+                    >
+                      Close
+                    </Button>
+                    <Button
+                      className="bg-green-500 hover:bg-green-600 text-white transition-colors"
+                    >
+                      Solve Problem
+                    </Button>
+                  </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        ))}
-        
-        {loading && (
-          <div className="flex justify-center p-4">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
           </div>
         )}
-        
-        {!loading && problems.length === 0 && (
-          <div className="text-center p-8">
-            <p className="text-gray-500 dark:text-gray-400">No problems found</p>
-          </div>
-        )}
-      </div>
+      </main>
     </div>
   );
 };

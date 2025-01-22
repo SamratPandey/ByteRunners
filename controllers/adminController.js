@@ -6,27 +6,27 @@ const jwt = require('jsonwebtoken');
 
 exports.registerAdmin = async (req, res) => {
   try {
-    const existingAdmin = await Admin.findOne({});
+    const existingAdmin = await Admin.findOne();
 
     if (!existingAdmin) {
       const defaultAdmin = new Admin({
-        username: 'admin', // default admin username
-        email: 'admin@gmail.com', // default admin email
-        password: 'admin', // default admin password
-        role: 'superAdmin', // super admin role
+        username: 'admin',
+        email: 'admin@gmail.com',
+        password: 'admin',
+        role: 'superAdmin',
         permissions: {
           manageUsers: true,
           manageCodingProblems: true,
           manageCodeExecutionSettings: true,
-          viewAnalytics: true
+          viewAnalytics: true,
+          manageContests: true,
+          manageFeedback: true
         }
       });
 
-      // Hash password before saving
       const salt = await bcrypt.genSalt(10);
       defaultAdmin.password = await bcrypt.hash(defaultAdmin.password, salt);
 
-      // Save the default admin to the database
       await defaultAdmin.save();
 
       return res.status(201).json({
@@ -54,40 +54,41 @@ exports.registerAdmin = async (req, res) => {
 exports.loginAdmin = async (req, res) => {
   try {
     const { email, password } = req.body;
-    
-    // Find admin by email
+
     const admin = await Admin.findOne({ email, isActive: true });
     if (!admin) {
-      return res.status(400).json({ 
-        message: 'Invalid credentials' 
+      return res.status(400).json({
+        message: 'Invalid credentials'
       });
     }
 
-    // Check password
     const isMatch = await bcrypt.compare(password, admin.password);
     if (!isMatch) {
-      return res.status(400).json({ 
-        message: 'Invalid credentials' 
+      return res.status(400).json({
+        message: 'Invalid credentials'
       });
     }
 
-    // Update last login
     admin.lastLogin = Date.now();
+    admin.loginHistory.push({
+      timestamp: new Date(),
+      ip: req.ip,
+      userAgent: req.headers['user-agent']
+    });
     await admin.save();
 
-    // Create token
     const token = jwt.sign(
-      { 
-        id: admin._id, 
+      {
+        id: admin._id,
         role: admin.role,
-        permissions: admin.permissions 
-      }, 
-      process.env.JWT_SECRET, 
+        permissions: admin.permissions
+      },
+      process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
 
-    res.json({ 
-      token, 
+    res.json({
+      token,
       admin: {
         id: admin._id,
         username: admin.username,
@@ -96,20 +97,17 @@ exports.loginAdmin = async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({ 
-      message: 'Server error', 
-      error: error.message 
+    res.status(500).json({
+      message: 'Server error',
+      error: error.message
     });
   }
 };
 
-
-
-// Get all users
 exports.getAllUsers = async (req, res) => {
   try {
     const users = await User.find()
-      .select('name email problemsSolved totalSubmissions accuracy rank score bio avatar')
+      .select('name email problemsSolved totalSubmissions accuracy rank score bio avatar preferredLanguages isPremium accountType')
       .lean();
 
     res.status(200).json({
@@ -124,12 +122,11 @@ exports.getAllUsers = async (req, res) => {
   }
 };
 
-// Get single user
 exports.getUser = async (req, res) => {
   try {
     const user = await User.findById(req.params.id)
-      .select('name email problemsSolved totalSubmissions accuracy rank score bio avatar recentActivity solvedProblems')
-      .populate('solvedProblems', 'title difficulty');
+      .select('name email problemsSolved totalSubmissions accuracy rank score bio avatar recentActivity solvedProblems preferredLanguages isPremium accountType')
+      .populate('solvedProblems.problemId', 'title difficulty');
 
     if (!user) {
       return res.status(404).json({
@@ -150,12 +147,11 @@ exports.getUser = async (req, res) => {
   }
 };
 
-// Update user
 exports.updateUser = async (req, res) => {
   try {
-    const allowedFields = ['name', 'email', 'rank', 'score', 'bio', 'avatar'];
+    const allowedFields = ['name', 'email', 'rank', 'score', 'bio', 'avatar', 'preferredLanguages'];
     const filteredBody = {};
-    
+
     Object.keys(req.body).forEach(key => {
       if (allowedFields.includes(key)) {
         filteredBody[key] = req.body[key];
@@ -190,7 +186,6 @@ exports.updateUser = async (req, res) => {
   }
 };
 
-// Delete user
 exports.deleteUser = async (req, res) => {
   try {
     const user = await User.findByIdAndDelete(req.params.id);
@@ -214,7 +209,6 @@ exports.deleteUser = async (req, res) => {
   }
 };
 
-// Get user statistics
 exports.getUserStats = async (req, res) => {
   try {
     const stats = await User.aggregate([
