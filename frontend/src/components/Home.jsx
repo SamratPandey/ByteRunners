@@ -12,25 +12,28 @@ import Nav from './Nav';
 
 //Problem code
 const problemCodes = {
-  "Linked List": {
-    "C++": `// C++ solution for Linked List `,
-    Python: `# Python solution for Linked List`,
-    Java: `// Java solution for Linked List`,
-    JavaScript: `// JavaScript solution for Linked List`,
-  },
-  "Binary Tree": {
-    "C++": `// C++ solution for Binary Tree`,
-    Python: `# Python solution for Binary Tree`,
-    Java: `// Java solution for Binary Tree`,
-    JavaScript: `// JavaScript solution for Binary Tree`,
-  },
-  "Fibonacci": {
-    "C++": `// C++ solution for Fibonacci`,
-    Python: `# Python solution for Fibonacci`,
-    Java: `// Java solution for Fibonacci`,
-    JavaScript: `// JavaScript solution for Fibonacci`,
+  "Hello World": {
+    "C++": `// C++ solution for Hello World
+#include <iostream>
+using namespace std;
+
+int main() {
+    cout << "Hello, World!" << endl;
+    return 0;
+}`,
+    Python: `# Python solution for Hello World
+print("Hello, World!")`,
+    Java: `// Java solution for Hello World
+public class HelloWorld {
+    public static void main(String[] args) {
+        System.out.println("Hello, World!");
+    }
+}`,
+    JavaScript: `// JavaScript solution for Hello World
+console.log("Hello, World!");`,
   },
 };
+
 
 const OutputPanel = ({ isOpen, onClose, output, isLoading }) => {
   return (
@@ -308,7 +311,7 @@ const AnimatedCard = ({ children }) => {
 
 const Home = () => {
 
-  const [selectedProblem, setSelectedProblem] = useState("Linked List");
+  const [selectedProblem, setSelectedProblem] = useState("Hello World");
   const [selectedLanguage, setSelectedLanguage] = useState("C++");
   const [editCode, setEditorCode] = useState("");
 
@@ -325,15 +328,15 @@ const Home = () => {
   const getLanguageId = (language) => {
     switch (language) {
       case "C++":
-        return 1;
+        return 54;
       case "Java":
-        return 4;
+        return 62;
       case "Python":
         return 71;
       case "JavaScript":
         return 63;
       default:
-        return 1;
+        return 54;
     }
   };
 
@@ -352,9 +355,8 @@ const Home = () => {
         stdin:'',
       });
   
-      return response.data;  // Process the result and show it in the UI
+      return response.data; 
     } catch (error) {
-      console.error("Error running the code:", error.message);
       return { error: error.message };  // Return an error message if something goes wrong
     }
   };
@@ -371,7 +373,7 @@ const Home = () => {
       </div>
 
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center overflow-hidden">
+      <section className="relative min-h-screen flex items-center overflow-hidden overscroll-none">
         <AnimatedBackground />
         <div className="container mx-auto px-6 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
@@ -391,7 +393,7 @@ const Home = () => {
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button className="relative group bg-green-600 hover:bg-green-700 text-white px-8 py-6 text-lg overflow-hidden">
-                  <span className="relative z-10">Start Coding Now</span>
+                  <Link to={'/problems'} className="relative z-10">Start Coding Now</Link>
                   <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-green-600 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </Button>
                 <Button variant="outline" className="border-green-500 text-green-500 hover:bg-green-950 px-8 py-6 text-lg">

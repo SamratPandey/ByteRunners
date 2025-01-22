@@ -29,6 +29,18 @@ const Nav = () => {
   const [isSearchVisible, setIsSearchVisible] = useState(false);
   const navigate = useNavigate();
 
+  const navigationItems = [
+    { label: 'DAILYPROBLEMS', path: '/problems' },
+    { label: 'JOB', path: '/job' },
+    { label: 'INTERVIEW', path: '/interview' },
+    { label: 'COURSES', path: '/courses' }
+  ];
+
+  const handleNavigation = (path) => {
+    navigate(path);
+    setIsMenuOpen(false);
+  };
+
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
     setIsAvatarDropdownOpen(false);
@@ -65,6 +77,13 @@ const Nav = () => {
     setIsAvatarDropdownOpen(false);
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    setIsLoggedIn(false);
+    window.location.reload();
+    navigate('/');
+  };
+
   useEffect(() => {
     const token = localStorage.getItem('token');
     setIsLoggedIn(!!token);
@@ -84,37 +103,32 @@ const Nav = () => {
     { icon: faSignOut, label: 'Logout'},
   ];
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    setIsLoggedIn(false);
-    window.location.reload();
-    navigate('/');
-  };
-
   return (
     <nav
-      className={`transition-all duration-300 fixed top-0 left-0 w-full bg-black/80 backdrop-blur-sm border-b border-green-900 py-4 px-8 md:px-12 z-50 ${
+      className={`transition-all duration-300 fixed top-0 left-0 w-full bg-black backdrop-blur-sm border-b border-green-900 py-4 px-8 md:px-12 z-50 ${
         isHidden ? '-translate-y-full' : 'translate-y-0'
       }`}
     >
       <div className="flex justify-between items-center">
-        {/* Logo */}
         <div className="flex items-center space-x-12">
           <Link to="/">
-              <img src={logo} alt="" srcSet="" className='w-44'/>
+            <img src={logo} alt="" srcSet="" className='w-44'/>
           </Link>
         </div>
 
-        {/* Centered Menu (Desktop) */}
         <ul className="hidden min-[840px]:flex space-x-8 text-center absolute left-1/2 transform -translate-x-1/2">
-          {['PRACTICE', 'JOB', 'INTERVIEW', 'COURSES'].map((item) => (
-            <li key={item} className="cursor-pointer">
-              <span className="text-green-400 hover:text-green-600 transition-colors duration-200">{item}</span>
+          {navigationItems.map((item) => (
+            <li key={item.label} className="cursor-pointer">
+              <span 
+                onClick={() => handleNavigation(item.path)}
+                className="text-green-400 hover:text-green-600 transition-colors duration-200"
+              >
+                {item.label}
+              </span>
             </li>
           ))}
         </ul>
 
-        {/* Right Section */}
         <div className="hidden min-[840px]:flex items-center space-x-6">
           <div className="search-container relative">
             <button
@@ -199,7 +213,6 @@ const Nav = () => {
           )}
         </div>
 
-        {/* Mobile Menu Button */}
         <div className="min-[840px]:hidden flex items-center space-x-4">
           <div className="search-container relative">
             <button
@@ -244,13 +257,17 @@ const Nav = () => {
         </div>
       </div>
 
-      {/* Mobile Menu */}
       {isMenuOpen && (
         <div className="min-[840px]:hidden mt-4 bg-black/95 border border-green-900 rounded-md p-4">
           <ul className="space-y-4">
-            {['PRACTICE', 'JOB', 'INTERVIEW', 'COURSES'].map((item) => (
-              <li key={item} className="cursor-pointer">
-                <span className="text-gray-300 hover:text-green-400 transition-colors duration-200">{item}</span>
+            {navigationItems.map((item) => (
+              <li key={item.label} className="cursor-pointer">
+                <span 
+                  onClick={() => handleNavigation(item.path)}
+                  className="text-gray-300 hover:text-green-400 transition-colors duration-200"
+                >
+                  {item.label}
+                </span>
               </li>
             ))}
             {!isLoggedIn ? (

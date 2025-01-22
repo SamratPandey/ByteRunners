@@ -7,7 +7,7 @@ require('dotenv').config();
 
 // Register User  
 const registerUser = async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, password} = req.body;
 
   try {
     const userExists = await User.findOne({ email });
@@ -15,10 +15,10 @@ const registerUser = async (req, res) => {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    const user = new User({ name, email, password });
+    const user = new User({ name, email, password});
     await user.save();
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ id: user._id, accountType: user.accountType }, process.env.JWT_SECRET, { expiresIn: '1h' });
     res.status(201).json({ token });
   } catch (error) {
     res.status(500).json({ message: "Server Error" });
@@ -39,7 +39,7 @@ const loginUser = async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ id: user._id, accountType: user.accountType, isPremium: user.isPremium }, process.env.JWT_SECRET, { expiresIn: '1h' });
     res.json({ token });
   } catch (error) {
     res.status(500).json({ message: "Server Error" });
@@ -107,11 +107,14 @@ const resetPassword = async (req, res) => {
 
 const getDashboardData = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id); // Use the decoded user ID from the token
-    
+    const user = await User.findById(req.user.id)
+      .select('name rank problemsSolved totalSubmissions accuracy recentActivity avatar isPremium preferredLanguages')
+      .populate('recentActivity.problemId', 'title difficulty');
+
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
+
     res.status(200).json({
       name: user.name,
       rank: user.rank,
@@ -120,6 +123,8 @@ const getDashboardData = async (req, res) => {
       accuracy: user.accuracy,
       recentActivity: user.recentActivity,
       avatar: user.avatar,
+      isPremium: user.isPremium,
+      preferredLanguages: user.preferredLanguages,
     });
   } catch (error) {
     console.error(error);
@@ -129,7 +134,8 @@ const getDashboardData = async (req, res) => {
 
 const getProfileData = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.user.id)
+      .select('name email bio avatar rank problemsSolved totalSubmissions accuracy isPremium accountType preferredLanguages');
 
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
@@ -144,6 +150,9 @@ const getProfileData = async (req, res) => {
       problemsSolved: user.problemsSolved,
       totalSubmissions: user.totalSubmissions,
       accuracy: user.accuracy,
+      isPremium: user.isPremium,
+      accountType: user.accountType,
+      preferredLanguages: user.preferredLanguages,
     });
   } catch (error) {
     console.error('Error in getProfileData:', error);
@@ -151,6 +160,4 @@ const getProfileData = async (req, res) => {
   }
 };
 
-
-
-module.exports = { registerUser, loginUser, forgotPassword, resetPassword, getDashboardData, getProfileData};
+module.exports = { registerUser, loginUser, forgotPassword, resetPassword, getDashboardData, getProfileData };
