@@ -1,10 +1,11 @@
+import ComingSoon from "./ComingSoon";
+
 const Courses = ()=>{
     return(
-        <>
-            <div>
-                Hello World
-            </div>
-        </>
+        <div>
+            <ComingSoon />
+                        
+        </div>
     );
 }
 

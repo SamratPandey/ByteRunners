@@ -13,7 +13,7 @@ export const login = (email, password) => async (dispatch) => {
       payload: response.data.token, // Storing only the token
     });
   } catch (error) {
-    // Dispatch the failure action
+    console.error('Login error:', error); // Log the full error object
     const errorMessage = error.response?.data?.message || error.message || 'An error occurred';
     dispatch({
       type: 'ADMIN_LOGIN_FAIL',
@@ -21,6 +21,7 @@ export const login = (email, password) => async (dispatch) => {
     });
     throw new Error(errorMessage);
   }
+  
 };
 
 export const logout = () => (dispatch) => {

@@ -1,7 +1,7 @@
 const Admin = require('../models/Admin');
 const User = require('../models/User');
 const Problem = require('../models/Problem');
-const bcrypt = require('bcryptjs');
+const Activity = require('../models/Activity')
 const jwt = require('jsonwebtoken');
 
 exports.registerAdmin = async (req, res) => {
@@ -12,7 +12,7 @@ exports.registerAdmin = async (req, res) => {
       const defaultAdmin = new Admin({
         username: 'admin',
         email: 'admin@gmail.com',
-        password: 'admin',
+        password: 'adminn',  
         role: 'superAdmin',
         permissions: {
           manageUsers: true,
@@ -23,9 +23,6 @@ exports.registerAdmin = async (req, res) => {
           manageFeedback: true
         }
       });
-
-      const salt = await bcrypt.genSalt(10);
-      defaultAdmin.password = await bcrypt.hash(defaultAdmin.password, salt);
 
       await defaultAdmin.save();
 
@@ -62,7 +59,7 @@ exports.loginAdmin = async (req, res) => {
       });
     }
 
-    const isMatch = await bcrypt.compare(password, admin.password);
+    const isMatch = await admin.comparePassword(password);
     if (!isMatch) {
       return res.status(400).json({
         message: 'Invalid credentials'
@@ -231,6 +228,297 @@ exports.getUserStats = async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Server Error'
+    });
+  }
+};
+
+exports.createProblem = async (req, res) => {
+  try {
+    const {
+      title,
+      description,
+      difficulty,
+      inputFormat,
+      outputFormat,
+      constraints,
+      timeLimit,
+      memoryLimit,
+      examples,
+      testCases,
+      solutions,
+      tags,
+      categories,
+      premium,
+      companies,
+      status
+    } = req.body;
+
+    const newProblem = new Problem({
+      title,
+      description,
+      difficulty,
+      inputFormat,
+      outputFormat,
+      constraints,
+      timeLimit,
+      memoryLimit,
+      examples,
+      testCases,
+      solutions,
+      tags,
+      categories,
+      premium,
+      companies,
+      status,
+      createdBy: req.admin.id,
+      lastModifiedBy: req.admin.id
+    });
+
+    await newProblem.save();
+
+    res.status(201).json({
+      success: true,
+      message: 'Problem created successfully',
+      data: newProblem
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error creating problem',
+      error: error.message
+    });
+  }
+};
+
+
+exports.getAllProblems = async (req, res) => {
+  try {
+    const problems = await Problem.find()
+      .select(
+        'title description difficulty inputFormat outputFormat constraints timeLimit memoryLimit examples testCases tags categories totalSubmissions acceptedSubmissions acceptanceRate status'
+      )
+      .populate('createdBy', 'username')
+      .lean();
+
+    const formattedProblems = problems.map(problem => ({
+      id: problem._id,
+      title: problem.title,
+      description: problem.description,
+      difficulty: problem.difficulty,
+      inputFormat: problem.inputFormat,
+      outputFormat: problem.outputFormat,
+      constraints: problem.constraints,
+      timeLimit: problem.timeLimit,
+      memoryLimit: problem.memoryLimit,
+      examples: problem.examples,
+      testCases: problem.testCases,
+      tags: problem.tags,
+      categories: problem.categories,
+      totalSubmissions: problem.totalSubmissions,
+      acceptedSubmissions: problem.acceptedSubmissions,
+      acceptanceRate: problem.acceptanceRate,
+      status: problem.status,
+      createdBy: problem.createdBy?.username || null,
+    }));
+
+    res.status(200).json({
+      success: true,
+      data: formattedProblems,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching problems',
+      error: error.message,
+    });
+  }
+};
+
+
+exports.getProblem = async (req, res) => {
+  try {
+    const problem = await Problem.findById(req.params.id)
+      .populate('createdBy', 'username')
+      .populate('lastModifiedBy', 'username')
+      .lean();
+
+    if (!problem) {
+      return res.status(404).json({
+        success: false,
+        message: 'Problem not found'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: problem
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching problem',
+      error: error.message
+    });
+  }
+};
+
+
+exports.updateProblem = async (req, res) => {
+  try {
+    const allowedFields = [
+      'title',
+      'description',
+      'difficulty',
+      'inputFormat',
+      'outputFormat',
+      'constraints',
+      'timeLimit',
+      'memoryLimit',
+      'examples',
+      'testCases',
+      'solutions',
+      'tags',
+      'categories',
+      'premium',
+      'companies',
+      'status'
+    ];
+
+    const filteredBody = {};
+    Object.keys(req.body).forEach(key => {
+      if (allowedFields.includes(key)) {
+        filteredBody[key] = req.body[key];
+      }
+    });
+
+    const updatedProblem = await Problem.findByIdAndUpdate(
+      req.params.id,
+      { ...filteredBody, lastModifiedBy: req.admin.id },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedProblem) {
+      return res.status(404).json({
+        success: false,
+        message: 'Problem not found'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Problem updated successfully',
+      data: updatedProblem
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error updating problem',
+      error: error.message
+    });
+  }
+};
+
+
+exports.deleteProblem = async (req, res) => {
+  try {
+    const problem = await Problem.findByIdAndDelete(req.params.id);
+
+    if (!problem) {
+      return res.status(404).json({
+        success: false,
+        message: 'Problem not found'
+      });
+    }
+
+    res.status(204).json({
+      success: true,
+      message: 'Problem deleted successfully'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error deleting problem',
+      error: error.message
+    });
+  }
+};
+
+
+exports.getProblemStats = async (req, res) => {
+  try {
+    const stats = await Problem.aggregate([
+      {
+        $group: {
+          _id: null,
+          totalProblems: { $sum: 1 },
+          totalSubmissions: { $sum: '$totalSubmissions' },
+          totalAccepted: { $sum: '$acceptedSubmissions' },
+          averageAcceptanceRate: { $avg: '$acceptanceRate' }
+        }
+      }
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: stats[0]
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching problem stats',
+      error: error.message
+    });
+  }
+};
+
+// Top Performers
+exports.getTopPerformers = async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 10; // Default to 10 top performers
+    const topPerformers = await User.find()
+      .sort({ score: -1 }) // Sort by score in descending order
+      .limit(limit)
+      .select('name email score rank avatar');
+
+    res.status(200).json({
+      success: true,
+      data: topPerformers
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching top performers',
+      error: error.message
+    });
+  }
+};
+
+// Recent Activity
+exports.getRecentActivity = async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 5; // Default to 5 most recent activities
+
+    // Fetch the most recent activities from the global activity log
+    const recentActivities = await Activity.find()
+      .sort({ timestamp: -1 }) // Sort by timestamp in descending order
+      .limit(limit); // Limit to 'limit' number of activities
+
+    if (!recentActivities.length) {
+      return res.status(404).json({
+        success: false,
+        message: 'No recent activities found'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: recentActivities
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching recent activity',
+      error: error.message
     });
   }
 };

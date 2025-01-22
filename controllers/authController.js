@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const Activity = require('../models/Activity'); 
 const crypto = require('crypto');
 const sendEmail = require('../controllers/sendMail');
 
@@ -7,7 +8,7 @@ require('dotenv').config();
 
 // Register User  
 const registerUser = async (req, res) => {
-  const { name, email, password} = req.body;
+  const { name, email, password } = req.body;
 
   try {
     const userExists = await User.findOne({ email });
@@ -15,8 +16,15 @@ const registerUser = async (req, res) => {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    const user = new User({ name, email, password});
+    const user = new User({ name, email, password });
     await user.save();
+
+    // Log the registration activity
+    const activity = new Activity({
+      type: 'User Registered',
+      description: `New user ${user.name} (${user.email}) has registered.`,
+    });
+    await activity.save();
 
     const token = jwt.sign({ id: user._id, accountType: user.accountType }, process.env.JWT_SECRET, { expiresIn: '1h' });
     res.status(201).json({ token });
@@ -38,6 +46,13 @@ const loginUser = async (req, res) => {
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
+
+    // Log the login activity
+    const activity = new Activity({
+      type: 'User Logged In',
+      description: `User ${user.name} (${user.email}) logged in.`,
+    });
+    await activity.save();
 
     const token = jwt.sign({ id: user._id, accountType: user.accountType, isPremium: user.isPremium }, process.env.JWT_SECRET, { expiresIn: '1h' });
     res.json({ token });
@@ -65,6 +80,13 @@ const forgotPassword = async (req, res) => {
     user.resetPasswordExpire = resetPasswordExpire;
     await user.save();
 
+    // Log the forgot password activity
+    const activity = new Activity({
+      type: 'Password Reset Requested',
+      description: `User ${user.name} requested a password reset.`,
+    });
+    await activity.save();
+
     // Create the reset link to be sent in the email
     const resetLink = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
 
@@ -86,7 +108,7 @@ const resetPassword = async (req, res) => {
     // Find user by reset token and check if the token is valid and not expired
     const user = await User.findOne({
       resetPasswordToken: resetToken,
-      resetPasswordExpire: { $gt: Date.now() },  
+      resetPasswordExpire: { $gt: Date.now() },
     });
 
     if (!user) {
@@ -98,6 +120,13 @@ const resetPassword = async (req, res) => {
     user.resetPasswordExpire = undefined; 
     await user.save();
 
+    // Log the reset password activity
+    const activity = new Activity({
+      type: 'Password Reset',
+      description: `User ${user.name} reset their password successfully.`,
+    });
+    await activity.save();
+
     res.status(200).json({ message: 'Password has been reset successfully' });
   } catch (error) {
     console.error("Error in resetPassword:", error);
@@ -105,6 +134,7 @@ const resetPassword = async (req, res) => {
   }
 };
 
+// Get Dashboard Data
 const getDashboardData = async (req, res) => {
   try {
     const user = await User.findById(req.user.id)
@@ -132,6 +162,7 @@ const getDashboardData = async (req, res) => {
   }
 };
 
+// Get Profile Data
 const getProfileData = async (req, res) => {
   try {
     const user = await User.findById(req.user.id)

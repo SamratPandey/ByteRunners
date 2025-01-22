@@ -1,10 +1,11 @@
+import ComingSoon from "./ComingSoon";
+
 const Job = ()=>{
     return(
-        <>
-            <div>
-                Hello World
-            </div>
-        </>
+        <div>
+            <ComingSoon />
+                        
+        </div>
     );
 }
 

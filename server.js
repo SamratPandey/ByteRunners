@@ -3,6 +3,7 @@ const cors = require('cors');
 const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const siteRoutes = require('./routes/siteRoutes');
 const Admin = require('./models/Admin');  // Import the Admin model
 const { registerAdmin } = require('./controllers/adminController'); // Import the registerAdmin function
 require('dotenv').config();
@@ -23,6 +24,7 @@ app.use(express.json());
 
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/site',siteRoutes);
 
 const createDefaultAdmin = async () => {
   try {

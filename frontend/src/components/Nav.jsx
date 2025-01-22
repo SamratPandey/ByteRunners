@@ -30,7 +30,7 @@ const Nav = () => {
   const navigate = useNavigate();
 
   const navigationItems = [
-    { label: 'DAILYPROBLEMS', path: '/problems' },
+    { label: 'PROBLEMS', path: '/problems' },
     { label: 'JOB', path: '/job' },
     { label: 'INTERVIEW', path: '/interview' },
     { label: 'COURSES', path: '/courses' }

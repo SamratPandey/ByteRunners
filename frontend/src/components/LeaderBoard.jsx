@@ -1,9 +1,12 @@
-const Leaderboard = ()=>{
+import ComingSoon from "./ComingSoon";
+
+const LeaderBoard = ()=>{
     return(
         <div>
-            Hello World
+            <ComingSoon />
+                        
         </div>
     );
 }
 
-export default Leaderboard;
+export default LeaderBoard;

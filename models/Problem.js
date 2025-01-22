@@ -1,7 +1,6 @@
-// models/Problem.js
 const mongoose = require('mongoose');
 
-// Problem Schema
+
 const problemSchema = new mongoose.Schema({
   title: { 
     type: String, 
