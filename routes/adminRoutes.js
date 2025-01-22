@@ -1,5 +1,3 @@
-
-
 const express = require('express');
 const { 
   loginAdmin,
@@ -7,7 +5,15 @@ const {
   getUser,
   updateUser,
   deleteUser,
-  getUserStats
+  getUserStats,
+  createProblem,
+  getAllProblems,
+  getProblem,
+  updateProblem,
+  deleteProblem,
+  getProblemStats,
+  getTopPerformers,  // Added route for top performers
+  getRecentActivity  // Added route for recent activity
 } = require('../controllers/adminController');
 const { adminProtect } = require('../middleware/adminAuth');
 
@@ -25,5 +31,17 @@ router.get('/users/:id', getUser);
 router.put('/users/:id', updateUser);
 router.delete('/users/:id', deleteUser);
 router.get('/user-stats', getUserStats);
+
+// Problem management routes
+router.post('/problems', createProblem);
+router.get('/problems', getAllProblems);
+router.get('/problems/:id', getProblem);
+router.put('/problems/:id', updateProblem);
+router.delete('/problems/:id', deleteProblem);
+router.get('/problem-stats', getProblemStats);
+
+// Routes for top performers and recent activity
+router.get('/top-performers', getTopPerformers); 
+router.get('/recent-activity', getRecentActivity); 
 
 module.exports = router;
