@@ -22,6 +22,7 @@ import AdminDashboard from './components/admin/AdminDashboard';
 import Profile from './components/Profile';
 import Leaderboard from './components/LeaderBoard';
 import MyCourses from './components/MyCourses';
+import Solve from './components/Solve';
 
 function App() {
   return (
@@ -55,6 +56,7 @@ function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/my-courses" element={<MyCourses />} />
+        <Route path="/solve/:problemId" element={<Solve />}/>
         
         {/*Nav  page to list  and handle Solve button */}
         <Route path="/problems" element={<Problems />} />
@@ -63,7 +65,7 @@ function App() {
         <Route path="/courses" element={<Courses />} />
         
         {/* Problem-solving IDE Layout (for solving the problem) */}
-        <Route path="/solve/:id" element={<IDELayout />} />
+        <Route path="/solve/:problemId" element={<Solve />}/>
         
         <Route path="*" element={<Navigate to="/login" replace />} />
         

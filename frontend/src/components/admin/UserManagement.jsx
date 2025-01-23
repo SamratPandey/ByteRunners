@@ -129,7 +129,6 @@ const UserManagement = () => {
   const sortAndFilterUsers = () => {
     let filteredUsers = [...users];
 
-    // Apply search filter
     if (searchQuery) {
       filteredUsers = filteredUsers.filter(user => 
         user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||

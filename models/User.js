@@ -53,7 +53,10 @@ const userSchema = new mongoose.Schema({
   socialLinks: {
     github: String,
     linkedin: String,
-    website: String
+    website: String,
+    twitter: String,
+    instagram: String,
+    facebook: String
   },
   solvedProblems: [{ 
     problemId: { type: mongoose.Schema.Types.ObjectId, ref: 'Problem' },

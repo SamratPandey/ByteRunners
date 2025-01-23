@@ -134,32 +134,101 @@ const resetPassword = async (req, res) => {
   }
 };
 
-// Get Dashboard Data
 const getDashboardData = async (req, res) => {
   try {
     const user = await User.findById(req.user.id)
-      .select('name rank problemsSolved totalSubmissions accuracy recentActivity avatar isPremium preferredLanguages')
-      .populate('recentActivity.problemId', 'title difficulty');
-
+      .select(`
+        name 
+        rank 
+        problemsSolved 
+        totalSubmissions 
+        accuracy 
+        streak 
+        lastActive
+        recentActivity 
+        avatar 
+        isPremium 
+        preferredLanguages 
+        badges 
+        socialLinks 
+        bio 
+        score
+        solvedProblems
+        accountType
+      `)
+      .populate({
+        path: 'recentActivity.problemId',
+        select: 'title difficulty'
+      })
+      .populate({
+        path: 'solvedProblems.problemId',
+        select: 'title difficulty'
+      })
+      .lean(); 
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ 
+        success: false,
+        message: 'User profile not found' 
+      });
     }
 
+    // Prepare dashboard response with structured data
+    const dashboardData = {
+      profile: {
+        name: user.name,
+        avatar: user.avatar,
+        bio: user.bio,
+        socialLinks: user.socialLinks,
+        rank: user.rank,
+        score: user.score,
+        isPremium: user.isPremium,
+        accountType: user.accountType,
+        preferredLanguages: user.preferredLanguages,
+        lastActive: user.lastActive
+      },
+      performance: {
+        problemsSolved: user.problemsSolved,
+        totalSubmissions: user.totalSubmissions,
+        accuracy: user.accuracy,
+        streak: user.streak,
+        recentActivity: user.recentActivity.map(activity => ({
+          problemTitle: activity.problemTitle,
+          status: activity.status,
+          language: activity.language,
+          executionTime: activity.executionTime,
+          memoryUsed: activity.memoryUsed,
+          timestamp: activity.timestamp
+        }))
+      },
+      achievements: {
+        badges: user.badges,
+        solvedProblems: user.solvedProblems.map(solve => ({
+          problemTitle: solve.problemId.title,
+          difficulty: solve.problemId.difficulty,
+          solvedAt: solve.solvedAt,
+          attempts: solve.attempts
+        }))
+      }
+    };
+
+    // Successful response
     res.status(200).json({
-      name: user.name,
-      rank: user.rank,
-      problemsSolved: user.problemsSolved,
-      totalSubmissions: user.totalSubmissions,
-      accuracy: user.accuracy,
-      recentActivity: user.recentActivity,
-      avatar: user.avatar,
-      isPremium: user.isPremium,
-      preferredLanguages: user.preferredLanguages,
+      success: true,
+      data: dashboardData
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
+    // Improved error handling
+    console.error('Dashboard Data Retrieval Error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Internal server error',
+      error: process.env.NODE_ENV === 'development' ? error.message : {}
+    });
   }
+};
+
+module.exports = {
+  getDashboardData
 };
 
 // Get Profile Data
