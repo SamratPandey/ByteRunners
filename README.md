@@ -34,7 +34,7 @@ This is a web application built for a coding platform that allows users to sign 
 Clone this repository to your local machine:
 
 ```bash
-git clone https://github.com/SamratPandey/noName.git
+https://github.com/SamratPandey/ByteRunners.git
 ```
 
 ### Backend Setup
