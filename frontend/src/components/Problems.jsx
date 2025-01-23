@@ -1,12 +1,15 @@
 import axios from 'axios';
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Search, Filter, ArrowUpDown, BookOpen, Star, Clock, Trophy, ChevronLeft, ChevronRight, Tag } from 'lucide-react';
 import Nav from './Nav';
 
+
 const Problems = () => {
+  const navigate = useNavigate(); 
   const [problems, setProblems] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedDifficulty, setSelectedDifficulty] = useState('All');
@@ -20,33 +23,39 @@ const Problems = () => {
   useEffect(() => {
     const fetchProblems = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/site/problems`); // Replace with your API endpoint
+        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/site/problems`);
         const result = response.data;
   
         if (result.success) {
           const problemsData = result.data;
+  
           setProblems(problemsData);
   
           const categoryCounts = problemsData.reduce((acc, problem) => {
-            acc[problem.category] = (acc[problem.category] || 0) + 1;
+            problem.tags.forEach((tag) => {
+              acc[tag] = (acc[tag] || 0) + 1;
+            });
             return acc;
           }, {});
   
+          // Format categories for easier rendering
           const formattedCategories = Object.entries(categoryCounts).map(([name, count]) => ({
             name,
             count,
           }));
+          console.log("Formatted categories:", formattedCategories);
   
           // Update categories state
           setCategories(formattedCategories);
         }
       } catch (error) {
-        console.error('Failed to fetch problems:', error);
+        console.error("Failed to fetch problems:", error);
       }
     };
   
     fetchProblems();
   }, []);
+  
   
 
   const getDifficultyColor = (difficulty) => {
@@ -73,6 +82,10 @@ const Problems = () => {
     }
   };
 
+  const handleSolveProblem = (problemId) => {
+    navigate(`/solve/${problemId}`);
+  };
+
   const handleSort = (field) => {
     setSortBy((prev) => ({
       field,
@@ -85,7 +98,7 @@ const Problems = () => {
       const matchesDifficulty =
         selectedDifficulty === 'All' || problem.difficulty === selectedDifficulty;
       const matchesCategory =
-        selectedCategory === 'All' || (problem.category && problem.category.includes(selectedCategory));
+        selectedCategory === 'All' || (problem.tags && problem.tags.includes(selectedCategory));
       const matchesSearch = problem.title.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesDifficulty && matchesCategory && matchesSearch;
     })
@@ -158,8 +171,8 @@ const Problems = () => {
               onClick={() => setSelectedCategory(category.name)}
               className={`${
                 selectedCategory === category.name
-                  ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
-                  : 'text-gray-400 hover:bg-green-500/10 hover:text-green-400'
+                  ? 'bg-green-800 text-white hover:bg-green-400'
+                  : 'text-white hover:bg-green-500/40 hover:text-white'
               } transition-colors`}
             >
               {category.name}
@@ -237,9 +250,11 @@ const Problems = () => {
                   </span>
                 </td>
                 <td className="px-6 py-4">
-                  <Badge className="bg-gray-800 text-gray-300">
-                    {problem.category}
-                  </Badge>
+                  {problem.tags.map((tag, index) => (
+                    <Badge key={index} className="bg-gray-800 text-gray-300 mx-1">
+                      {tag}
+                    </Badge>
+                  ))}
                 </td>
               </tr>
             ))}
@@ -362,6 +377,7 @@ const Problems = () => {
                   </Button>
                   <Button
                     className="bg-green-500 hover:bg-green-600 text-white transition-colors"
+                    onClick={() => handleSolveProblem(selectedProblem.id)}
                   >
                     Solve Problem
                   </Button>

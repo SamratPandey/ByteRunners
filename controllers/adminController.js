@@ -295,7 +295,7 @@ exports.getAllProblems = async (req, res) => {
   try {
     const problems = await Problem.find()
       .select(
-        'title description difficulty inputFormat outputFormat constraints timeLimit memoryLimit examples testCases tags categories totalSubmissions acceptedSubmissions acceptanceRate status'
+        'title description difficulty inputFormat outputFormat constraints timeLimit memoryLimit examples starterTemplates testCases tags categories totalSubmissions acceptedSubmissions acceptanceRate status'
       )
       .populate('createdBy', 'username')
       .lean();
@@ -313,6 +313,7 @@ exports.getAllProblems = async (req, res) => {
       examples: problem.examples,
       testCases: problem.testCases,
       tags: problem.tags,
+      starterTemplates: problem.starterTemplates,
       categories: problem.categories,
       totalSubmissions: problem.totalSubmissions,
       acceptedSubmissions: problem.acceptedSubmissions,
@@ -374,6 +375,7 @@ exports.updateProblem = async (req, res) => {
       'constraints',
       'timeLimit',
       'memoryLimit',
+      'starterTemplates',
       'examples',
       'testCases',
       'solutions',

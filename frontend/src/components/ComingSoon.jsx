@@ -203,8 +203,8 @@ const ComingSoon = () => {
               {features.map(({ icon: Icon, title, description }, index) => (
                 <Card key={index} className="p-6 bg-black/40 backdrop-blur-xl border border-green-900/50 hover:border-green-500 transition-all duration-300 group">
                   <Icon className="w-12 h-12 text-green-500 mb-4 group-hover:scale-110 transition-transform duration-300" />
-                  <h3 className="text-xl font-bold mb-2">{title}</h3>
-                  <p className="text-gray-400">{description}</p>
+                  <h3 className="text-xl text-green-500 font-bold mb-2 group-hover:scale-110 transition-transform duration-300">{title}</h3>
+                  <p className="text-gray-400 group-hover:scale-110 transition-transform duration-300">{description}</p>
                 </Card>
               ))}
             </div>

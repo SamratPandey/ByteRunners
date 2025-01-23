@@ -2,9 +2,13 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Card } from '@/components/ui/card';
+import { useNavigate, useParams, Link } from 'react-router-dom';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { ClipLoader } from 'react-spinners';
 import axios from 'axios';
-import { toast } from 'react-toastify';
+import logo from '../../src/assets/logo.png';
 
 const ResetPassword = () => {
   const [password, setPassword] = useState('');
@@ -13,18 +17,31 @@ const ResetPassword = () => {
   const navigate = useNavigate();
   const { resetToken } = useParams();
 
+  const validateForm = () => {
+    if (!password) {
+      toast.error('Password is required');
+      return false;
+    }
+    if (password.length < 8) {
+      toast.error('Password must be at least 8 characters long');
+      return false;
+    }
+    if (password !== confirmPassword) {
+      toast.error('Passwords do not match');
+      return false;
+    }
+    return true;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (password !== confirmPassword) {
-      toast.error('Passwords do not match');
-      return;
-    }
+    if (!validateForm()) return;
 
     setIsSubmitting(true);
 
     try {
-      const response = await axios.post(`${import.meta.env.BACKEND_URL}/reset-password`, {
+      const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/auth/reset-password`, {
         resetToken,
         password,
       });
@@ -40,42 +57,69 @@ const ResetPassword = () => {
   };
 
   return (
-    <div className="flex justify-center bg-primary items-center min-h-screen">
-      <div className="w-full max-w-md p-8 bg-[#222729] rounded-[5px] shadow-lg">
-        <h2 className="text-3xl font-semibold text-center text-ourgreen mb-6">Reset Password</h2>
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <Label htmlFor="password" className="text-white">New Password</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="Enter your new password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="mt-2 w-full bg-input text-black border rounded-lg p-2"
-            />
+    <div className="min-h-screen flex flex-col bg-black text-white overflow-hidden">
+      <div className="flex-1 flex items-center justify-center relative z-10">
+        <Card className="w-full max-w-sm p-8 bg-black/80 backdrop-blur-sm border border-green-900 shadow-xl">
+          <div className="relative mb-6">
+            <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-green-700 blur-xl opacity-20" />
+            <Link to="/" className="relative flex flex-col items-center">
+              <img src={logo} alt="logo" className="w-2/3 mb-4" />
+            </Link>
           </div>
-          <div className="mb-6">
-            <Label htmlFor="confirmPassword" className="text-white">Confirm Password</Label>
-            <Input
-              id="confirmPassword"
-              type="password"
-              placeholder="Confirm your new password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="mt-2 w-full bg-input text-black border rounded-lg p-2"
-            />
-          </div>
+          
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="password" className="text-gray-300">
+                New Password
+              </Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="Enter your new password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="mt-2 bg-black/50 border-green-900 text-white placeholder:text-gray-500"
+              />
+            </div>
 
-          <Button
-            type="submit"
-            disabled={isSubmitting}
-            className={`w-full ${isSubmitting ? 'bg-gray-300 cursor-not-allowed' : 'bg-ourgreen hover:bg-primary-400'} text-white rounded-xl py-2`}
-          >
-            {isSubmitting ? 'Resetting...' : 'Reset Password'}
-          </Button>
-        </form>
+            <div>
+              <Label htmlFor="confirmPassword" className="text-gray-300">
+                Confirm Password
+              </Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                placeholder="Confirm your new password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="mt-2 bg-black/50 border-green-900 text-white placeholder:text-gray-500"
+              />
+            </div>
+
+            <Button
+              onClick={handleSubmit}
+              className={`w-full ${
+                isSubmitting ? 'bg-green-800' : 'bg-green-600 hover:bg-green-700'
+              } text-white relative group overflow-hidden`}
+            >
+              <span className="relative z-10">
+                {isSubmitting ? <ClipLoader color="#fff" size={20} /> : 'Reset Password'}
+              </span>
+              <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-green-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+            </Button>
+
+            <div className="text-center text-gray-400">
+              <p className="text-sm">
+                Remembered your password?{' '}
+                <Link to="/login" className="text-green-500 hover:text-green-400 font-semibold">
+                  Log In
+                </Link>
+              </p>
+            </div>
+          </div>
+        </Card>
       </div>
+      <ToastContainer />
     </div>
   );
 };

@@ -36,7 +36,12 @@ const problemSchema = new mongoose.Schema({
     code: String,
     authorId: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin' },
     isOfficial: { type: Boolean, default: true }
-  }],
+  }], 
+  starterTemplates: { 
+    type: Map, 
+    of: String, 
+    default: {}
+  },
   tags: [{ type: String }],
   categories: [{ type: String }],
   totalSubmissions: { type: Number, default: 0 },

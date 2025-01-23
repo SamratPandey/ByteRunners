@@ -1,12 +1,11 @@
 import ComingSoon from "./ComingSoon";
 
-const Interview = ()=>{
+const Solve = () =>{
+
     return(
         <div>
             <ComingSoon />
-                        
         </div>
     );
 }
-
-export default Interview;
+export default Solve;

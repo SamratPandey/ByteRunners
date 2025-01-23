@@ -1,7 +1,94 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
-import { Users, Brain, Trophy, Target, TrendingUp, TrendingDown, Activity, ChevronRight } from 'lucide-react';
+import { Clock, User, Users, Brain, Trophy, Target, TrendingUp, TrendingDown, Activity, ChevronRight } from 'lucide-react';
+
+const getActivityIcon = (type) => {
+  switch (type) {
+    case 'User Logged In':
+      return <User className="w-4 h-4 text-blue-500" />;
+    case 'User Registered':
+      return <Activity className="w-4 h-4 text-green-500" />;
+    default:
+      return <Clock className="w-4 h-4 text-gray-500" />;
+  }
+};
+
+const getActivityColor = (type) => {
+  switch (type) {
+    case 'User Logged In':
+      return {
+        dot: 'bg-blue-600',
+        badge: 'bg-blue-100 text-blue-700'
+      };
+    case 'User Registered':
+      return {
+        dot: 'bg-green-600',
+        badge: 'bg-green-100 text-green-700'
+      };
+    default:
+      return {
+        dot: 'bg-gray-600',
+        badge: 'bg-gray-100 text-gray-700'
+      };
+  }
+};
+
+const formatTimestamp = (timestamp) => {
+  const date = new Date(timestamp);
+  const now = new Date();
+  const diff = now.getTime() - date.getTime();
+  
+  const seconds = Math.floor(diff / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+
+  if (days > 0) return `${days} day${days > 1 ? 's' : ''} ago`;
+  if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+  if (minutes > 0) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+  return 'just now';
+};
+
+const RecentActivityLog = ({ activities }) => {
+  return (
+    <div className="bg-white shadow-md rounded-lg overflow-hidden">
+      <div className="px-6 py-4 bg-gray-50 border-b">
+        <h2 className="text-lg font-semibold text-gray-800">Recent Activity</h2>
+      </div>
+      <div className="divide-y divide-gray-100">
+        {activities.map((activity) => {
+          const { dot, badge } = getActivityColor(activity.type);
+          
+          return (
+            <div 
+              key={activity._id} 
+              className="px-6 py-4 hover:bg-gray-50 transition-colors flex items-start space-x-4"
+            >
+              <div className={`w-2 h-2 mt-2 rounded-full ${dot}`} />
+              <div className="flex-grow">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-900 font-medium">
+                      {activity.description}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1 flex items-center space-x-2">
+                      {getActivityIcon(activity.type)}
+                      <span>{formatTimestamp(activity.timestamp)}</span>
+                    </p>
+                  </div>
+                  <span className={`text-xs px-2 py-1 rounded-full ${badge}`}>
+                    {activity.type}
+                  </span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
 
 const DashboardOverview = ({ data }) => {
   const { 
@@ -12,6 +99,8 @@ const DashboardOverview = ({ data }) => {
     topPerformers,
     recentActivity 
   } = data;
+
+
 
   const [timeRange, setTimeRange] = useState('daily');
 
@@ -233,31 +322,8 @@ const DashboardOverview = ({ data }) => {
           </div>
         </CardHeader>
         <CardContent className="pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {recentActivity.map((activity, i) => (
-              <div key={i} className="flex items-start space-x-4 p-4 rounded-lg hover:bg-gray-50 transition-colors">
-                <div className={`w-2 h-2 mt-2 rounded-full ${
-                  activity.status === 'Accepted' ? 'bg-emerald-600' :
-                  activity.status === 'Wrong Answer' ? 'bg-red-600' :
-                  'bg-amber-600'
-                }`} />
-                <div>
-                  <p className="text-sm text-gray-900 font-medium">{activity.problemTitle}</p>
-                  <p className="text-xs text-gray-500 mt-1">by {activity.userName}</p>
-                  <div className="flex items-center mt-2">
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      activity.status === 'Accepted' ? 'bg-emerald-100 text-emerald-700' :
-                      activity.status === 'Wrong Answer' ? 'bg-red-100 text-red-700' :
-                      'bg-amber-100 text-amber-700'
-                    }`}>
-                      {activity.status}
-                    </span>
-                    <span className="text-xs text-gray-500 ml-2">{activity.language}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+            <RecentActivityLog activities={recentActivity}/>
+
         </CardContent>
       </Card>
     </div>
