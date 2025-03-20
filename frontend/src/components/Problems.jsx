@@ -43,9 +43,6 @@ const Problems = () => {
             name,
             count,
           }));
-          console.log("Formatted categories:", formattedCategories);
-  
-          // Update categories state
           setCategories(formattedCategories);
         }
       } catch (error) {
@@ -163,7 +160,6 @@ const Problems = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-4">
-          {console.log(categories)}
           {categories.map((category) => (
             <Button
               key={category.name}
@@ -200,7 +196,7 @@ const Problems = () => {
         <table className="w-full">
           <thead className="bg-gray-900/50">
             <tr>
-              <th className="px-6 py-3 text-left text-gray-400">Status</th>
+              <th className="px-6 py-3 text-left text-gray-400">No.</th>
               <th className="px-6 py-3 text-left text-gray-400">
                 <button
                   className="flex items-center gap-2 hover:text-green-400 transition-colors"
@@ -221,6 +217,7 @@ const Problems = () => {
               </th>
               <th className="px-6 py-3 text-left text-gray-400">Difficulty</th>
               <th className="px-6 py-3 text-left text-gray-400">Category</th>
+              <th className="px-6 py-3 text-left text-gray-400">Action</th>
             </tr>
           </thead>
           <tbody>
@@ -231,7 +228,7 @@ const Problems = () => {
                 className="border-t border-gray-800/50 hover:bg-green-500/5 transition-colors cursor-pointer"
               >
                 <td className="px-6 py-4">
-                  {getStatusIcon(problem.status)}
+                  {`${(problems.indexOf(problem) + 1)}.`}
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-2">
@@ -255,6 +252,14 @@ const Problems = () => {
                       {tag}
                     </Badge>
                   ))}
+                </td>
+                <td className="px-6 py-4">
+                  <Button
+                    className="bg-green-500 hover:bg-green-600 text-white transition-colors"
+                    onClick={() => handleSolveProblem(selectedProblem.id)}
+                  >
+                    Solve Problem
+                  </Button>
                 </td>
               </tr>
             ))}
