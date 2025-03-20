@@ -2,6 +2,7 @@ import axios from 'axios';
 export const login = (email, password) => async (dispatch) => {
   try {
     const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/auth/login`, { email, password });
+    console.log(`${import.meta.env.VITE_BACKEND_URL}`);
     dispatch({ type: 'LOGIN_SUCCESS', payload: response.data.token });
   } catch (error) {
     const errorMessage = error.response?.data?.message || error.message || 'An error occurred';

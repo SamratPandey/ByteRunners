@@ -85,8 +85,6 @@ userSchema.pre('save', async function(next) {
 userSchema.methods.matchPassword = async function(password) {
   return await bcrypt.compare(password, this.password);
 };
-
-userSchema.index({ email: 1 });
 userSchema.index({ score: -1 });
 
 module.exports = mongoose.model('User', userSchema);
