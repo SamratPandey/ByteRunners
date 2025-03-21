@@ -7,7 +7,6 @@ import { useNavigate, Link } from 'react-router-dom';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { ClipLoader } from 'react-spinners';
-import logo from '../../src/assets/logo.png';
 import axios from 'axios';
 
 const ForgotPassword = () => {
@@ -56,7 +55,7 @@ const ForgotPassword = () => {
           <div className="relative mb-6">
             <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-green-700 blur-xl opacity-20" />
             <Link to="/" className="relative flex flex-col items-center">
-              <img src={logo} alt="logo" className="w-2/3 mb-4" />
+              <img src="/images/logo.png" alt="logo" className="w-2/3 mb-4" />
             </Link>
           </div>
           <div className="space-y-4">
