@@ -9,15 +9,12 @@ import {
   faUser,
   faTrophy,
   faBook,
-  faSignOut 
+  faSignOut
 } from '@fortawesome/free-solid-svg-icons';
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar"
+
+import {User} from "lucide-react"
 import { Badge } from "@/components/ui/badge";
-import logo from "../assets/logo.png"
+
 
 const Nav = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -112,7 +109,7 @@ const Nav = () => {
       <div className="flex justify-between items-center">
         <div className="flex items-center space-x-12">
           <Link to="/">
-            <img src={logo} alt="" srcSet="" className='w-44'/>
+            <img src="/images/logo.png" alt="" srcSet="" className='w-44'/>
           </Link>
         </div>
 
@@ -172,13 +169,12 @@ const Nav = () => {
             </Link>
           ) : (
             <div className="relative">
-              <Avatar
+              <div
                 onClick={toggleAvatarDropdown}
                 className="cursor-pointer ring-2 ring-green-500/50 hover:ring-green-500 transition-all duration-200"
               >
-                <AvatarImage src="" alt="" />
-                <AvatarFallback className="bg-green-600 text-white">CN</AvatarFallback>
-              </Avatar>
+               <User />
+              </div>
               
               {isAvatarDropdownOpen && (
                 <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-black/95 border border-green-900 text-gray-300">

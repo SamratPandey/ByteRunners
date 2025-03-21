@@ -11,7 +11,7 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGoogle, faGithub } from '@fortawesome/free-brands-svg-icons';
-import logo from '../../src/assets/logo.png';
+
 
 
 const Login = () => {
@@ -19,11 +19,10 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { token, isAuthenticated } = useSelector((state) => state.auth);
+  const { token, isAuthenticated, error  } = useSelector((state) => state.auth);
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  // Redirect if the user is already logged in
   useEffect(() => {
     if (isAuthenticated) {
       navigate('/');
@@ -51,19 +50,21 @@ const Login = () => {
 
   const handleLogin = async () => {
     if (!validateForm()) return;
+  
     setIsSubmitting(true);
-    const result = await dispatch(login(email, password));
-    if (!result) {
+  
+    await dispatch(login(email, password));
+  
+    if (isAuthenticated) {
       toast.success('Logged in successfully!');
       navigate('/');
     } else if (error) {
       setEmail('');
       setPassword('');
       toast.error(error);
-      setIsSubmitting(false);
-    } else {
-      setIsSubmitting(false);
     }
+  
+    setIsSubmitting(false);
   };
 
   return (
@@ -73,7 +74,7 @@ const Login = () => {
           <div className="relative mb-6">
             <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-green-700 blur-xl opacity-20" />
             <Link to="/" className="relative flex flex-col items-center">
-              <img src={logo} alt="logo" className="w-2/3 mb-4" />
+              <img src="/images/logo.png" alt="logo" className="w-2/3 mb-4" />
             </Link>
           </div>
           <div className="space-y-3">
