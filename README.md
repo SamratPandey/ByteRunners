@@ -1,4 +1,4 @@
-# ByteRunners - A Web Application for Coder 
+# ByteRunners - A coding platform for students
 
 ## Description
 
