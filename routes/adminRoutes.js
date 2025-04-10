@@ -12,8 +12,8 @@ const {
   updateProblem,
   deleteProblem,
   getProblemStats,
-  getTopPerformers,  // Added route for top performers
-  getRecentActivity  // Added route for recent activity
+  getTopPerformers,
+  getRecentActivity  
 } = require('../controllers/adminController');
 const { adminProtect } = require('../middleware/adminAuth');
 

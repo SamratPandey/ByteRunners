@@ -7,7 +7,7 @@ import { Alert } from '@/components/ui/alert';
 import Nav from './Nav';
 
 const calculateTimeLeft = () => {
-    const launchDate = new Date('2025-03-20').getTime();
+    const launchDate = new Date('2026-03-20').getTime();
     const now = new Date().getTime();
     const difference = launchDate - now;
 

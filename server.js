@@ -4,6 +4,7 @@ const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const siteRoutes = require('./routes/siteRoutes');
+const courseRoutes = require('./routes/courseRoutes')
 const Admin = require('./models/Admin');  // Import the Admin model
 const { registerAdmin } = require('./controllers/adminController'); // Import the registerAdmin function
 require('dotenv').config();
@@ -25,10 +26,11 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/site',siteRoutes);
+app.use('/api/course',courseRoutes);
 
 const createDefaultAdmin = async () => {
   try {
-    const admin = await Admin.findOne({ email: 'admin@example.com' });  // Check if an admin exists by email or another identifier
+    const admin = await Admin.findOne({ email: 'admin@gmail.com' }); 
     if (!admin) {
       console.log('Default admin not found, creating...');
       const req = {

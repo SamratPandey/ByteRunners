@@ -50,21 +50,16 @@ router.post('/submit', protect, async (req, res) => {
     const user = await User.findById(userId);
     const problem = await Problem.findById(problemId);
 
-    // Check if the problem has already been solved
     if (user.solvedProblems.includes(problemId)) {
       return res.status(400).json({ error: 'Problem already solved.' });
     }
 
-    // Simulate checking the submission (e.g., match output or logic)
-    const isSolved = true; // Implement real checking logic
+    const isSolved = true; 
 
     if (isSolved) {
-      // Mark as solved and update user model
       user.solvedProblems.push(problemId);
       user.problemsSolved += 1;
       user.totalSubmissions += 1;
-
-      // Optionally, update accuracy and other fields based on the solution
       await user.save();
 
       res.status(200).json({ status: 'solved', message: 'Problem solved!' });

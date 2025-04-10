@@ -52,7 +52,6 @@ const adminSchema = new mongoose.Schema({
 });
 
 adminSchema.pre('save', async function(next) {
-  // Hash the password only if it's new or modified
   if (this.isModified('password')) {
     this.password = await bcrypt.hash(this.password, 10);
   }

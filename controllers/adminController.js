@@ -473,12 +473,11 @@ exports.getProblemStats = async (req, res) => {
   }
 };
 
-// Top Performers
 exports.getTopPerformers = async (req, res) => {
   try {
-    const limit = parseInt(req.query.limit) || 10; // Default to 10 top performers
+    const limit = parseInt(req.query.limit) || 10; 
     const topPerformers = await User.find()
-      .sort({ score: -1 }) // Sort by score in descending order
+      .sort({ score: -1 }) 
       .limit(limit)
       .select('name email score rank avatar');
 
@@ -495,15 +494,15 @@ exports.getTopPerformers = async (req, res) => {
   }
 };
 
-// Recent Activity
+
 exports.getRecentActivity = async (req, res) => {
   try {
-    const limit = parseInt(req.query.limit) || 5; // Default to 5 most recent activities
+    const limit = parseInt(req.query.limit) || 5; 
 
-    // Fetch the most recent activities from the global activity log
+    
     const recentActivities = await Activity.find()
-      .sort({ timestamp: -1 }) // Sort by timestamp in descending order
-      .limit(limit); // Limit to 'limit' number of activities
+      .sort({ timestamp: -1 }) 
+      .limit(limit);
 
     if (!recentActivities.length) {
       return res.status(404).json({

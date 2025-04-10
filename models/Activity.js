@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 
-// Define the Activity Schema
 const activitySchema = new mongoose.Schema({
   type: {
     type: String,
@@ -16,7 +15,6 @@ const activitySchema = new mongoose.Schema({
   },
 });
 
-// Create and export the Activity model
 const Activity = mongoose.model('Activity', activitySchema);
 
 module.exports = Activity;

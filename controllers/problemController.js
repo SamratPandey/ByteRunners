@@ -7,20 +7,17 @@ const getProblemResponse = async (req, res) => {
     // Fetch all problems
     const problems = await Problem.find();
 
-    // Check if user is logged in
     if (!req.user) {
       return res.status(401).json({ message: 'User not logged in' });
     }
 
-    // Fetch user statistics, assuming the user is authenticated and we have userID in the request
-    const userId = req.user._id;  // Assuming authentication middleware sets req.user
+    const userId = req.user._id;  
     const user = await User.findById(userId);
 
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Calculate statistics based on user's solved problems
     const solvedProblems = user.solvedProblems;
     const stats = {
       totalSolved: solvedProblems.length,
@@ -33,7 +30,6 @@ const getProblemResponse = async (req, res) => {
       hardTotal: problems.filter(p => p.difficulty === 'Hard').length,
     };
 
-    // Map over the problems to return them in the required format
     const problemData = problems.map(problem => ({
       _id: problem._id,
       title: problem.title,
@@ -45,7 +41,6 @@ const getProblemResponse = async (req, res) => {
       companies: problem.companies || [],  
     }));
 
-    // Return the response
     res.status(200).json({
       problems: problemData,
       stats,
