@@ -14,7 +14,7 @@ import {
 import { User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
-const Nav = () => {
+const Nav = (props) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAvatarDropdownOpen, setIsAvatarDropdownOpen] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -81,7 +81,11 @@ const Nav = () => {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    setIsLoggedIn(!!token);
+    if(token){
+      setIsLoggedIn(true);
+    }else{
+      setIsLoggedIn(false);
+    }
     window.addEventListener('scroll', handleScroll);
     window.addEventListener('click', handleClickOutside);
     

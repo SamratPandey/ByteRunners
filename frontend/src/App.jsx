@@ -23,6 +23,7 @@ import Profile from './components/Profile';
 import Leaderboard from './components/LeaderBoard';
 import MyCourses from './components/MyCourses';
 import Solve from './components/Solve';
+import CourseDetails from './components/CourseDetails';
 
 function App() {
   return (
@@ -63,6 +64,7 @@ function App() {
         <Route path="/job" element={<Job />} />
         <Route path="/interview" element={<Interview />} />
         <Route path="/courses" element={<Courses />} />
+        <Route path="/course-details/:slug" element={<CourseDetails />} />
         
         {/* Problem-solving IDE Layout (for solving the problem) */}
         <Route path="/solve/:problemId" element={<Solve />}/>
