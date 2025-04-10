@@ -71,14 +71,13 @@ const pollSubmissionResult = async (token) => {
       const result = await response.json();
       console.log(`Poll attempt ${retries + 1}:`, result);
 
-      // Check if the submission is finished
       if (result.status) {
         switch (result.status.id) {
-          case 1: // In Queue
-          case 2: // Processing
+          case 1: 
+          case 2: 
             await new Promise(resolve => setTimeout(resolve, retryDelay));
             continue;
-          case 3: // Accepted
+          case 3:
             return {
               status: result.status,
               stdout: result.stdout,
@@ -88,7 +87,6 @@ const pollSubmissionResult = async (token) => {
               memory: result.memory
             };
           default:
-            // Any other status (error, runtime error, etc.)
             return result;
         }
       }

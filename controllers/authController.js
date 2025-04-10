@@ -19,7 +19,6 @@ const registerUser = async (req, res) => {
     const user = new User({ name, email, password });
     await user.save();
 
-    // Log the registration activity
     const activity = new Activity({
       type: 'User Registered',
       description: `New user ${user.name} (${user.email}) has registered.`,
@@ -47,7 +46,6 @@ const loginUser = async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    // Log the login activity
     const activity = new Activity({
       type: 'User Logged In',
       description: `User ${user.name} (${user.email}) logged in.`,
@@ -71,26 +69,21 @@ const forgotPassword = async (req, res) => {
       return res.status(400).json({ message: "User not found" });
     }
 
-    // Create a reset token
     const resetToken = crypto.randomBytes(20).toString('hex');
-    const resetPasswordExpire = Date.now() + 3600000; // 1 hour from now
+    const resetPasswordExpire = Date.now() + 3600000; 
 
-    // Save the reset token and expiry time to the user's document
     user.resetPasswordToken = resetToken;
     user.resetPasswordExpire = resetPasswordExpire;
     await user.save();
 
-    // Log the forgot password activity
     const activity = new Activity({
       type: 'Password Reset Requested',
       description: `User ${user.name} requested a password reset.`,
     });
     await activity.save();
 
-    // Create the reset link to be sent in the email
     const resetLink = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
 
-    // Send password reset email using sendEmail function
     await sendEmail(user.email, 'Password Reset Request', `You requested a password reset. Click the link below to reset your password:\n\n${resetLink}`);
 
     res.status(200).json({ message: 'Password reset link sent to your email.' });
@@ -105,7 +98,6 @@ const resetPassword = async (req, res) => {
   const { resetToken, password } = req.body;
 
   try {
-    // Find user by reset token and check if the token is valid and not expired
     const user = await User.findOne({
       resetPasswordToken: resetToken,
       resetPasswordExpire: { $gt: Date.now() },
@@ -120,7 +112,6 @@ const resetPassword = async (req, res) => {
     user.resetPasswordExpire = undefined; 
     await user.save();
 
-    // Log the reset password activity
     const activity = new Activity({
       type: 'Password Reset',
       description: `User ${user.name} reset their password successfully.`,
@@ -172,7 +163,6 @@ const getDashboardData = async (req, res) => {
       });
     }
 
-    // Prepare dashboard response with structured data
     const dashboardData = {
       profile: {
         name: user.name,
@@ -211,14 +201,11 @@ const getDashboardData = async (req, res) => {
       }
     };
 
-    // Successful response
     res.status(200).json({
       success: true,
       data: dashboardData
     });
   } catch (error) {
-    // Improved error handling
-    console.error('Dashboard Data Retrieval Error:', error);
     res.status(500).json({ 
       success: false,
       message: 'Internal server error',
@@ -255,7 +242,6 @@ const getProfileData = async (req, res) => {
       preferredLanguages: user.preferredLanguages,
     });
   } catch (error) {
-    console.error('Error in getProfileData:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
