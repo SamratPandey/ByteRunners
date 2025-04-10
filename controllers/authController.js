@@ -52,7 +52,7 @@ const loginUser = async (req, res) => {
     });
     await activity.save();
 
-    const token = jwt.sign({ id: user._id, accountType: user.accountType, isPremium: user.isPremium }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ id: user._id, accountType: user.accountType, isPremium: user.isPremium }, process.env.JWT_SECRET, { expiresIn: '7d' });
     res.json({ token });
   } catch (error) {
     res.status(500).json({ message: "Server Error" });
