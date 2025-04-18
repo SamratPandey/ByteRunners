@@ -14,7 +14,7 @@ const protect = (req, res, next) => {
     next(); 
   } catch (error) {
     console.error(error);
-    return res.status(401).json({ message: 'Token is not valid' });
+    return res.status(401).json({ message: 'Token not valid' });
   }
 };
 
