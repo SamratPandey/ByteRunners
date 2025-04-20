@@ -37,242 +37,11 @@ const CourseDetails = () => {
   const [activeTab, setActiveTab] = useState('curriculum');
   const [videoModalOpen, setVideoModalOpen] = useState(false);
 
-  // Mock course data for development
-  const mockCourse = {
-    _id: '1',
-    title: 'JavaScript Fundamentals: The Complete Guide',
-    slug: 'javascript-fundamentals',
-    description: 'Master the core concepts of JavaScript programming language with this comprehensive course designed for beginners and intermediate developers. Learn everything from basic syntax to advanced patterns with hands-on projects and challenges.',
-    summary: 'A comprehensive course covering all JavaScript basics and advanced concepts',
-    thumbnail: '/api/placeholder/1200/675',
-    introVideo: '/course-intro.mp4', // Mock video URL
-    price: 49.99,
-    isFree: false,
-    discountPrice: 39.99,
-    discountEnds: new Date('2025-06-30'),
-    category: 'Web Development',
-    tags: ['JavaScript', 'Frontend', 'Programming', 'ES6', 'Web Development'],
-    level: 'beginner',
-    prerequisites: [
-      'Basic understanding of HTML and CSS',
-      'No prior JavaScript knowledge required'
-    ],
-    learningOutcomes: [
-      'Understand core JavaScript concepts and syntax',
-      'Build interactive web applications with JavaScript',
-      'Master ES6+ features and modern practices',
-      'Debug JavaScript code effectively',
-      'Work with DOM manipulation and browser APIs',
-      'Implement asynchronous programming with Promises and async/await'
-    ],
-    instructor: {
-      _id: '101',
-      name: 'Alex Johnson',
-      avatar: '/api/placeholder/200/200',
-      bio: 'Senior JavaScript Developer with 10+ years of experience. Previously worked at Google and Meta on large-scale web applications.',
-      rating: 4.8,
-      totalStudents: 12580,
-      totalCourses: 7
-    },
-    averageRating: 4.7,
-    totalRatings: 320,
-    totalStudents: 1850,
-    lastUpdated: new Date('2025-03-15'),
-    curriculum: [
-      { 
-        title: 'Getting Started with JavaScript',
-        lessons: [
-          { 
-            _id: 'l1', 
-            title: 'Introduction to the Course', 
-            type: 'video', 
-            duration: 8, 
-            isPreview: true 
-          },
-          { 
-            _id: 'l2', 
-            title: 'Setting Up Your Development Environment', 
-            type: 'video', 
-            duration: 15, 
-            isPreview: false 
-          },
-          { 
-            _id: 'l3', 
-            title: 'JavaScript in HTML', 
-            type: 'video', 
-            duration: 12, 
-            isPreview: false 
-          },
-          { 
-            _id: 'l4', 
-            title: 'Module Quiz', 
-            type: 'quiz', 
-            duration: 10, 
-            isPreview: false 
-          }
-        ]
-      },
-      { 
-        title: 'JavaScript Basics',
-        lessons: [
-          { 
-            _id: 'l5', 
-            title: 'Variables and Data Types', 
-            type: 'video', 
-            duration: 18, 
-            isPreview: true 
-          },
-          { 
-            _id: 'l6', 
-            title: 'Operators and Expressions', 
-            type: 'video', 
-            duration: 22, 
-            isPreview: false 
-          },
-          { 
-            _id: 'l7', 
-            title: 'Control Flow: Conditionals', 
-            type: 'video', 
-            duration: 20, 
-            isPreview: false 
-          },
-          { 
-            _id: 'l8', 
-            title: 'Control Flow: Loops', 
-            type: 'video', 
-            duration: 25, 
-            isPreview: false 
-          },
-          { 
-            _id: 'l9', 
-            title: 'Practice Exercise: Calculator App', 
-            type: 'article', 
-            duration: 30, 
-            isPreview: false 
-          }
-        ]
-      },
-      { 
-        title: 'Functions and Objects',
-        lessons: [
-          { 
-            _id: 'l10',
-            title: 'Function Declaration and Expression', 
-            type: 'video', 
-            duration: 15, 
-            isPreview: false 
-          },
-          { 
-            _id: 'l11', 
-            title: 'Function Parameters and Return Values', 
-            type: 'video', 
-            duration: 18, 
-            isPreview: false 
-          },
-          { 
-            _id: 'l12', 
-            title: 'Object Basics', 
-            type: 'video', 
-            duration: 22, 
-            isPreview: false 
-          },
-          { 
-            _id: 'l13', 
-            title: 'Working with Methods', 
-            type: 'video', 
-            duration: 20, 
-            isPreview: false 
-          },
-          { 
-            _id: 'l14', 
-            title: 'Module Challenge: Todo App', 
-            type: 'article', 
-            duration: 45, 
-            isPreview: false,
-            downloadableResources: [
-              { name: 'Starter Files', url: '#' },
-              { name: 'Solution Code', url: '#' }
-            ]
-          }
-        ]
-      },
-      { 
-        title: 'Working with the DOM',
-        lessons: [
-          { 
-            _id: 'l15', 
-            title: 'Introduction to the DOM', 
-            type: 'video', 
-            duration: 12, 
-            isPreview: false 
-          },
-          { 
-            _id: 'l16', 
-            title: 'Selecting Elements', 
-            type: 'video', 
-            duration: 18, 
-            isPreview: false 
-          },
-          { 
-            _id: 'l17', 
-            title: 'Manipulating Elements', 
-            type: 'video', 
-            duration: 22, 
-            isPreview: false 
-          },
-          { 
-            _id: 'l18', 
-            title: 'Events and Event Handlers', 
-            type: 'video', 
-            duration: 25, 
-            isPreview: false 
-          }
-        ]
-      }
-    ],
-    reviews: [
-      {
-        user: { name: 'Sarah M.', avatar: '/api/placeholder/40/40' },
-        rating: 5,
-        comment: 'This course completely changed how I approach JavaScript. The explanations are clear and the projects are challenging but achievable.',
-        ratedAt: new Date('2025-03-10')
-      },
-      {
-        user: { name: 'David L.', avatar: '/api/placeholder/40/40' },
-        rating: 4,
-        comment: 'Great content overall. Some sections could use more examples, but the instructor explains concepts very well.',
-        ratedAt: new Date('2025-02-28')
-      },
-      {
-        user: { name: 'Priya K.', avatar: '/api/placeholder/40/40' },
-        rating: 5,
-        comment: 'As a complete beginner to JavaScript, this course was exactly what I needed. The progression from basics to more complex topics is perfectly paced.',
-        ratedAt: new Date('2025-02-15')
-      },
-    ],
-    faqs: [
-      {
-        question: 'Do I need prior programming experience for this course?',
-        answer: 'No prior JavaScript experience is needed, but basic HTML and CSS knowledge is recommended. We start from the absolute basics and gradually build up to more advanced concepts.'
-      },
-      {
-        question: 'How long do I have access to the course?',
-        answer: 'Once enrolled, you have lifetime access to the course material, including all future updates and additions.'
-      },
-      {
-        question: 'Is there a certificate upon completion?',
-        answer: 'Yes, you will receive a ByteRunners certificate of completion once you finish all course modules and pass the final assessment.'
-      }
-    ]
-  };
 
   useEffect(() => {
-    // Replace with actual API call when available
     const fetchCourseDetails = async () => {
       try {
-        // Mock API call for now
-        // const response = await fetch(`/api/courses/${slug}`);
-        // const data = await response.json();
+        
         
         setTimeout(() => {
           setCourse(mockCourse);
@@ -739,7 +508,7 @@ const CourseDetails = () => {
                                     <div className="flex items-center space-x-4">
                                         <Download className="w-4 h-4" />
                                         <span>{lesson.downloadableResources.length} downloadable resources</span>
-</div>
+                                    </div>
                                     </div>
                                   )}
                                 </div>
@@ -937,52 +706,21 @@ const CourseDetails = () => {
                 <h3 className="text-xl font-bold text-white mb-6">Share this course</h3>
                 
                 <div className="flex space-x-4 mb-8">
-                  <Button variant="outline" className="flex-1 flex items-center justify-center border-blue-600 text-blue-500 hover:bg-blue-600/10">
+                  <Button variant="outline" className="flex-1 flex items-center justify-center border-blue-600 text-blue-500">
                     <Facebook className="w-5 h-5 mr-2" />
                     Share
                   </Button>
-                  <Button variant="outline" className="flex-1 flex items-center justify-center border-blue-400 text-blue-400 hover:bg-blue-400/10">
+                  <Button variant="outline" className="flex-1 flex items-center justify-center border-blue-400 text-blue-400">
                     <Twitter className="w-5 h-5 mr-2" />
                     Tweet
                   </Button>
-                  <Button variant="outline" className="flex-1 flex items-center justify-center border-blue-700 text-blue-500 hover:bg-blue-700/10">
+                  <Button variant="outline" className="flex-1 flex items-center justify-center border-blue-700 text-blue-500">
                     <LinkedinIcon className="w-5 h-5 mr-2" />
                     Post
                   </Button>
                 </div>
-                
-                <h3 className="text-xl font-bold text-white mb-4">Similar Courses</h3>
-                
-                <div className="space-y-4">
-                  {[1, 2, 3].map(index => (
-                    <div key={index} className="flex items-start">
-                      <div className="flex-shrink-0 w-16 h-12 rounded bg-black/60 overflow-hidden mr-3">
-                        <img src={`/api/placeholder/200/150`} alt="Course thumbnail" className="w-full h-full object-cover" />
-                      </div>
-                      <div>
-                        <h4 className="text-white text-sm font-medium hover:text-green-500 transition-colors">
-                          {index === 1 ? 'JavaScript ES6: The Complete Developer\'s Guide' : 
-                           index === 2 ? 'Web Development with JavaScript and DOM' : 
-                           'Advanced JavaScript Patterns and Best Practices'}
-                        </h4>
-                        <div className="flex items-center mt-1">
-                          <div className="flex">
-                            {[...Array(5)].map((_, i) => (
-                              <Star 
-                                key={i}
-                                className={`w-3 h-3 ${i < 4 ? 'text-yellow-400 fill-yellow-400' : 'text-gray-400'}`}
-                              />
-                            ))}
-                          </div>
-                          <span className="text-gray-400 text-xs ml-1">(210)</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                
                 <div className="mt-6">
-                  <Button variant="outline" className="w-full border-green-600 text-green-500 hover:bg-green-600/10">
+                  <Button variant="outline" className="w-full border-green-600 text-green-500">
                     View More Courses
                   </Button>
                 </div>

@@ -13,7 +13,6 @@ import AdminProtectedRouter from './components/admin/AdminProtectedRouter';
 import AdminPublicRoute from './components/admin/AdminPublicRoute';
 
 import AdminLogin from './components/admin/AdminLogin';
-import IDELayout from './components/IDELayout';
 import Problems from './components/Problems';
 import Interview from './components/Interview';
 import Job from './components/Job';
@@ -66,9 +65,7 @@ function App() {
         <Route path="/courses" element={<Courses />} />
         <Route path="/course-details/:slug" element={<CourseDetails />} />
         
-        {/* Problem-solving IDE Layout (for solving the problem) */}
-        <Route path="/solve/:problemId" element={<Solve />}/>
-        
+
         <Route path="*" element={<Navigate to="/login" replace />} />
         
 

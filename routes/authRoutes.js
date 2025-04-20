@@ -2,7 +2,7 @@ const express = require('express');
 const { registerUser, loginUser, forgotPassword, resetPassword, getDashboardData } = require('../controllers/authController');
 const { executeCode } = require('../controllers/judge0'); 
 const { protect } = require('../middleware/auth');
-
+const { getProblemById } = require('../controllers/problemController');
 const router = express.Router();
 
 router.post('/register', registerUser);
@@ -74,7 +74,6 @@ router.post('/submit', protect, async (req, res) => {
 
 router.get('/dashboard', protect, getDashboardData); 
 router.get('/profile', protect, getDashboardData); 
-
-router.get('/problems');
+router.get('/problem/:id', protect, getProblemById);
 
 module.exports = router;

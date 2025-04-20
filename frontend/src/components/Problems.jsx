@@ -4,9 +4,9 @@ import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Search, Filter, ArrowUpDown, BookOpen, Star, Clock, Trophy, ChevronLeft, ChevronRight, Tag } from 'lucide-react';
+import { Search, Filter, ArrowUpDown, BookOpen, Star, Clock, Trophy, ChevronLeft, ChevronRight, Tag, Key } from 'lucide-react';
 import Nav from './Nav';
-
+import toast, {Toaster} from 'react-hot-toast';
 
 const Problems = () => {
   const navigate = useNavigate(); 
@@ -80,7 +80,14 @@ const Problems = () => {
   };
 
   const handleSolveProblem = (problemId) => {
+  if(localStorage.getItem("token") === null){
+    toast.error("Please login first to solve amy problem.");
+    setTimeout(() => {
+      navigate("/login");
+    }, 1000);
+  }else{
     navigate(`/solve/${problemId}`);
+  }  
   };
 
   const handleSort = (field) => {
@@ -141,7 +148,7 @@ const Problems = () => {
 
       {/* Filters Section */}
       <div className="space-y-4 mb-8">
-      <div className="flex flex-wrap items-center gap-4">
+      <div className="flex relative w-full flex-wrap items-center gap-4">
           {['All', 'Easy', 'Medium', 'Hard'].map((difficulty) => (
             <Button
               key={difficulty}
@@ -157,6 +164,16 @@ const Problems = () => {
               {difficulty}
             </Button>
           ))}
+          <Search className="absolute right-10 top-1/2 transform -translate-y-1/2 text-gray-400 " />
+          <input
+            type="text"
+            placeholder="Search problems by title, tag"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-1/2 absolute right-3 bg-gray-900/50 border border-gray-800 rounded-lg px-4 py-2 pl-10 
+              focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500/50
+              hover:border-gray-700 transition-colors text-gray-300"
+          />
         </div>
 
         <div className="flex flex-wrap items-center gap-4">
@@ -175,19 +192,6 @@ const Problems = () => {
               <Badge className="ml-2 bg-gray-800">{category.count}</Badge>
             </Button>
           ))}
-        </div>
-
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <input
-            type="text"
-            placeholder="Search problems by title, tag, or company..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-gray-900/50 border border-gray-800 rounded-lg px-4 py-2 pl-10 
-              focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500/50
-              hover:border-gray-700 transition-colors text-gray-300"
-          />
         </div>
       </div>
 
@@ -256,7 +260,7 @@ const Problems = () => {
                 <td className="px-6 py-4">
                   <Button
                     className="bg-green-500 hover:bg-green-600 text-white transition-colors"
-                    onClick={() => handleSolveProblem(selectedProblem.id)}
+                    onClick={() => handleSolveProblem(problem.id)}
                   >
                     Solve Problem
                   </Button>
