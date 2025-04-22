@@ -169,37 +169,36 @@ const ProblemManagement = () => {
 
 
   const ProblemDialog = ({ problem, onClose, onSubmit, mode }) => {
-    const [formData, setFormData] = useState(
-      problem || {
-        title: '',
-        description: '',
-        difficulty: 'Easy',
-        inputFormat: '',
-        outputFormat: '',
-        constraints: '',
-        timeLimit: 1000,
-        memoryLimit: 256,
-        examples: [{ input: '', output: '', explanation: '' }],
-        testCases: [{ input: '', output: '', isHidden: true }],
-        tags: [''],
-        categories: [''],
-        companies: [''],
-        solutions: [],
-        status: 'draft',
-        premium: false,
-        similarProblems: []
-      }
-    );
+    const [formData, setFormData] = useState(() => ({
+      title: '',
+      description: '',
+      difficulty: 'Easy',
+      inputFormat: '',
+      outputFormat: '',
+      constraints: '',
+      timeLimit: 1000,
+      memoryLimit: 256,
+      examples: [{ input: '', output: '', explanation: '' }],
+      testCases: [{ input: '', output: '', isHidden: true }],
+      tags: [''],
+      categories: [''],
+      companies: [''],
+      solutions: [],
+      status: 'draft',
+      premium: false,
+      similarProblems: [],
+      ...(problem || {}) 
+    }));
   
     const handleArrayFieldChange = (field, index, key, value) => {
-      setFormData(prev => ({
-        ...prev,
-        [field]: prev[field].map((item, i) => 
-          i === index 
-            ? { ...item, [key]: value }
-            : item
-        )
-      }));
+      setFormData((prev) => {
+        const updatedArray = [...prev[fieldName]];
+        updatedArray[index] = value;
+        return {
+          ...prev,
+          [fieldName]: updatedArray,
+        };
+      });
     };
   
     const addArrayField = (field, template) => {
@@ -485,7 +484,7 @@ const ProblemManagement = () => {
                 <div key={index} className="flex gap-2">
                   <Input
                     value={company}
-                    onChange={(e) => handleArrayFieldChange('companies', index, '', e.target.value)}
+                    onChange={(e) => handleArrayFieldChange('companies', index, e.target.value)}
                     placeholder="Company"
                   />
                   <Button
@@ -498,6 +497,7 @@ const ProblemManagement = () => {
                   </Button>
                 </div>
               ))}
+
             </div>
           </div>
   

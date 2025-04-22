@@ -214,10 +214,6 @@ const getDashboardData = async (req, res) => {
   }
 };
 
-module.exports = {
-  getDashboardData
-};
-
 // Get Profile Data
 const getProfileData = async (req, res) => {
   try {

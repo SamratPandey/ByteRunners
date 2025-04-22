@@ -8,7 +8,7 @@ const executeCode = async (source_code, language_id, stdin = '') => {
     throw new Error('JUDGE0_API_KEY is not configured');
   }
 
-  const url = `${JUDGE0_API_URL}/submissions`;
+  const url = `${JUDGE0_API_URL}/submissions?base64_encoded=false&wait=false`;
   const options = {
     method: 'POST',
     headers: {
@@ -31,16 +31,13 @@ const executeCode = async (source_code, language_id, stdin = '') => {
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    
-    const data = await response.json();
-    console.log('Submission Response:', data);
 
+    const data = await response.json();
     if (!data.token) {
       throw new Error('No token received from Judge0');
     }
 
     const result = await pollSubmissionResult(data.token);
-    console.log('Final Result:', result);
     return result;
 
   } catch (error) {
@@ -52,11 +49,11 @@ const executeCode = async (source_code, language_id, stdin = '') => {
 // Function to poll the result
 const pollSubmissionResult = async (token) => {
   const maxRetries = 10;
-  const retryDelay = 2000; // 2 seconds
-  
+  const retryDelay = 2000;
+
   for (let retries = 0; retries < maxRetries; retries++) {
     try {
-      const response = await fetch(`${JUDGE0_API_URL}/submissions/${token}`, {
+      const response = await fetch(`${JUDGE0_API_URL}/submissions/${token}?base64_encoded=false`, {
         method: 'GET',
         headers: {
           'X-RapidAPI-Key': JUDGE0_API_KEY,
@@ -64,34 +61,24 @@ const pollSubmissionResult = async (token) => {
         },
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
       const result = await response.json();
-      console.log(`Poll attempt ${retries + 1}:`, result);
 
       if (result.status) {
-        switch (result.status.id) {
-          case 1: 
-          case 2: 
-            await new Promise(resolve => setTimeout(resolve, retryDelay));
-            continue;
-          case 3:
-            return {
-              status: result.status,
-              stdout: result.stdout,
-              stderr: result.stderr,
-              compile_output: result.compile_output,
-              time: result.time,
-              memory: result.memory
-            };
-          default:
-            return result;
+        const statusId = result.status.id;
+        if (statusId === 1 || statusId === 2) {
+          await new Promise(resolve => setTimeout(resolve, retryDelay));
+          continue;
         }
+        return {
+          status: result.status,
+          stdout: result.stdout,
+          stderr: result.stderr,
+          compile_output: result.compile_output,
+          time: result.time,
+          memory: result.memory
+        };
       }
     } catch (error) {
-      console.error(`Poll attempt ${retries + 1} failed:`, error);
       if (retries === maxRetries - 1) throw error;
       await new Promise(resolve => setTimeout(resolve, retryDelay));
     }

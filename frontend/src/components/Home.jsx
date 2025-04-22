@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { BookOpen, Code, Users, Terminal,  Github, Twitter, Linkedin, X, Play, Copy, Maximize2, Minimize2} from 'lucide-react';
 import Editor from '@monaco-editor/react';
 import Nav from './Nav';
+import { Value } from '@radix-ui/react-select';
 
 
 
@@ -127,7 +128,10 @@ const CodeEditor = ({
     setIsOutputOpen(true);
     try {
       const code = editorRef.current.getValue();
-      const result = await onRunCode(code, language);
+    
+      const languageValue = languageMap[language];
+     
+      const result = await onRunCode(code, languageValue);
       setOutput(result);
     } catch (error) {
       setOutput({ error: error.message });
@@ -234,7 +238,6 @@ const CodeEditor = ({
           />
         </div>
       </div>
-
       <OutputPanel
         isOpen={isOutputOpen}
         onClose={() => setIsOutputOpen(false)}
@@ -325,39 +328,29 @@ const Home = () => {
     setEditorCode(code || problemCodes[selectedProblem][language]);
   };
 
-  const getLanguageId = (language) => {
-    switch (language) {
-      case "C++":
-        return 54;
-      case "Java":
-        return 62;
-      case "Python":
-        return 71;
-      case "JavaScript":
-        return 63;
-      default:
-        return 54;
-    }
-  };
 
   const runCode = async (sourceCode, language) => {
     try {
-      const languageId = getLanguageId(language); 
-      console.log(`${import.meta.env.VITE_BACKEND_URL}`)
-      console.log( {
-        source_code: sourceCode,
-        language_id: languageId,
-        stdin:'',
-      })
-      const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/auth/run-code`, {
-        source_code: sourceCode,
-        language_id: languageId,
-        stdin:'',
-      });
+        const response = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/api/auth/run-code`,
+        {
+          source_code: sourceCode,
+          language,
+          stdin: '',
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          }
+        }
+      );
   
-      return response.data; 
+      return response.data;
     } catch (error) {
-      return { error: error.message };  // Return an error message if something goes wrong
+      return {
+        error: error.response?.data?.error || error.message || 'Something went wrong',
+      };
     }
   };
   
