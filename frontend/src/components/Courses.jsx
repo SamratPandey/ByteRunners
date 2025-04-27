@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Alert } from '@/components/ui/alert';
 import Nav from './Nav';
+import axios from 'axios';
 
 const Courses = () => {
   const navigate = useNavigate();
@@ -21,175 +22,15 @@ const Courses = () => {
   });
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-  const mockCourses = [
-    {
-      _id: '1',
-      title: 'JavaScript Fundamentals',
-      slug: 'javascript-fundamentals',
-      description: 'Master the core concepts of JavaScript programming language',
-      summary: 'A comprehensive course covering all JavaScript basics and advanced concepts',
-      thumbnail: '/api/placeholder/400/300',
-      price: 4999,
-      isFree: false,
-      category: 'Web Development',
-      tags: ['JavaScript', 'Frontend', 'Programming'],
-      level: 'beginner',
-      instructor: {
-        _id: '101',
-        name: 'Anmol Kumar',
-        avatar: '/api/placeholder/60/60'
-      },
-      averageRating: 4.7,
-      totalRatings: 320,
-      curriculum: [
-        { title: 'Getting Started', lessons: [{}, {}, {}] },
-        { title: 'Core Concepts', lessons: [{}, {}, {}, {}] },
-        { title: 'Advanced Topics', lessons: [{}, {}, {}] }
-      ],
-      publishedAt: new Date('2023-11-10')
-    },
-    {
-      _id: '2',
-      title: 'React for Professionals',
-      slug: 'react-for-professionals',
-      description: 'Take your React skills to the next level with advanced patterns',
-      summary: 'Learn performance optimization, state management, and component architecture',
-      thumbnail: '/api/placeholder/400/300',
-      price: 79.99,
-      isFree: false,
-      category: 'Web Development',
-      tags: ['React', 'Frontend', 'JavaScript'],
-      level: 'advanced',
-      instructor: {
-        _id: '102',
-        name: 'Anisha Gupta',
-        avatar: '/api/placeholder/60/60'
-      },
-      averageRating: 4.9,
-      totalRatings: 215,
-      curriculum: [
-        { title: 'Modern React', lessons: [{}, {}, {}] },
-        { title: 'Performance Optimization', lessons: [{}, {}, {}, {}] },
-        { title: 'State Management', lessons: [{}, {}, {}] },
-        { title: 'Testing & Deployment', lessons: [{}, {}, {}] }
-      ],
-      publishedAt: new Date('2024-01-15')
-    },
-    {
-      _id: '3',
-      title: 'Python Data Science',
-      slug: 'python-data-science',
-      description: 'Learn data analysis, visualization and machine learning with Python',
-      summary: 'From pandas to scikit-learn, master the Python data science ecosystem',
-      thumbnail: '/api/placeholder/400/300',
-      price: 0,
-      isFree: true,
-      category: 'Data Science',
-      tags: ['Python', 'Data Analysis', 'Machine Learning'],
-      level: 'intermediate',
-      instructor: {
-        _id: '103',
-        name: 'Michael Chen',
-        avatar: '/api/placeholder/60/60'
-      },
-      averageRating: 4.5,
-      totalRatings: 189,
-      curriculum: [
-        { title: 'Python Essentials', lessons: [{}, {}, {}] },
-        { title: 'Data Manipulation with Pandas', lessons: [{}, {}, {}, {}] },
-        { title: 'Data Visualization', lessons: [{}, {}, {}] },
-        { title: 'Machine Learning Basics', lessons: [{}, {}, {}, {}] }
-      ],
-      publishedAt: new Date('2023-12-05')
-    },
-    {
-      _id: '4',
-      title: 'Blockchain Development',
-      slug: 'blockchain-development',
-      description: 'Build decentralized applications on Ethereum and other platforms',
-      summary: 'Smart contracts, Web3.js, and decentralized application architecture',
-      thumbnail: '/api/placeholder/400/300',
-      price: 99.99,
-      isFree: false,
-      category: 'Blockchain',
-      tags: ['Ethereum', 'Smart Contracts', 'Web3'],
-      level: 'advanced',
-      instructor: {
-        _id: '104',
-        name: 'Taylor Wright',
-        avatar: '/api/placeholder/60/60'
-      },
-      averageRating: 4.8,
-      totalRatings: 94,
-      curriculum: [
-        { title: 'Blockchain Fundamentals', lessons: [{}, {}, {}] },
-        { title: 'Smart Contract Development', lessons: [{}, {}, {}, {}] },
-        { title: 'DApp Development', lessons: [{}, {}, {}] }
-      ],
-      publishedAt: new Date('2024-02-20')
-    },
-    {
-      _id: '5',
-      title: 'UI/UX Design Principles',
-      slug: 'ui-ux-design-principles',
-      description: 'Create intuitive and beautiful user interfaces',
-      summary: 'Design thinking, wireframing, prototyping and user research',
-      thumbnail: '/api/placeholder/400/300',
-      price: 59.99,
-      isFree: false,
-      category: 'Design',
-      tags: ['UI', 'UX', 'Design Thinking'],
-      level: 'beginner',
-      instructor: {
-        _id: '105',
-        name: 'Olivia Garcia',
-        avatar: '/api/placeholder/60/60'
-      },
-      averageRating: 4.6,
-      totalRatings: 156,
-      curriculum: [
-        { title: 'Design Fundamentals', lessons: [{}, {}, {}] },
-        { title: 'User Research', lessons: [{}, {}, {}] },
-        { title: 'Wireframing & Prototyping', lessons: [{}, {}, {}, {}] },
-        { title: 'User Testing', lessons: [{}, {}, {}] }
-      ],
-      publishedAt: new Date('2023-10-12')
-    },
-    {
-      _id: '6',
-      title: 'Introduction to Algorithms',
-      slug: 'introduction-to-algorithms',
-      description: 'Essential algorithms and data structures for efficient programming',
-      summary: 'Learn sorting, searching, graph algorithms and complexity analysis',
-      thumbnail: '/api/placeholder/400/300',
-      price: 0,
-      isFree: true,
-      category: 'Computer Science',
-      tags: ['Algorithms', 'Data Structures', 'Problem Solving'],
-      level: 'intermediate',
-      instructor: {
-        _id: '106',
-        name: 'David Kim',
-        avatar: '/api/placeholder/60/60'
-      },
-      averageRating: 4.9,
-      totalRatings: 247,
-      curriculum: [
-        { title: 'Algorithm Analysis', lessons: [{}, {}, {}] },
-        { title: 'Sorting Algorithms', lessons: [{}, {}, {}, {}] },
-        { title: 'Data Structures', lessons: [{}, {}, {}, {}, {}] },
-        { title: 'Graph Algorithms', lessons: [{}, {}, {}] }
-      ],
-      publishedAt: new Date('2023-09-18')
-    }
-  ];
+
 
 
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        setCourses(mockCourses);
-        setFilteredCourses(mockCourses);
+        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/course/all`);
+        setCourses(response.data.courses);
+        setFilteredCourses(response.data.courses);
         setLoading(false);
       } catch (err) {
         setError('Failed to load courses');
@@ -199,6 +40,7 @@ const Courses = () => {
 
     fetchCourses();
   }, []);
+  console.log(courses);
 
   useEffect(() => {
     let results = courses;
@@ -313,64 +155,72 @@ const Courses = () => {
       </div>
     );
   };
+
   const CourseCard = ({ course }) => {
   
     const handleViewCourse = () => {
-      navigate(`/course-details/${course.slug}`);
+      navigate(`/course-details/${course._id}`);
     };
-  
+    
     return (
-      <Card className="bg-black/40 backdrop-blur-xl border border-green-900/50 hover:border-green-500 transition-all duration-300 overflow-hidden group">
+      <Card className="bg-black/40 backdrop-blur-xl border-l-4 border border-green-900/50 hover:border-l-green-500 transition-all duration-300 overflow-hidden group h-full flex flex-col shadow-lg">
         <div className="relative">
           <img 
             src={course.thumbnail} 
             alt={course.title} 
-            className="w-full h-52 object-cover object-center group-hover:scale-105 transition-transform duration-500"
+            className="w-full aspect-video object-cover object-center group-hover:scale-105 transition-transform duration-500"
           />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          
           {course.isFree && (
-            <Badge className="absolute top-4 right-4 bg-green-600 text-white">
+            <Badge className="absolute top-4 left-4 bg-green-600 text-white font-medium px-3 py-1 rounded-full shadow-md">
               Free
             </Badge>
           )}
-        </div>
-        
-        <div className="p-6 space-y-4">
-          <Badge className={`px-3 py-1 ${getLevelColor(course.level)}`}>
+          
+          <Badge className={`absolute bottom-4 left-4 px-3 py-1 rounded-full shadow-md ${getLevelColor(course.level)}`}>
             {course.level.charAt(0).toUpperCase() + course.level.slice(1)}
           </Badge>
-          
-          <h3 className="text-xl font-bold text-white line-clamp-2 h-16">
+        </div>
+        
+        <div className="p-5 space-y-3 flex-grow flex flex-col">
+          <h3 className="text-xl font-bold text-white group-hover:text-green-400 transition-colors duration-300 line-clamp-2">
             {course.title}
           </h3>
           
-          <p className="text-gray-400 text-sm line-clamp-2 h-10">
+          <p className="text-gray-400 text-sm line-clamp-2">
             {course.summary}
           </p>
           
-          <div className="flex items-center space-x-2">
-            <img 
-              src={course.instructor.avatar} 
-              alt={course.instructor.name} 
-              className="w-8 h-8 rounded-full"
-            />
-            <span className="text-gray-300 text-sm">{course.instructor.name}</span>
-          </div>
-          
-          <div className="flex flex-wrap gap-y-2 justify-between">
+          <div className="flex items-center justify-between pt-3">
+            <div className="flex items-center gap-2">
+              <img 
+                src={course.instructor.avatar} 
+                alt={course.instructor.name} 
+                className="w-8 h-8 rounded-full object-cover ring-1 ring-green-900"
+              />
+              <span className="text-gray-300 text-sm">{course.instructor.name}</span>
+            </div>
+            
             <RatingStars rating={course.averageRating} />
-            
-            <div className="flex items-center text-gray-400 text-sm">
-              <Book className="w-4 h-4 mr-1" />
-              <span>{getTotalLessons(course)} lessons</span>
-            </div>
           </div>
           
-          <div className="pt-4 border-t border-green-900/30 flex items-center justify-between">
-            <div className="text-xl font-bold text-green-500">
-              {formatPrice(course.price, course.isFree)}
+          <div className="flex flex-wrap items-center justify-between gap-2 mt-3 pt-3 border-t border-green-900/30">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center text-gray-400 text-sm">
+                <Book className="w-4 h-4 mr-1" />
+                <span>{getTotalLessons(course)} lessons</span>
+              </div>
+              
+              <div className="text-xl font-bold text-green-500">
+                {formatPrice(course.price, course.isFree)}
+              </div>
             </div>
             
-            <Button onClick={handleViewCourse} className="bg-green-600 hover:bg-green-700 text-white">
+            <Button 
+              onClick={handleViewCourse} 
+              className="bg-green-600 hover:bg-green-700 text-white rounded-full px-4 py-2 text-sm font-medium shadow-md transition-all duration-300 hover:shadow-lg"
+            >
               View Course
             </Button>
           </div>
@@ -378,7 +228,7 @@ const Courses = () => {
       </Card>
     );
   };
-
+  
   const FilterSection = () => {
     return (
       <div className={`bg-black/90 backdrop-blur-lg border border-green-900/50 rounded-lg p-6 mb-8 transition-all duration-300 ${isFilterOpen ? 'max-h-screen' : 'max-h-20 overflow-hidden'}`}>

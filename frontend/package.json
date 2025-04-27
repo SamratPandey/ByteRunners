@@ -28,6 +28,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dotenv": "^16.4.7",
+    "imagekitio-react": "^4.3.0",
     "lucide-react": "^0.468.0",
     "path-browserify": "^1.0.1",
     "react": "^18.3.1",

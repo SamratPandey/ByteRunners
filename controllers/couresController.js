@@ -1,22 +1,45 @@
 const Course = require('../models/Course');
 
 
-const getAllCourses = async (req, res) =>{
+const getCourses = async (req,res) =>{
     try {
-        const courses = await Course.find({});
-        console.log(courses);
-        if (!courses || courses.length === 0) {
-            return res.status(404).json({ message: 'No courses found' });
+        const courses =  await Course.find();
+        if(!courses){
+            res.status(500).json({ message: "Error while fetching courses" });
+        }else{
+            res.status(200).json({
+                message: "Courses fetched successfully",
+                courses: courses
+            });
         }
-        res.status(200).json(courses);
     } catch (error) {
-        res.status(500).json({ message: 'Server error' });
+        console.log(error);
+        res.status(500).json({ message: error.message });
+    }
+
+}
+
+const getCourseById = async (req,res) =>{
+    const { id } = req.params;
+    try {
+        const course =  await Course.findById(id);
+        if(!course){
+            res.status(500).json({ message: "Error while fetching course" });
+        }else{
+            res.status(200).json({
+                message: "Course fetched successfully",
+                course: course
+            });
+        }
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: error.message });
     }
 }
 
 
-
 module.exports = {
-    getAllCourses
+    getCourses,
+    getCourseById
 }
 
