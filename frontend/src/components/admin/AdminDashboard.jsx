@@ -29,6 +29,7 @@ const AdminDashboard = () => {
 
         // Fetch user statistics
         const statsResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/admin/user-stats`, { headers });
+        console.log(statsResponse.data);
         const statsData = statsResponse.data;
 
         // Fetch problem statistics

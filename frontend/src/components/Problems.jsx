@@ -175,26 +175,10 @@ const Problems = () => {
               hover:border-gray-700 transition-colors text-gray-300"
           />
         </div>
-
-        <div className="flex flex-wrap items-center gap-4">
-          {categories.map((category) => (
-            <Button
-              key={category.name}
-              variant="ghost"
-              onClick={() => setSelectedCategory(category.name)}
-              className={`${
-                selectedCategory === category.name
-                  ? 'bg-green-800 text-white hover:bg-green-400'
-                  : 'text-white hover:bg-green-500/40 hover:text-white'
-              } transition-colors`}
-            >
-              {category.name}
-              <Badge className="ml-2 bg-gray-800">{category.count}</Badge>
-            </Button>
-          ))}
-        </div>
       </div>
-
+       <div>
+          there is a main this mu     bb
+       </div>
       {/* Problems Table */}
       <div className="overflow-x-auto rounded-lg border border-gray-800">
         <table className="w-full">
