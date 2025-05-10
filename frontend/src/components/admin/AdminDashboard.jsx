@@ -3,6 +3,7 @@ import axios from 'axios';
 import UserManagement from "./UserManagement";
 import DashboardOverview from "./DashboardOverview";
 import ProblemManagement from './ProblemManagement';
+import JobManagement from './JobManagement';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Users, Code, BarChart, Settings, LogOut } from 'lucide-react';
@@ -29,7 +30,6 @@ const AdminDashboard = () => {
 
         // Fetch user statistics
         const statsResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/admin/user-stats`, { headers });
-        console.log(statsResponse.data);
         const statsData = statsResponse.data;
 
         // Fetch problem statistics
@@ -91,6 +91,8 @@ const AdminDashboard = () => {
         return <UserManagement users={adminData.users} />;
       case 'problems':
         return <ProblemManagement />
+      case 'jobs':
+        return <JobManagement />
       default:
         return <DashboardOverview data={adminData} />;
     }
@@ -128,6 +130,15 @@ const AdminDashboard = () => {
             onClick={() => setActiveSection('problems')}
           >
             <Code className="mr-2" /> Problem Management
+          </Button>
+          <Button
+            variant="ghost"
+            className={`w-full justify-start mb-2 text-white hover:bg-green-700 ${
+              activeSection === 'jobs' ? 'bg-green-700' : ''
+            }`}
+            onClick={() => setActiveSection('jobs')}
+          >
+            <Code className="mr-2" /> Job Management
           </Button>
           <Button
             variant="destructive"

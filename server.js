@@ -5,6 +5,7 @@ const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const siteRoutes = require('./routes/siteRoutes');
 const courseRoutes = require('./routes/courseRoutes')
+const jobRoutes = require('./routes/jobRoutes');
 const Admin = require('./models/Admin');  // Import the Admin model
 const { registerAdmin } = require('./controllers/adminController'); // Import the registerAdmin function
 require('dotenv').config();
@@ -27,6 +28,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/site',siteRoutes);
 app.use('/api/course',courseRoutes);
+app.use('/api/jobs', jobRoutes);
 
 const createDefaultAdmin = async () => {
   try {

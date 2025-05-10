@@ -12,7 +12,6 @@ import {
   faSignOut
 } from '@fortawesome/free-solid-svg-icons';
 import { User } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 
 const Nav = (props) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -260,9 +259,6 @@ const Nav = (props) => {
             aria-label="Notifications"
           >
             <FontAwesomeIcon icon={faBell} />
-            <Badge className="absolute -top-1 -right-1 bg-green-500 text-black text-xs h-4 min-w-4 flex items-center justify-center p-0">
-              2
-            </Badge>
           </button>
           
           <button
