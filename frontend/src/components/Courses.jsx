@@ -309,16 +309,6 @@ const Courses = () => {
               From beginner to advanced, discover courses crafted by industry experts to elevate your coding journey.
             </p>
           </div>
-          <div className="relative max-w-3xl mx-auto mb-12">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search for courses, topics or technologies..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 rounded-lg bg-black/40 backdrop-blur-xl border border-green-900/50 focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none transition-all duration-300 text-white"
-            />
-          </div>
           <FilterSection />
           {loading ? (
             <div className="text-center py-20">

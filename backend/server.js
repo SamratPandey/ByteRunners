@@ -6,8 +6,8 @@ const adminRoutes = require('./routes/adminRoutes');
 const siteRoutes = require('./routes/siteRoutes');
 const courseRoutes = require('./routes/courseRoutes')
 const jobRoutes = require('./routes/jobRoutes');
-const Admin = require('./models/Admin');  // Import the Admin model
-const { registerAdmin } = require('./controllers/adminController'); // Import the registerAdmin function
+const Admin = require('./models/Admin');  
+const { registerAdmin } = require('./controllers/adminController');
 require('dotenv').config();
 
 const app = express();
@@ -15,12 +15,7 @@ const app = express();
 connectDB();
 
 // Middleware setup
-app.use(cors({
-  origin: 'http://localhost:5173',  
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],  
-  allowedHeaders: ['Content-Type', 'Authorization'],  
-  credentials: true,  
-}));
+app.use(cors());
                   
 app.use(express.json());
 
