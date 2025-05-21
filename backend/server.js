@@ -22,8 +22,6 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization'],  
   credentials: true,  
 }));
-
-console.log(process.env.FRONTEND_URL)
                   
 app.use(express.json());
 

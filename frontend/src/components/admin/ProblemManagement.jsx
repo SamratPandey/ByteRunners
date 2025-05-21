@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import adminApi from '../../utils/adminApi';
 import {
   Card,
   CardContent,
@@ -49,20 +50,13 @@ const ProblemManagement = () => {
     const [filterConfig, setFilterConfig] = useState({ difficulty: 'all' });
     const [currentPage, setCurrentPage] = useState(1);
     const problemsPerPage = 10;
-  
     const fetchProblems = async () => {
       try {
         setLoading(true);
         setError(null);
-        const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/admin/problems`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-          }
-        });
+        const response = await adminApi.get('/api/admin/problems');
         
-        if (!response.ok) throw new Error('Failed to fetch problems');
-        
-        const responseData = await response.json();
+        const responseData = response.data;
         
         // Check if the response has the expected structure
         if (responseData.success && Array.isArray(responseData.data)) {
@@ -91,45 +85,21 @@ const ProblemManagement = () => {
     const direction = sortConfig.key === key && sortConfig.direction === 'asc' ? 'desc' : 'asc';
     setSortConfig({ key, direction });
   };
-
   const handleUpdateProblem = async (id, updatedData) => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/admin/problems/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
-        },
-        body: JSON.stringify(updatedData),
-      });
-      
-      if (response.ok) {
-        fetchProblems();
-        setIsEditDialogOpen(false);
-      } else {
-        throw new Error('Failed to update problem');
-      }
+      await adminApi.put(`/api/admin/problems/${id}`, updatedData);
+      fetchProblems();
+      setIsEditDialogOpen(false);
     } catch (error) {
       setError(error.message);
     }
   };
-
   const handleDeleteProblem = async (id) => {
     if (!window.confirm('Are you sure you want to delete this problem?')) return;
     
     try {
-      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/admin/problems/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
-        },
-      });
-      
-      if (response.ok) {
-        fetchProblems();
-      } else {
-        throw new Error('Failed to delete problem');
-      }
+      await adminApi.delete(`/api/admin/problems/${id}`);
+      fetchProblems();
     } catch (error) {
       setError(error.message);
     }

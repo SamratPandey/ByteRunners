@@ -3,8 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useDispatch, useSelector } from 'react-redux';
-import { login } from '../../redux/actions/adminActions';
-import { Link, useNavigate } from 'react-router-dom';
+import { login, logout } from '../../redux/actions/adminActions';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { ClipLoader } from 'react-spinners';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -15,7 +15,23 @@ const AdminLogin = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const { isAuthenticated, error } = useSelector((state) => state.admin);
+  // Check if there's an expired token message in the URL
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tokenExpired = params.get('tokenExpired');
+    
+    if (tokenExpired === 'true') {
+      // Clear the token and show a message
+      dispatch(logout());
+      toast.error('Your session has expired. Please log in again.');
+      
+      // Remove the query parameter from the URL without refreshing the page
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
+    }
+  }, [location, dispatch]);
 
   useEffect(() => {
     if (isAuthenticated) {

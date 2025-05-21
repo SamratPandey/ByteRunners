@@ -1,4 +1,5 @@
 import axios from 'axios';
+import adminApi from '../../utils/adminApi';
 
 export const login = (email, password) => async (dispatch) => {
   try {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';  
+import adminApi from '../../utils/adminApi';  
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Briefcase, Search, Plus, Eye, Edit, Trash2 } from 'lucide-react';
@@ -14,12 +14,9 @@ const JobManagement = () => {
     console.log("Jobs:", jobs);
 
     useEffect(() => {
-        const fetchJobs = async () => {
-            try {
+        const fetchJobs = async () => {            try {
                 setIsLoading(true);
-                const token = localStorage.getItem('adminToken');
-                const headers = { Authorization: `Bearer ${token}` };
-                const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/jobs`, { headers });
+                const response = await adminApi.get('/api/jobs');
                 setJobs(response.data.jobs);
             } catch (error) {
                 toast.error("Error fetching jobs");

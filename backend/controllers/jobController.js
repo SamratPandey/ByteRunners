@@ -1,7 +1,6 @@
 const Job = require('../models/Job');
 
 const getAllJobs = async(req, res) =>{
-    console.log("Fetching all jobs");
     try {
         const jobs = await Job.find();
         if (!jobs || jobs.length === 0) {

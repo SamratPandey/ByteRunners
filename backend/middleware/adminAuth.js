@@ -17,9 +17,18 @@ exports.adminProtect = async (req, res, next) => {
   if (!token) {
     return res.status(400).json({ message: 'Token is missing' });
   }
-
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    // Check if token is expired
+    const currentTime = Math.floor(Date.now() / 1000);
+    if (decoded.exp && decoded.exp < currentTime) {
+      return res.status(401).json({ 
+        message: 'Token has expired', 
+        expired: true 
+      });
+    }
+    
     req.admin = await Admin.findById(decoded.id).select('-password');
 
     if (!req.admin || !req.admin.isActive) {
@@ -28,6 +37,13 @@ exports.adminProtect = async (req, res, next) => {
 
     next();
   } catch (error) {
-    return res.status(401).json({ message: 'Token is invalid or expired' });
+    // JWT verify will throw an error if token is expired
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ 
+        message: 'Token has expired', 
+        expired: true 
+      });
+    }
+    return res.status(401).json({ message: 'Token is invalid' });
   }
 };

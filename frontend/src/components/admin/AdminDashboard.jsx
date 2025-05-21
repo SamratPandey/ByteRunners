@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import adminApi from '../../utils/adminApi';
 import UserManagement from "./UserManagement";
 import DashboardOverview from "./DashboardOverview";
 import ProblemManagement from './ProblemManagement';
@@ -21,31 +22,28 @@ const AdminDashboard = () => {
   });
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchData = async () => {
+  useEffect(() => {    const fetchData = async () => {
       try {
         setIsLoading(true);
-        const token = localStorage.getItem('adminToken');
-        const headers = { Authorization: `Bearer ${token}` };
-
-        // Fetch user statistics
-        const statsResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/admin/user-stats`, { headers });
+        
+        // Use the adminApi utility for all admin API calls
+        const statsResponse = await adminApi.get('/api/admin/user-stats');
         const statsData = statsResponse.data;
 
         // Fetch problem statistics
-        const problemStatsResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/admin/problem-stats`, { headers });
+        const problemStatsResponse = await adminApi.get('/api/admin/problem-stats');
         const problemStatsData = problemStatsResponse.data;
 
         // Fetch all users
-        const usersResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/admin/users`, { headers });
+        const usersResponse = await adminApi.get('/api/admin/users');
         const usersData = usersResponse.data;
 
         // Fetch top performers
-        const topPerformersResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/admin/top-performers`, { headers });
+        const topPerformersResponse = await adminApi.get('/api/admin/top-performers');
         const topPerformersData = topPerformersResponse.data;
 
         // Fetch recent activity
-        const recentActivityResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/admin/recent-activity`, { headers });
+        const recentActivityResponse = await adminApi.get('/api/admin/recent-activity');
         const recentActivityData = recentActivityResponse.data;
 
         setAdminData({
@@ -56,12 +54,9 @@ const AdminDashboard = () => {
           users: usersData?.data || [],
           topPerformers: topPerformersData?.data || [],
           recentActivity: recentActivityData?.data || [],
-        });
-      } catch (error) {
+        });      } catch (error) {
         console.error('Error fetching admin data:', error);
-        if (error.response && error.response.status === 401) {
-          window.location.href = '/admin/login';
-        }
+        // Token expiration is now handled by the adminApi utility
       } finally {
         setIsLoading(false);
       }
