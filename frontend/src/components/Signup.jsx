@@ -7,8 +7,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { signup } from '../redux/actions/authActions';
 import { ClipLoader } from 'react-spinners';
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { toast } from 'react-hot-toast';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGoogle, faGithub, faLinkedin, faFacebook } from '@fortawesome/free-brands-svg-icons';
 
@@ -193,11 +192,9 @@ const Signup = () => {
                   Log in
                 </Link>
               </p>
-            </div>
-          </form>
+            </div>        </form>
         </Card>
       </div>
-      <ToastContainer />
     </div>
   );
 };

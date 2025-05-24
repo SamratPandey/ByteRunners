@@ -1,31 +1,66 @@
-import axios from 'axios';
 import adminApi from '../../utils/adminApi';
 
 export const login = (email, password) => async (dispatch) => {
   try {
-    const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/admin/login`, { email, password });
-    
-    // Store the token in localStorage
-    localStorage.setItem('adminToken', response.data.token);
+    // Use adminApi which already has withCredentials set
+    const response = await adminApi.post(
+      '/api/admin/login', 
+      { email, password }
+    );
     
     // Dispatch the success action
     dispatch({
       type: 'ADMIN_LOGIN_SUCCESS',
-      payload: response.data.token, // Storing only the token
+      payload: true, // We just store the auth state
     });
+    return true;
   } catch (error) {
-    console.error('Login error:', error); // Log the full error object
+    console.error('Login error:', error);
     const errorMessage = error.response?.data?.message || error.message || 'An error occurred';
     dispatch({
       type: 'ADMIN_LOGIN_FAIL',
       payload: errorMessage,
     });
-    throw new Error(errorMessage);
+    return false;
   }
-  
 };
 
-export const logout = () => (dispatch) => {
-  localStorage.removeItem('adminToken'); 
+export const logout = () => async (dispatch) => {
+  try {
+    // Call the logout endpoint to clear the cookie on the server
+    await adminApi.post('/api/admin/logout');
+  } catch (error) {
+    console.error('Logout error:', error);
+  }
+  
+  // Always dispatch logout action regardless of server response
   dispatch({ type: 'ADMIN_LOGOUT' });
+};
+
+// Action to check admin authentication status
+export const checkAdminAuthStatus = () => async (dispatch) => {
+  try {
+    // Add a header to identify this as an auth check request
+    const response = await adminApi.get('/api/admin/check-auth', {
+      headers: {
+        'x-checking-auth': 'true'
+      }
+    });
+    
+    if (response.data.success) {
+      dispatch({
+        type: 'ADMIN_LOGIN_SUCCESS',
+        payload: response.data.admin
+      });
+      return true;
+    } else {
+      dispatch({ type: 'ADMIN_LOGOUT' });
+      return false;
+    }
+  } catch (error) {
+    console.log('Admin auth check failed:', error.message);
+    dispatch({ type: 'ADMIN_LOGOUT' });
+    // Don't show error toast for auth check failures
+    return false;
+  }
 };

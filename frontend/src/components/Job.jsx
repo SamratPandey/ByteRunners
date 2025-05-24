@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
-import axios from "axios";
+import authApi from '../utils/authApi';
+import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Eye, Search, Filter, ChevronDown, Briefcase, MapPin, Clock, Building, Star, Calendar, Zap } from 'lucide-react';
@@ -19,12 +21,12 @@ const Job = () => {
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [featuredJobs, setFeaturedJobs] = useState([]);
     const [activeView, setActiveView] = useState('grid');
+    const { isAuthenticated } = useSelector(state => state.auth);
+    const navigate = useNavigate();
 
     const handleJobById = async (id) => {
         try {
-            const token = localStorage.getItem('token');
-            const headers = { Authorization: `Bearer ${token}` };
-            const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/jobs/${id}`, { headers });
+            const response = await authApi.get(`/api/jobs/${id}`);
             return response.data;
         } catch (error) {
             toast.error("Error fetching job by ID");
@@ -35,9 +37,7 @@ const Job = () => {
         const fetchJobs = async () => {
             try {
                 setIsLoading(true);
-                const token = localStorage.getItem('token');
-                const headers = { Authorization: `Bearer ${token}` };
-                const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/jobs`, { headers });
+                const response = await authApi.get('/api/jobs');
                 setJobs(response.data.jobs);
                 setFilteredJobs(response.data.jobs);
                 
@@ -197,6 +197,15 @@ const Job = () => {
                 </div>
             </div>
         );
+    };    const handleViewJobDetails = (jobId) => {
+        if (!isAuthenticated) {
+            toast("Please login to view job details", { icon: 'ℹ️' });
+            navigate('/login', { state: { from: { pathname: `/job/${jobId}` } } });
+        } else {
+            // Handle viewing job details here
+            toast.success(`Viewing job ${jobId}`);
+            // TODO: Navigate to job details page when implemented
+        }
     };
 
     const FeaturedJobCard = ({ job }) => (
@@ -236,6 +245,7 @@ const Job = () => {
                         variant="outline" 
                         size="sm"
                         className="bg-green-600/10 border-green-600/20 text-green-500 hover:bg-green-600 hover:text-white transition-all duration-300"
+                        onClick={() => handleViewJobDetails(job._id)}
                     >
                         <Eye size={16} className="mr-1" /> View Details
                     </Button>
@@ -282,6 +292,7 @@ const Job = () => {
                     variant="outline" 
                     size="sm" 
                     className="flex items-center bg-green-600/10 border-green-600/20 text-green-500 hover:bg-green-600 hover:text-white transition-all duration-300"
+                    onClick={() => handleViewJobDetails(job._id)}
                 >
                     <Eye size={16} className="mr-1" /> View Details
                 </Button>
@@ -328,6 +339,7 @@ const Job = () => {
                     variant="outline" 
                     size="sm" 
                     className="flex items-center bg-green-600/10 border-green-600/20 text-green-500 hover:bg-green-600 hover:text-white transition-all duration-300 w-full md:w-auto"
+                    onClick={() => handleViewJobDetails(job._id)}
                 >
                     <Eye size={16} className="mr-1" /> View Details
                 </Button>

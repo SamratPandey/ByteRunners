@@ -1,33 +1,41 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { useDispatch, useSelector } from 'react-redux';
 import { login } from '../redux/actions/authActions';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { ClipLoader } from 'react-spinners';
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { toast } from 'react-hot-toast';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGoogle, faGithub } from '@fortawesome/free-brands-svg-icons';
-
-
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { token, isAuthenticated, error  } = useSelector((state) => state.auth);
+  const { isAuthenticated, error } = useSelector((state) => state.auth);
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useDispatch();
 
-  useEffect(() => {
+  // Get redirect path from location state or default to home
+  const from = location.state?.from?.pathname || '/';
+
+  // Use useCallback to prevent infinite loop
+  const redirectIfAuthenticated = useCallback(() => {
     if (isAuthenticated) {
-      navigate('/');
+      console.log('User is authenticated, redirecting to:', from);
+      navigate(from, { replace: true });
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, from]);
+
+  useEffect(() => {
+    // Only redirect if authenticated
+    redirectIfAuthenticated();
+  }, [redirectIfAuthenticated]);
 
   const validateForm = () => {
     const newErrors = {};
@@ -48,23 +56,24 @@ const Login = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleLogin = async () => {
+  const handleLogin = async (e) => {
+    if (e) e.preventDefault();
     if (!validateForm()) return;
   
     setIsSubmitting(true);
+    
+    try {
+      const success = await dispatch(login(email, password));
   
-    await dispatch(login(email, password));
-  
-    if (isAuthenticated) {
-      toast.success('Logged in successfully!');
-      navigate('/');
-    } else if (error) {
-      setEmail('');
-      setPassword('');
-      toast.error(error);
+      if (success) {
+        toast.success('Logged in successfully!');
+        // Will be redirected by the useEffect when isAuthenticated changes
+      }
+    } catch (err) {
+      console.error('Login error:', err);
+    } finally {
+      setIsSubmitting(false);
     }
-  
-    setIsSubmitting(false);
   };
 
   return (
@@ -159,9 +168,7 @@ const Login = () => {
               </p>
             </div>
           </div>
-        </Card>
-      </div>
-      <ToastContainer />
+        </Card>      </div>
     </div>
   );
 };

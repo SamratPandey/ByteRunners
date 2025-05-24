@@ -3,12 +3,9 @@ import { Navigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 
 const AdminProtectedRoute = ({ children }) => {
-  // Change from state.auth.token to state.admin.token
-  const token = useSelector((state) => state.admin.token);
+  const { isAuthenticated } = useSelector((state) => state.admin);
 
-  
-
-  if (!token) {
+  if (!isAuthenticated) {
     return <Navigate to="/admin/login" />;
   }
 

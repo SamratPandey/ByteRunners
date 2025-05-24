@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { toast } from 'react-hot-toast';
 import { Search, Filter, Star, ChevronDown, Clock, Book, BarChart } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -9,6 +11,7 @@ import Nav from './Nav';
 import axios from 'axios';
 
 const Courses = () => {
+  const { isAuthenticated } = useSelector(state => state.auth);
   const navigate = useNavigate();
   const [courses, setCourses] = useState([]);
   const [filteredCourses, setFilteredCourses] = useState([]);
@@ -21,9 +24,6 @@ const Courses = () => {
     price: 'all'
   });
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-
-
-
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -157,9 +157,13 @@ const Courses = () => {
   };
 
   const CourseCard = ({ course }) => {
-  
     const handleViewCourse = () => {
-      navigate(`/course-details/${course._id}`);
+      if (!isAuthenticated) {
+        toast("Please login to view course details", { icon: 'ℹ️' });
+        navigate('/login', { state: { from: { pathname: `/course-details/${course._id}` } } });
+      } else {
+        navigate(`/course-details/${course._id}`);
+      }
     };
     
     return (

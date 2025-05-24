@@ -35,6 +35,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Edit, Trash2, UserPlus, ArrowUpDown, Filter } from 'lucide-react';
+import adminApi from '../../utils/adminApi';
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
@@ -57,20 +58,19 @@ const UserManagement = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/admin/users`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+      const response = await adminApi.get('/api/admin/users');
+      
+      if (response.status === 200) {
+        const data = response.data;
+        if (Array.isArray(data.data) && data.data.length > 0) {
+          setUsers(data.data);
+        } else {
+          setUsers([]);
+          setError('No users found');
         }
-      });
-      if (!response.ok) throw new Error('Failed to fetch users');
-      const data = await response.json();
-      if (Array.isArray(data.data) && data.data.length > 0) {
-        setUsers(data.data);
-      } else {
-        throw new Error('No users found in the response');
       }
     } catch (error) {
-      setError(error.message);
+      setError('Failed to fetch users: ' + (error.response?.data?.message || error.message));
     } finally {
       setLoading(false);
     }
@@ -82,16 +82,9 @@ const UserManagement = () => {
   };
   const handleUpdateUser = async (id, updatedData) => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/admin/users/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
-        },
-        body: JSON.stringify(updatedData),
-      });
+      const response = await adminApi.put(`/api/admin/users/${id}`, updatedData);
   
-      if (response.ok) {
+      if (response.status === 200) {
         fetchUsers(); // Refresh the user list
         setIsEditDialogOpen(false); // Close the edit dialog
       } else {
@@ -104,14 +97,9 @@ const UserManagement = () => {
   
   const handleDeleteUser = async (id) => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/admin/users/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
-        },
-      });
+      const response = await adminApi.delete(`/api/admin/users/${id}`);
   
-      if (response.ok) {
+      if (response.status === 200) {
         fetchUsers(); // Refresh the user list
       } else {
         console.error('Failed to delete user');
@@ -173,16 +161,9 @@ const UserManagement = () => {
 
     const handleAddUser = async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/admin/users`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-          },
-          body: JSON.stringify(newUser)
-        });
+        const response = await adminApi.post(`/api/admin/users`, newUser);
         
-        if (response.ok) {
+        if (response.status === 200 || response.status === 201) {
           fetchUsers();
           setIsAddDialogOpen(false);
         }

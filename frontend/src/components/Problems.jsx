@@ -6,10 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Search, Filter, ArrowUpDown, BookOpen, Star, Clock, Trophy, ChevronLeft, ChevronRight, Tag, Key } from 'lucide-react';
 import Nav from './Nav';
-import toast, {Toaster} from 'react-hot-toast';
+import { toast, Toaster } from 'react-hot-toast';
+import { useSelector } from 'react-redux';
 
 const Problems = () => {
   const navigate = useNavigate(); 
+  const { isAuthenticated } = useSelector(state => state.auth);
   const [problems, setProblems] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedDifficulty, setSelectedDifficulty] = useState('All');
@@ -78,16 +80,14 @@ const Problems = () => {
         return <BookOpen className="w-4 h-4 text-gray-400" />;
     }
   };
-
   const handleSolveProblem = (problemId) => {
-  if(localStorage.getItem("token") === null){
-    toast.error("Please login first to solve amy problem.");
-    setTimeout(() => {
-      navigate("/login");
-    }, 1000);
-  }else{
-    navigate(`/solve/${problemId}`);
-  }  
+    if (!isAuthenticated) {
+      toast("Please login to solve problems", { icon: 'ℹ️' });
+      // Save the problem ID and redirect to login
+      navigate('/login', { state: { from: { pathname: `/solve/${problemId}` } } });
+    } else {
+      navigate(`/solve/${problemId}`);
+    }  
   };
 
   const handleSort = (field) => {

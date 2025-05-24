@@ -4,8 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { toast } from 'react-hot-toast';
 import { ClipLoader } from 'react-spinners';
 import axios from 'axios';
 
@@ -113,12 +112,10 @@ const ResetPassword = () => {
                 <Link to="/login" className="text-green-500 hover:text-green-400 font-semibold">
                   Log In
                 </Link>
-              </p>
-            </div>
+              </p>          </div>
           </div>
         </Card>
       </div>
-      <ToastContainer />
     </div>
   );
 };

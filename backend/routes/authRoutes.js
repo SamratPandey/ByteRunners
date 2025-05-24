@@ -4,14 +4,17 @@ const { executeCode } = require('../utils/judge0');
 const { protect } = require('../middleware/auth');
 const { getProblemById } = require('../controllers/problemController');
 const LANGUAGE_MAP = require('../utils/languageMap');
+// Import the temporary logout function
+const { logoutUser } = require('../controllers/tempLogoutUser');
 const router = express.Router();
 const User = require('../models/User');
 const Problem = require('../models/Problem');
 
 router.post('/register', registerUser);
 router.post('/login', loginUser);
+router.post('/logout', logoutUser);
 router.post('/forgot-password', forgotPassword);  
-router.post('/reset-password', resetPassword);  
+router.post('/reset-password', resetPassword);
 
 router.post('/run-code', async (req, res) => {
   const { source_code, language, stdin = '' } = req.body;
@@ -86,5 +89,9 @@ router.post('/submit', protect, async (req, res) => {
 router.get('/dashboard', protect, getDashboardData); 
 router.get('/profile', protect, getDashboardData); 
 router.get('/problem/:id', protect, getProblemById);
+
+// Add a check-auth endpoint to verify cookie-based authentication status
+const { checkAuth } = require('../controllers/tempCheckAuth');
+router.get('/check-auth', protect, checkAuth);
 
 module.exports = router;

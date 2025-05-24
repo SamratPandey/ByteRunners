@@ -3,9 +3,9 @@ import { useParams } from 'react-router-dom';
 import { ResizablePanel, ResizablePanelGroup, ResizableHandle } from '@/components/ui/resizable';
 import { Copy, Maximize2, Minimize2, X, Play, Pause, RotateCcw, Send } from 'lucide-react';
 import Editor from '@monaco-editor/react';
-import toast, { Toaster } from 'react-hot-toast';
+import { toast, Toaster } from 'react-hot-toast';
 import Nav from './Nav';
-import axios from 'axios';
+import authApi from '../utils/authApi';
 
 const ProblemDetailsPanel = ({ problem }) => {
   return (
@@ -120,26 +120,20 @@ const CodeEditorPanel = ({
     
     const runCode = async () => {
       if (!code.trim()) {
-        toast.error('Please write some code before running');
+        toast.error('Please write some code first', { id: 'runCode' });
         return;
       }
       
-      setIsRunning(true);
-      toast.loading('Running code...', { id: 'runCode' });
-      
       try {
-        const response = await axios.post(
-          `${import.meta.env.VITE_BACKEND_URL}/api/auth/run-code`,
+        toast.loading('Running your code...', { id: 'runCode' });
+        setIsRunning(true);
+        
+        const response = await authApi.post(
+          '/api/auth/run-code',
           {
             source_code: code,
             language_id: languageIdMap[selectedLanguage],
             stdin: '' 
-          },
-          {
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${localStorage.getItem("token")}`
-            }
           }
         );
         

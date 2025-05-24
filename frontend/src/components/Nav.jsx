@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faBars, 
@@ -12,8 +13,9 @@ import {
   faSignOut
 } from '@fortawesome/free-solid-svg-icons';
 import { User } from "lucide-react";
+import { logout } from '../redux/actions/authActions';
 
-const Nav = (props) => {
+const Nav = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAvatarDropdownOpen, setIsAvatarDropdownOpen] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -22,6 +24,8 @@ const Nav = (props) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchVisible, setIsSearchVisible] = useState(false);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { isAuthenticated } = useSelector(state => state.auth);
 
   const navigationItems = [
     { label: 'PROBLEMS', path: '/problems' },
@@ -72,19 +76,14 @@ const Nav = (props) => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
+    dispatch(logout());
     setIsLoggedIn(false);
-    window.location.reload();
     navigate('/');
   };
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if(token){
-      setIsLoggedIn(true);
-    }else{
-      setIsLoggedIn(false);
-    }
+    setIsLoggedIn(isAuthenticated);
+    
     window.addEventListener('scroll', handleScroll);
     window.addEventListener('click', handleClickOutside);
     
@@ -92,7 +91,7 @@ const Nav = (props) => {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('click', handleClickOutside);
     };
-  }, [lastScrollY]);
+  }, [lastScrollY, isAuthenticated]);
 
   const avatarMenuItems = [
     { icon: faUser, label: 'My Profile', path: '/profile' },
@@ -206,7 +205,7 @@ const Nav = (props) => {
                         <Link
                           key={index}
                           to={item.path}
-                          className="block px-4 py-2 text-sm hover:bg-green-900/40 hover:text-green-300 transition-colors duration-200 flex items-center space-x-3"
+                          className="px-4 py-2 text-sm hover:bg-green-900/40 hover:text-green-300 transition-colors duration-200 flex items-center space-x-3"
                         >
                           <FontAwesomeIcon icon={item.icon} className="text-green-500 w-4" />
                           <span>{item.label}</span>

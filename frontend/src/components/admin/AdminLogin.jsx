@@ -6,8 +6,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { login, logout } from '../../redux/actions/adminActions';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { ClipLoader } from 'react-spinners';
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { toast } from 'react-hot-toast';
 
 const AdminLogin = () => {
   const [email, setEmail] = useState('');
@@ -103,14 +102,11 @@ const AdminLogin = () => {
           {isSubmitting ? <ClipLoader color="#fff" size={20} /> : 'Log In'}
         </Button>
 
-        <div className="mt-4 text-center text-white">
-          <p className="text-sm">
+        <div className="mt-4 text-center text-white">          <p className="text-sm">
             Not an admin? 
             <Link to="/user-login" className="text-white font-bold hover:text-primary-400"> User Login</Link>
           </p>
         </div>
-
-        <ToastContainer />
       </div>
     </div>
   );

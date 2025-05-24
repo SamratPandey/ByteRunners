@@ -2,7 +2,23 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 const protect = (req, res, next) => {
-  const token = req.headers.authorization?.split(' ')[1]; 
+  let token;
+  
+  // Check for token in cookies first
+  if (req.cookies.userToken) {
+    token = req.cookies.userToken;
+  }
+  // Fallback to Authorization header
+  else if (req.headers.authorization?.startsWith('Bearer ')) {
+    token = req.headers.authorization.split(' ')[1]; 
+  }
+  // Special handling for check-auth endpoint
+  if (!token && req.originalUrl.includes('/check-auth')) {
+    return res.status(401).json({ 
+      success: false,
+      message: 'Not authenticated'
+    });
+  }
   
   if (!token) {
     return res.status(401).json({ message: 'Not authorized, no token' });
@@ -13,7 +29,14 @@ const protect = (req, res, next) => {
     req.user = decoded;
     next(); 
   } catch (error) {
-    console.error(error);
+    console.error(error);    // Special handling for check-auth endpoint
+    if (req.originalUrl.includes('/check-auth')) {
+      return res.status(401).json({ 
+        success: false,
+        message: 'Not authenticated'
+      });
+    }
+    
     return res.status(401).json({ message: 'Token not valid' });
   }
 };

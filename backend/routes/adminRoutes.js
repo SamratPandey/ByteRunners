@@ -17,12 +17,20 @@ const {
 } = require('../controllers/adminController');
 const { adminProtect } = require('../middleware/adminAuth');
 
+// Import the logoutAdmin function
+const { logoutAdmin } = require('../controllers/tempLogoutAdmin');
+const { checkAdminAuth } = require('../controllers/tempCheckAdminAuth');
+
 const router = express.Router();
 
 // Public routes
 router.post('/login', loginAdmin);
+router.post('/logout', logoutAdmin);
 
-// Protected routes - require admin authentication
+// Auth check route - already uses adminProtect internally
+router.get('/check-auth', adminProtect, checkAdminAuth);
+
+// All other routes require admin authentication
 router.use(adminProtect);
 
 // User management routes

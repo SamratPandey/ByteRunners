@@ -72,8 +72,7 @@ exports.loginAdmin = async (req, res) => {
       ip: req.ip,
       userAgent: req.headers['user-agent']
     });
-    await admin.save();
-
+    await admin.save();    
     const token = jwt.sign(
       {
         id: admin._id,
@@ -84,8 +83,16 @@ exports.loginAdmin = async (req, res) => {
       { expiresIn: '24h' }
     );
 
+    // Set cookie with the token
+    res.cookie('adminToken', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
+      sameSite: 'strict',
+      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    });
+
     res.json({
-      token,
+      success: true,
       admin: {
         id: admin._id,
         username: admin.username,

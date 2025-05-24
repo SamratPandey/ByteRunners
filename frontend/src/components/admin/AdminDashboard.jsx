@@ -8,6 +8,8 @@ import JobManagement from './JobManagement';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Users, Code, BarChart, Settings, LogOut } from 'lucide-react';
+import { useDispatch } from 'react-redux';
+import { logout } from '../../redux/actions/adminActions';
 
 const AdminDashboard = () => {
   const [activeSection, setActiveSection] = useState('dashboard');
@@ -21,6 +23,7 @@ const AdminDashboard = () => {
     recentActivity: [],
   });
   const [isLoading, setIsLoading] = useState(true);
+  const dispatch = useDispatch();
 
   useEffect(() => {    const fetchData = async () => {
       try {
@@ -66,7 +69,7 @@ const AdminDashboard = () => {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('adminToken');
+    dispatch(logout());
     window.location.href = '/admin/login';
   };
 

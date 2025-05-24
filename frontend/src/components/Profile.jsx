@@ -18,11 +18,13 @@ import {
   Instagram,
   Facebook
 } from 'lucide-react';
-import axios from 'axios';
-import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { toast } from 'react-hot-toast';
 import { Button } from '@/components/ui/button';
 import Nav from './Nav';
+import { logout } from '../redux/actions/authActions';
+import authApi from '../utils/authApi';
 
 // Utility function to safely capitalize first letter
 const capitalizeFirstLetter = (str) => {
@@ -110,39 +112,36 @@ const Profile = () => {
   const [userData, setUserData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { isAuthenticated } = useSelector(state => state.auth);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
+    if (!isAuthenticated) {
       navigate('/login', { replace: true });
       return;
     }
   
     const fetchUserProfile = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/auth/profile`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const response = await authApi.get('/api/auth/profile');
   
         const result = response.data;
   
         if (result.success) {
           setUserData(result.data);
           setIsLoading(false);
-        }
-      } catch (error) {
-        localStorage.removeItem('token');
-        toast.error('Session expired. Please login again.');
+        }      } catch (error) {
+        dispatch(logout());
+        toast("Session expired. Please login again.", { icon: '❌' });
         navigate('/login', { replace: true });
       }
     };
   
     fetchUserProfile();
-  }, []);
-
+  }, [isAuthenticated, dispatch, navigate]);
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    toast.success('Logged out successfully!');
+    dispatch(logout());
+    toast("Logged out successfully!", { icon: '✅' });
     navigate('/login', { replace: true });
   };
 

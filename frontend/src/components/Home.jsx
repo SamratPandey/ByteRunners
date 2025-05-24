@@ -8,7 +8,7 @@ import { BookOpen, Code, Users, Terminal,  Github, Twitter, Linkedin, X, Play, C
 import Editor from '@monaco-editor/react';
 import Nav from './Nav';
 import { Value } from '@radix-ui/react-select';
-
+import authApi from '../utils/authApi';
 
 
 //Problem code
@@ -328,11 +328,10 @@ const Home = () => {
     setEditorCode(code || problemCodes[selectedProblem][language]);
   };
 
-
   const runCode = async (sourceCode, language) => {
     try {
         const response = await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/api/auth/run-code`,
+        `${import.meta.env.VITE_BACKEND_URL}/api/site/run-code-public`,
         {
           source_code: sourceCode,
           language,
@@ -341,7 +340,6 @@ const Home = () => {
         {
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
           }
         }
       );

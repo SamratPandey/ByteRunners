@@ -4,19 +4,30 @@ const Admin = require('../models/Admin');
 exports.adminProtect = async (req, res, next) => {
   let token;
 
-  // Check if authorization header is present and properly formatted
-  if (
+
+  // Check for token in cookies first (preferred method)
+  if (req.cookies.adminToken) {
+    token = req.cookies.adminToken;
+  } 
+  // Fallback to Authorization header if cookie is not present
+  else if (
     req.headers.authorization &&
     req.headers.authorization.startsWith('Bearer ')
   ) {
     token = req.headers.authorization.split(' ')[1]; 
-  } else {
-    return res.status(400).json({ message: 'Authorization header is malformed or missing' });
+  }  // Special handling for check-auth endpoint
+  // Make sure we're checking the full path
+  if (!token && req.originalUrl.includes('/check-auth')) {
+    return res.status(401).json({ 
+      success: false,
+      message: 'Not authenticated'
+    });
   }
-
+  
   if (!token) {
-    return res.status(400).json({ message: 'Token is missing' });
+    return res.status(400).json({ message: 'Authentication token is missing' });
   }
+  
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
@@ -36,7 +47,14 @@ exports.adminProtect = async (req, res, next) => {
     }
 
     next();
-  } catch (error) {
+  } catch (error) {    // Special handling for check-auth endpoint
+    if (req.originalUrl.includes('/check-auth')) {
+      return res.status(401).json({ 
+        success: false,
+        message: 'Not authenticated'
+      });
+    }
+    
     // JWT verify will throw an error if token is expired
     if (error.name === 'TokenExpiredError') {
       return res.status(401).json({ 

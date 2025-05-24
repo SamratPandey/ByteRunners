@@ -23,10 +23,18 @@ const registerUser = async (req, res) => {
       type: 'User Registered',
       description: `New user ${user.name} (${user.email}) has registered.`,
     });
-    await activity.save();
-
+    await activity.save();     
     const token = jwt.sign({ id: user._id, accountType: user.accountType }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    res.status(201).json({ token });
+    
+    // Set cookie with the token
+    res.cookie('userToken', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 60 * 60 * 1000 // 1 hour
+    });
+    
+    res.status(201).json({ success: true });
   } catch (error) {
     res.status(500).json({ message: "Server Error" });
   }
@@ -50,10 +58,17 @@ const loginUser = async (req, res) => {
       type: 'User Logged In',
       description: `User ${user.name} (${user.email}) logged in.`,
     });
-    await activity.save();
-
-    const token = jwt.sign({ id: user._id, accountType: user.accountType, isPremium: user.isPremium }, process.env.JWT_SECRET, { expiresIn: '7d' });
-    res.json({ token });
+    await activity.save();    const token = jwt.sign({ id: user._id, accountType: user.accountType, isPremium: user.isPremium }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    
+    // Set cookie with the token
+    res.cookie('userToken', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
+    
+    res.json({ success: true });
   } catch (error) {
     res.status(500).json({ message: "Server Error" });
   }

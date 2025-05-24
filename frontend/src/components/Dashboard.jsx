@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { toast } from 'react-hot-toast';
+import authApi from '../utils/authApi';
+import { useDispatch, useSelector } from 'react-redux';
+import { logout } from '../redux/actions/authActions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { User, Code, Trophy, Star } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { toast } from 'react-toastify';
-import axios from 'axios';
 
 const DifficultyBadge = ({ difficulty }) => {
   const colors = {
@@ -27,27 +30,23 @@ const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [shouldRedirect, setShouldRedirect] = useState(false);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { isAuthenticated } = useSelector(state => state.auth);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-
-    if (!token) {
+    if (!isAuthenticated) {
       setShouldRedirect(true);
       return;
     }
 
     const fetchUserData = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.BACKEND_URL}/dashboard`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await authApi.get('/dashboard');
         setUser(response.data);
         setIsLoading(false);
       } catch (error) {
         if (error.response?.status === 401) {
-          localStorage.removeItem('token');
+          dispatch(logout());
           toast.error('Session expired. Please login again.');
           setShouldRedirect(true);
         } else {
@@ -58,7 +57,7 @@ const Dashboard = () => {
     };
 
     fetchUserData();
-  }, []);
+  }, [isAuthenticated, dispatch]);
 
   useEffect(() => {
     if (shouldRedirect) {
@@ -67,7 +66,7 @@ const Dashboard = () => {
   }, [shouldRedirect, navigate]);
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
+    dispatch(logout());
     setUser(null);
     toast.success('Logged out successfully!');
     setShouldRedirect(true);
