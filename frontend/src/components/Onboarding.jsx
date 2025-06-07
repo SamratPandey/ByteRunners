@@ -17,13 +17,24 @@ import {
   faSpinner
 } from '@fortawesome/free-solid-svg-icons';
 
+// Goal options for the onboarding process
+const goalOptions = [
+  { value: 'career-change', label: 'Career Change' },
+  { value: 'skill-improvement', label: 'Improve Skills' },
+  { value: 'interview-prep', label: 'Interview Preparation' },
+  { value: 'learning', label: 'Learn Programming' },
+  { value: 'certification', label: 'Get Certified' },
+  { value: 'freelancing', label: 'Start Freelancing' }
+];
+
 const Onboarding = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [userProfile, setUserProfile] = useState({
     experienceLevel: '',
     interests: [],
-    languages: []
+    languages: [],
+    goals: ''
   });
   const [quizQuestions, setQuizQuestions] = useState([]);
   const [quizAnswers, setQuizAnswers] = useState({});

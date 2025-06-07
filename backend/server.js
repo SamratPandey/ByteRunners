@@ -1,6 +1,7 @@
 require('dotenv').config()
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const cookieParser = require('cookie-parser');
 const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
@@ -10,32 +11,62 @@ const courseRoutes = require('./routes/courseRoutes')
 const jobRoutes = require('./routes/jobRoutes');
 const testRoutes = require('./routes/testRoutes');
 const onboardingRoutes = require('./routes/onboardingRoutes');
+const userProfileRoutes = require('./routes/userProfileRoutes');
 const Admin = require('./models/Admin');  
 const { registerAdmin } = require('./controllers/adminController');
-
+const multer = require('multer');
 
 const app = express();
 
+// Connect to database
 connectDB();
 
-
+// CORS configuration
 app.use(cors({
   origin: `${process.env.FRONTEND_URL}`,  
   methods: ['GET', 'POST', 'PUT', 'DELETE'],  
   allowedHeaders: ['Content-Type', 'Authorization', 'x-checking-auth'],  
   credentials: true,  
 }));
-                  
+
+// Middleware
 app.use(express.json());
 app.use(cookieParser());
 
+// Serve static files from the uploads directory
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/auth', userProfileRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/api/site',siteRoutes);
-app.use('/api/course',courseRoutes);
+app.use('/api/site', siteRoutes);
+app.use('/api/course', courseRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/test', testRoutes);
 app.use('/api/onboarding', onboardingRoutes);
+
+// Generic error handler
+app.use((err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({
+        success: false,
+        message: 'File size is too large. Max limit is 2MB'
+      });
+    }
+    return res.status(400).json({
+      success: false,
+      message: err.message
+    });
+  }
+  
+  console.error(err.stack);
+  res.status(500).json({
+    success: false,
+    message: 'Something broke!'
+  });
+});
 
 const createDefaultAdmin = async () => {
   try {
