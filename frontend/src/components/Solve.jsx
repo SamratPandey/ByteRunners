@@ -113,14 +113,29 @@ const CodeEditorPanel = ({
     
     const copyCode = () => {
       navigator.clipboard.writeText(code);
-      toast.success('Code copied to clipboard!');
+      toast.success('📋 Code copied to clipboard! Ready to share or save.', {
+        style: {
+          background: '#22c55e',
+          color: 'white',
+          fontWeight: '500'
+        },
+        duration: 2000
+      });
     };
     
 
     
     const runCode = async () => {
       if (!code.trim()) {
-        toast.error('Please write some code first', { id: 'runCode' });
+        toast.error('Please write some code first before running tests!', { 
+          id: 'runCode',
+          style: {
+            background: '#ef4444',
+            color: 'white',
+            fontWeight: '500'
+          },
+          duration: 3000
+        });
         return;
       }
       
@@ -140,7 +155,15 @@ const CodeEditorPanel = ({
         setIsRunning(false);
         
         if (response.data.success) {
-          toast.success('Code executed successfully', { id: 'runCode' });
+          toast.success('✅ Code executed successfully! Check the output below.', { 
+            id: 'runCode',
+            style: {
+              background: '#22c55e',
+              color: 'white',
+              fontWeight: '500'
+            },
+            duration: 2000
+          });
           setOutput({
             status: 'success',
             stdout: response.data.stdout || 'No output',
@@ -165,7 +188,14 @@ const CodeEditorPanel = ({
     
     const submitCode = async () => {
       if (!code.trim()) {
-        toast.error('Please write some code before submitting');
+        toast.error('Please write your solution code before submitting!', {
+          style: {
+            background: '#ef4444',
+            color: 'white',
+            fontWeight: '500'
+          },
+          duration: 3000
+        });
         return;
       }
       
@@ -207,7 +237,15 @@ const CodeEditorPanel = ({
         }
       } catch (error) {
         setIsSubmitting(false);
-        toast.error('Error submitting solution', { id: 'submitCode' });
+        toast.error('Unable to submit your solution right now. Please try again in a moment.', { 
+          id: 'submitCode',
+          style: {
+            background: '#ef4444',
+            color: 'white',
+            fontWeight: '500'
+          },
+          duration: 4000
+        });
         setOutput({
           status: 'error',
           error: error.response?.data?.error || error.message || 'Network error'
@@ -468,7 +506,14 @@ const Solve = () => {
           );
   
           if (!response.data) {
-            toast.error("No problem found.");
+            toast.error("Problem not found. It may have been removed or you don't have access.", {
+              style: {
+                background: '#ef4444',
+                color: 'white',
+                fontWeight: '500'
+              },
+              duration: 4000
+            });
             return;
           }
   
@@ -478,7 +523,14 @@ const Solve = () => {
             setCode(response.data.codeTemplates[selectedLanguage]);
           }
         } catch (error) {
-          toast.error("Error fetching problem.");
+          toast.error("Unable to load the problem. Please refresh the page or try again later.", {
+            style: {
+              background: '#ef4444',
+              color: 'white',
+              fontWeight: '500'
+            },
+            duration: 4000
+          });
         }
       };
   

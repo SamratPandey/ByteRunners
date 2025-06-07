@@ -257,4 +257,31 @@ const getProfileData = async (req, res) => {
   }
 };
 
-module.exports = { registerUser, loginUser, forgotPassword, resetPassword, getDashboardData, getProfileData };
+// Get User Profile
+const getUserProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('-password');
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    res.json({ 
+      success: true, 
+      data: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        problemsSolved: user.problemsSolved,
+        solvedProblems: user.solvedProblems,
+        totalSubmissions: user.totalSubmissions,
+        isPremium: user.isPremium,
+        joinedAt: user.createdAt,
+        stats: user.stats || {}
+      }
+    });
+  } catch (error) {
+    console.error('Profile fetch error:', error);
+    res.status(500).json({ success: false, message: 'Error fetching profile' });
+  }
+};
+
+module.exports = { registerUser, loginUser, forgotPassword, resetPassword, getDashboardData, getProfileData, getUserProfile };

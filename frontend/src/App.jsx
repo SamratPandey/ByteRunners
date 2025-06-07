@@ -9,7 +9,10 @@ import Login from './components/Login';
 import ForgotPassword from './components/ForgotPassword'; 
 import ResetPassword from './components/ResetPassword';
 import Signup from './components/Signup';  
-import Dashboard from './components/Dashboard';  
+import Onboarding from './components/Onboarding';
+import PrivacyPolicy from './components/PrivacyPolicy';
+import TermsOfService from './components/TermsOfService';
+import Dashboard from './components/Dashboard';
 import ProtectedRoute from './components/ProtectedRoute'; 
 import PublicRoute from './components/PublicRoute';
 
@@ -27,6 +30,8 @@ import Leaderboard from './components/LeaderBoard';
 import MyCourses from './components/MyCourses';
 import Solve from './components/Solve';
 import CourseDetails from './components/CourseDetails';
+import AITestInterface from './components/AITestInterface';
+import TestAnalytics from './components/TestAnalytics';
 
 function App() {
   const dispatch = useDispatch();
@@ -40,11 +45,11 @@ function App() {
     <Router>
       {/* Global toast container for notifications */}
       <Toaster position="top-right" />
-      
-      <Routes>
+        <Routes>
         {/* Public routes - accessible by anyone */}
         <Route path="/" element={<Home />} /> 
-        <Route path="/login" 
+        <Route path="/home" element={<Home />} />
+        <Route path="/login"
         element={
           <PublicRoute>
             <Login />
@@ -55,9 +60,11 @@ function App() {
           <PublicRoute>
             <Signup />
           </PublicRoute>
-        } /> 
-        <Route path="/forgot-password" element={<ForgotPassword />} /> 
+        } />        <Route path="/forgot-password" element={<ForgotPassword />} /> 
         <Route path="/reset-password/:resetToken" element={<ResetPassword />} /> 
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/terms" element={<TermsOfService />} />
+        <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
         
         {/* Feature listing pages - accessible by anyone */}
         <Route path="/problems" element={<Problems />} />
@@ -68,10 +75,11 @@ function App() {
         {/* Protected routes - require authentication */}
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-        <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
-        <Route path="/my-courses" element={<ProtectedRoute><MyCourses /></ProtectedRoute>} />
+        <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />        <Route path="/my-courses" element={<ProtectedRoute><MyCourses /></ProtectedRoute>} />
         <Route path="/solve/:problemId" element={<ProtectedRoute><Solve /></ProtectedRoute>} />
         <Route path="/course-details/:courseId" element={<ProtectedRoute><CourseDetails /></ProtectedRoute>} />
+        <Route path="/ai-test" element={<ProtectedRoute><AITestInterface /></ProtectedRoute>} />
+        <Route path="/test-analytics" element={<ProtectedRoute><TestAnalytics /></ProtectedRoute>} />
 
         {/* Admin routes */}
         <Route path="/admin/login" element={<AdminPublicRoute><AdminLogin /></AdminPublicRoute>} />

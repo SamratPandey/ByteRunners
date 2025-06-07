@@ -10,7 +10,9 @@ import {
   faUser,
   faTrophy,
   faBook,
-  faSignOut
+  faSignOut,
+  faBrain,
+  faChartLine
 } from '@fortawesome/free-solid-svg-icons';
 import { User } from "lucide-react";
 import { logout } from '../redux/actions/authActions';
@@ -91,12 +93,12 @@ const Nav = () => {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('click', handleClickOutside);
     };
-  }, [lastScrollY, isAuthenticated]);
-
-  const avatarMenuItems = [
+  }, [lastScrollY, isAuthenticated]);  const avatarMenuItems = [
     { icon: faUser, label: 'My Profile', path: '/profile' },
     { icon: faTrophy, label: 'Leaderboard', path: '/leaderboard' },
     { icon: faBook, label: 'My Courses', path: '/my-courses' },
+    { icon: faBrain, label: 'AI Test', path: '/ai-test' },
+    { icon: faChartLine, label: 'Test Analytics', path: '/test-analytics' },
     { icon: faSignOut, label: 'Logout'},
   ];
 

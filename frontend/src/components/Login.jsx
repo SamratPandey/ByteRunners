@@ -10,19 +10,21 @@ import { ClipLoader } from 'react-spinners';
 import { toast } from 'react-hot-toast';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGoogle, faGithub } from '@fortawesome/free-brands-svg-icons';
+import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [acceptPolicy, setAcceptPolicy] = useState(false);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { isAuthenticated, error } = useSelector((state) => state.auth);
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
-
   // Get redirect path from location state or default to home
-  const from = location.state?.from?.pathname || '/';
+  const from = location.state?.from?.pathname || '/home';
 
   // Use useCallback to prevent infinite loop
   const redirectIfAuthenticated = useCallback(() => {
@@ -30,32 +32,52 @@ const Login = () => {
       console.log('User is authenticated, redirecting to:', from);
       navigate(from, { replace: true });
     }
-  }, [isAuthenticated, navigate, from]);
+  }, [isAuthenticated, from]); // Removed navigate from dependencies
 
   useEffect(() => {
-    // Only redirect if authenticated
     redirectIfAuthenticated();
   }, [redirectIfAuthenticated]);
 
-  const validateForm = () => {
+  // Handle Redux auth errors
+  useEffect(() => {
+    if (error) {
+      toast.error(error);
+    }
+  }, [error]);  const validateForm = () => {
     const newErrors = {};
+    
     if (!email) {
-      newErrors.email = 'Email is required';
-      toast.error(newErrors.email);
+      newErrors.email = 'Please enter your email address';
     } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = 'Please enter a valid email address';
-      toast.error(newErrors.email);
+      newErrors.email = 'Please enter a valid email address (e.g., user@example.com)';
     }
 
     if (!password) {
-      newErrors.password = 'Password is required';
-      toast.error(newErrors.password);
+      newErrors.password = 'Please enter your password';
+    } else if (password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters long';
+    }
+
+    if (!acceptPolicy) {
+      newErrors.policy = 'Please accept our Privacy Policy and Terms of Service to continue';
+    }
+
+    // Show user-friendly error message
+    if (Object.keys(newErrors).length > 0) {
+      const firstError = Object.values(newErrors)[0];
+      toast.error(firstError, {
+        duration: 4000,
+        style: {
+          background: '#ef4444',
+          color: 'white',
+          fontWeight: '500'
+        }
+      });
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-
   const handleLogin = async (e) => {
     if (e) e.preventDefault();
     if (!validateForm()) return;
@@ -66,13 +88,35 @@ const Login = () => {
       const success = await dispatch(login(email, password));
   
       if (success) {
-        toast.success('Logged in successfully!');
-        // Will be redirected by the useEffect when isAuthenticated changes
+        toast.success('Welcome back! You have been logged in successfully.', {
+          duration: 3000,
+          style: {
+            background: '#10b981',
+            color: 'white',
+            fontWeight: '500'
+          }
+        });
+        // Navigation will be handled by the useEffect above
       }
     } catch (err) {
       console.error('Login error:', err);
+      toast.error('Unable to log you in. Please check your credentials and try again.', {
+        duration: 4000,
+        style: {
+          background: '#ef4444',
+          color: 'white',
+          fontWeight: '500'
+        }
+      });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  // Handle Enter key press
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleLogin(e);
     }
   };
 
@@ -86,7 +130,8 @@ const Login = () => {
               <img src="/images/logo.png" alt="logo" className="w-2/3 mb-4" />
             </Link>
           </div>
-          <div className="space-y-3">
+          
+          <form onSubmit={handleLogin} className="space-y-3">
             <div>
               <Label htmlFor="email" className="text-gray-300">
                 Email Address
@@ -97,29 +142,57 @@ const Login = () => {
                 placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                onKeyPress={handleKeyPress}
                 className="mt-2 bg-black/50 border-green-900 text-white placeholder:text-gray-500"
+                disabled={isSubmitting}
               />
-            </div>
-
-            <div>
+              {errors.email && (
+                <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+              )}
+            </div>            <div>
               <Label htmlFor="password" className="text-gray-300">
                 Password
               </Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="mt-2 bg-black/50 border-green-900 text-white placeholder:text-gray-500"
-              />
-            </div>
-
-            <div className="flex justify-between items-center">
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  className="mt-2 bg-black/50 border-green-900 text-white placeholder:text-gray-500 pr-10"
+                  disabled={isSubmitting}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                >
+                  <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
+                </button>
+              </div>
+              {errors.password && (
+                <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+              )}
+            </div>            <div className="flex justify-between items-center">
               <div className="flex items-center">
-                <input type="checkbox" id="rememberMe" className="mr-2" />
-                <Label htmlFor="rememberMe" className="text-gray-300 text-sm">
-                  Remember Me
+                <input 
+                  type="checkbox" 
+                  id="acceptPolicy" 
+                  checked={acceptPolicy}
+                  onChange={(e) => setAcceptPolicy(e.target.checked)}
+                  className="mr-2" 
+                />
+                <Label htmlFor="acceptPolicy" className="text-gray-300 text-sm">
+                  I accept the{' '}
+                  <Link to="/privacy" className="text-green-500 hover:text-green-400">
+                    Privacy Policy
+                  </Link>
+                  {' '}and{' '}
+                  <Link to="/terms" className="text-green-500 hover:text-green-400">
+                    Terms of Service
+                  </Link>
                 </Label>
               </div>
               <Link to="/forgot-password" className="text-green-500 hover:text-green-400 text-sm">
@@ -128,7 +201,8 @@ const Login = () => {
             </div>
 
             <Button
-              onClick={handleLogin}
+              type="submit"
+              disabled={isSubmitting}
               className={`w-full ${
                 isSubmitting ? 'bg-green-800' : 'bg-green-600 hover:bg-green-700'
               } text-white relative group overflow-hidden`}
@@ -138,37 +212,41 @@ const Login = () => {
               </span>
               <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-green-600 opacity-0 group-hover:opacity-100 transition-opacity" />
             </Button>
+          </form>
 
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-green-900"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-black text-gray-400">Or continue with</span>
-              </div>
+          <div className="relative mt-4">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-green-900"></div>
             </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              {[
-                { icon: faGoogle, bg: 'bg-blue-600 hover:bg-blue-700' },
-                { icon: faGithub, bg: 'bg-gray-800 hover:bg-gray-900' },
-              ].map((social, index) => (
-                <Button key={index} className={`${social.bg} text-white`}>
-                  <FontAwesomeIcon icon={social.icon} />
-                </Button>
-              ))}
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-black text-gray-400">Or continue with</span>
             </div>
-
-            <div className="text-center text-gray-400">
-              <p className="text-sm">
-                New at ByteRunners?{' '}
-                <Link to="/signup" className="text-green-500 hover:text-green-400 font-semibold">
-                  Create an account
-                </Link>
-              </p>
-            </div>
+          </div>          <div className="grid grid-cols-2 gap-4 mt-4">
+            {[
+              { icon: faGoogle, bg: 'bg-blue-600 hover:bg-blue-700', name: 'Google' },
+              { icon: faGithub, bg: 'bg-gray-800 hover:bg-gray-900', name: 'GitHub' },
+            ].map((social, index) => (
+              <Button 
+                key={index} 
+                type="button"
+                className={`${social.bg} text-white`}
+                onClick={() => toast.info(`${social.name} login coming soon!`)}
+              >
+                <FontAwesomeIcon icon={social.icon} />
+              </Button>
+            ))}
           </div>
-        </Card>      </div>
+
+          <div className="text-center text-gray-400 mt-4">
+            <p className="text-sm">
+              New at ByteRunners?{' '}
+              <Link to="/signup" className="text-green-500 hover:text-green-400 font-semibold">
+                Create an account
+              </Link>
+            </p>
+          </div>
+        </Card>
+      </div>
     </div>
   );
 };

@@ -1,0 +1,85 @@
+// API utilities for onboarding functionality
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+
+// Helper function to make authenticated API calls
+const makeAuthenticatedRequest = async (url, options = {}) => {
+  const response = await fetch(url, {
+    ...options,
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'API request failed');
+  }
+
+  return response.json();
+};
+
+// Onboarding API functions
+export const onboardingApi = {
+  // Get onboarding status
+  getStatus: async () => {
+    return makeAuthenticatedRequest(`${API_BASE_URL}/onboarding/status`);
+  },
+
+  // Save onboarding data
+  saveOnboardingData: async (onboardingData) => {
+    return makeAuthenticatedRequest(`${API_BASE_URL}/onboarding/save`, {
+      method: 'POST',
+      body: JSON.stringify(onboardingData),
+    });
+  },
+
+  // Get skill assessment questions
+  getSkillAssessmentQuestions: async (languages) => {
+    const languageParam = languages ? `?languages=${languages.join(',')}` : '';
+    return makeAuthenticatedRequest(`${API_BASE_URL}/onboarding/assessment-questions${languageParam}`);
+  },
+
+  // Validate skill assessment answers
+  validateSkillAssessment: async (answers) => {
+    return makeAuthenticatedRequest(`${API_BASE_URL}/onboarding/validate-assessment`, {
+      method: 'POST',
+      body: JSON.stringify({ answers }),
+    });
+  },
+};
+
+// Test API functions
+export const testApi = {
+  // Generate AI-powered test questions
+  generateQuestions: async (subject, topic, difficulty, count = 5) => {
+    return makeAuthenticatedRequest(`${API_BASE_URL}/test/generate-questions`, {
+      method: 'POST',
+      body: JSON.stringify({ subject, topic, difficulty, count }),
+    });
+  },
+
+  // Submit test answers for AI analysis
+  submitAnswers: async (testData) => {
+    return makeAuthenticatedRequest(`${API_BASE_URL}/test/submit-answers`, {
+      method: 'POST',
+      body: JSON.stringify(testData),
+    });
+  },
+
+  // Get personalized recommendations
+  getRecommendations: async () => {
+    return makeAuthenticatedRequest(`${API_BASE_URL}/test/recommendations`);
+  },
+
+  // Get test analytics and history
+  getAnalytics: async () => {
+    return makeAuthenticatedRequest(`${API_BASE_URL}/test/analytics`);
+  },
+};
+
+export default {
+  onboardingApi,
+  testApi,
+};

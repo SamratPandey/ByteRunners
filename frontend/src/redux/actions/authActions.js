@@ -46,10 +46,15 @@ export const signup = (name, email, password) => async (dispatch) => {
 // Action to check authentication status
 export const checkAuthStatus = () => async (dispatch) => {
   try {
-    // This will now be handled by the request interceptor
-    const response = await authApi.get('/api/auth/check-auth');
+    // Add header to identify this as an auth check
+    const response = await authApi.get('/api/auth/check-auth', {
+      headers: {
+        'x-checking-auth': 'true'
+      }
+    });
     
     if (response.data.success) {
+      // Store user data from successful auth check
       dispatch({
         type: 'LOGIN_SUCCESS',
         payload: response.data.user
@@ -60,10 +65,13 @@ export const checkAuthStatus = () => async (dispatch) => {
       return false;
     }
   } catch (error) {
+    // Only log the error, don't show it to the user
     console.log('Auth check failed:', error.message);
     dispatch({ type: 'LOGOUT' });
-    // Don't show error toast for auth check failures
     return false;
+  } finally {
+    // Mark auth as initialized regardless of outcome
+    dispatch({ type: 'AUTH_INITIALIZED' });
   }
 };
 

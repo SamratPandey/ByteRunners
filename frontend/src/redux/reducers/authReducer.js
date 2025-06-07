@@ -1,13 +1,21 @@
 const initialState = {
-  isAuthenticated: false, // Will be set by checking auth status
+  isAuthenticated: false,
+  user: null,
   error: null,
+  isInitialized: false
 };
 
 const authReducer = (state = initialState, action) => {
   switch (action.type) {
     case 'LOGIN_SUCCESS':
     case 'SIGNUP_SUCCESS':
-      return { ...state, isAuthenticated: true, error: null };
+      return { 
+        ...state, 
+        isAuthenticated: true, 
+        error: null,
+        user: action.payload,
+        isInitialized: true 
+      };
 
     case 'LOGIN_FAILURE':
     case 'SIGNUP_FAILURE':

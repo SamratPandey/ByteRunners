@@ -9,7 +9,8 @@ import { signup } from '../redux/actions/authActions';
 import { ClipLoader } from 'react-spinners';
 import { toast } from 'react-hot-toast';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faGoogle, faGithub, faLinkedin, faFacebook } from '@fortawesome/free-brands-svg-icons';
+import { faGoogle, faGithub } from '@fortawesome/free-brands-svg-icons';
+import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 
 
 
@@ -20,36 +21,63 @@ const Signup = () => {
     password: '',
     confirmPassword: '',
   });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [acceptPolicy, setAcceptPolicy] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const dispatch = useDispatch();
-  const navigate = useNavigate();
-
-  const validateForm = () => {
+  const navigate = useNavigate();  const validateForm = () => {
     let isValid = true;
 
-    if (!formData.name) {
-      toast.error('Full name is required');
+    if (!formData.name || formData.name.trim().length < 2) {
+      toast.error('Please enter your full name (at least 2 characters)', {
+        duration: 4000,
+        style: { background: '#ef4444', color: 'white', fontWeight: '500' }
+      });
       isValid = false;
     }
 
     if (!formData.email) {
-      toast.error('Email is required');
+      toast.error('Please enter your email address', {
+        duration: 4000,
+        style: { background: '#ef4444', color: 'white', fontWeight: '500' }
+      });
       isValid = false;
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      toast.error('Email is not valid');
+      toast.error('Please enter a valid email address (e.g., user@example.com)', {
+        duration: 4000,
+        style: { background: '#ef4444', color: 'white', fontWeight: '500' }
+      });
       isValid = false;
     }
 
     if (!formData.password) {
-      toast.error('Password is required');
+      toast.error('Please create a password', {
+        duration: 4000,
+        style: { background: '#ef4444', color: 'white', fontWeight: '500' }
+      });
       isValid = false;
     } else if (formData.password.length < 6) {
-      toast.error('Password must be at least 6 characters');
+      toast.error('Password must be at least 6 characters long for security', {
+        duration: 4000,
+        style: { background: '#ef4444', color: 'white', fontWeight: '500' }
+      });
       isValid = false;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      toast.error('Passwords do not match');
+      toast.error('Passwords do not match. Please check and try again.', {
+        duration: 4000,
+        style: { background: '#ef4444', color: 'white', fontWeight: '500' }
+      });
+      isValid = false;
+    }
+
+    if (!acceptPolicy) {
+      toast.error('Please accept our Privacy Policy and Terms of Service to create your account', {
+        duration: 4000,
+        style: { background: '#ef4444', color: 'white', fontWeight: '500' }
+      });
       isValid = false;
     }
 
@@ -59,16 +87,21 @@ const Signup = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async (e) => {
+  };  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
 
     setIsSubmitting(true);
     try {
       await dispatch(signup(formData.name, formData.email, formData.password));
-      toast.success('Account created successfully! You can now log in.');
+      toast.success('🎉 Welcome to ByteRunners! Your account has been created successfully.', {
+        duration: 3000,
+        style: {
+          background: '#10b981',
+          color: 'white',
+          fontWeight: '500'
+        }
+      });
       setFormData({
         name: '',
         email: '',
@@ -76,10 +109,17 @@ const Signup = () => {
         confirmPassword: '',
       });
       setTimeout(() => {
-        navigate('/login');
+        navigate('/onboarding');
       }, 2000);
     } catch (error) {
-      toast.error('Failed to create an account. Please try again.');
+      toast.error('We couldn\'t create your account at this time. Please check your details and try again.', {
+        duration: 4000,
+        style: {
+          background: '#ef4444',
+          color: 'white',
+          fontWeight: '500'
+        }
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -122,32 +162,66 @@ const Signup = () => {
                 onChange={handleChange}
                 className="mt-2 bg-black/50 border-green-900 text-white placeholder:text-gray-500"
               />
-            </div>
-
-            <div>
+            </div>            <div>
               <Label htmlFor="password" className="text-gray-300">Password</Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                placeholder="Enter your password"
-                value={formData.password}
-                onChange={handleChange}
-                className="mt-2 bg-black/50 border-green-900 text-white placeholder:text-gray-500"
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter your password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  className="mt-2 bg-black/50 border-green-900 text-white placeholder:text-gray-500 pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                >
+                  <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
+                </button>
+              </div>
             </div>
 
             <div>
               <Label htmlFor="confirmPassword" className="text-gray-300">Confirm Password</Label>
-              <Input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                placeholder="Re-enter your password"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                className="mt-2 bg-black/50 border-green-900 text-white placeholder:text-gray-500"
+              <div className="relative">
+                <Input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="Re-enter your password"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  className="mt-2 bg-black/50 border-green-900 text-white placeholder:text-gray-500 pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                >
+                  <FontAwesomeIcon icon={showConfirmPassword ? faEyeSlash : faEye} />
+                </button>
+              </div>
+            </div>            <div className="flex items-center mt-4">
+              <input 
+                type="checkbox" 
+                id="acceptPolicy" 
+                checked={acceptPolicy}
+                onChange={(e) => setAcceptPolicy(e.target.checked)}
+                className="mr-2" 
               />
+              <Label htmlFor="acceptPolicy" className="text-gray-300 text-sm">
+                I accept the{' '}
+                <Link to="/privacy" className="text-green-500 hover:text-green-400">
+                  Privacy Policy
+                </Link>
+                {' '}and{' '}
+                <Link to="/terms" className="text-green-500 hover:text-green-400">
+                  Terms of Service
+                </Link>
+              </Label>
             </div>
 
             <Button
@@ -168,17 +242,16 @@ const Signup = () => {
               <div className="relative flex justify-center text-sm">
                 <span className="px-2 bg-black text-gray-400">Or continue with</span>
               </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
+            </div>            <div className="grid grid-cols-2 gap-4">
               {[
-                { icon: faGoogle, bg: 'bg-red-600 hover:bg-red-700' },
-                { icon: faGithub, bg: 'bg-gray-800 hover:bg-gray-900' }
+                { icon: faGoogle, bg: 'bg-red-600 hover:bg-red-700', name: 'Google' },
+                { icon: faGithub, bg: 'bg-gray-800 hover:bg-gray-900', name: 'GitHub' }
               ].map((social, index) => (
                 <Button 
                   key={index} 
                   type="button"
                   className={`${social.bg} text-white transition-all duration-200`}
+                  onClick={() => toast.info(`${social.name} signup coming soon!`)}
                 >
                   <FontAwesomeIcon icon={social.icon} />
                 </Button>

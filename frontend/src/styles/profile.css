@@ -1,0 +1,275 @@
+/* Modern animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+  from { transform: translateX(-30px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes glowPulse {
+  0% { box-shadow: 0 0 5px rgba(16, 185, 129, 0.2); }
+  50% { box-shadow: 0 0 20px rgba(16, 185, 129, 0.4); }
+  100% { box-shadow: 0 0 5px rgba(16, 185, 129, 0.2); }
+}
+
+/* Modern glassmorphism and gradients */
+.profile-container {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.profile-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 400px;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(6, 95, 70, 0.05) 100%);
+  clip-path: polygon(0 0, 100% 0, 100% 75%, 0 100%);
+}
+
+.profile-header {
+  position: relative;
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(16, 185, 129, 0.2);
+  animation: slideIn 0.6s ease-out;
+}
+
+.profile-avatar-container {
+  position: relative;
+  animation: fadeIn 0.8s ease-out;
+}
+
+.profile-avatar {
+  transition: all 0.3s ease;
+  border: 4px solid rgba(16, 185, 129, 0.3);
+}
+
+.profile-avatar:hover {
+  transform: scale(1.05);
+  border-color: rgba(16, 185, 129, 0.8);
+  animation: glowPulse 2s infinite;
+}
+
+/* Modern card designs */
+.stat-card {
+  background: rgba(30, 41, 59, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(16, 185, 129, 0.1);
+  transition: all 0.3s ease;
+  animation: fadeIn 0.6s ease-out;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+  border-color: rgba(16, 185, 129, 0.3);
+  box-shadow: 0 10px 30px -10px rgba(16, 185, 129, 0.2);
+}
+
+.badge-item {
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  transition: all 0.3s ease;
+  animation: fadeIn 0.6s ease-out;
+}
+
+.badge-item:hover {
+  transform: translateY(-3px) scale(1.02);
+  border-color: rgba(245, 158, 11, 0.4);
+  box-shadow: 0 8px 20px -8px rgba(245, 158, 11, 0.2);
+}
+
+.activity-item {
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid transparent;
+  transition: all 0.3s ease;
+  animation: fadeIn 0.6s ease-out;
+}
+
+.activity-item:hover {
+  background: rgba(30, 41, 59, 0.8);
+  border-color: rgba(16, 185, 129, 0.2);
+  transform: translateX(8px);
+}
+
+/* Stats and metrics */
+.metric-value {
+  font-size: 1.5rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: fadeIn 0.8s ease-out;
+}
+
+/* Enhanced language tags */
+.language-tag {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  transition: all 0.3s ease;
+}
+
+.language-tag:hover {
+  background: rgba(16, 185, 129, 0.2);
+  transform: translateY(-2px);
+}
+
+/* Social links */
+.social-link {
+  transition: all 0.3s ease;
+}
+
+.social-link:hover {
+  transform: translateY(-2px) scale(1.1);
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+  .profile-container::before {
+    height: 300px;
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .profile-header {
+    padding: 1.5rem;
+    text-align: center;
+  }
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* Profile container styles */
+.profile-container {
+  animation: fadeIn 0.5s ease-out;
+  background: linear-gradient(to bottom, rgba(17, 24, 39, 0.8), rgba(17, 24, 39, 1));
+}
+
+.profile-header {
+  position: relative;
+  background: linear-gradient(to right, rgba(16, 185, 129, 0.1), rgba(6, 95, 70, 0.1));
+  border-bottom: 1px solid rgba(16, 185, 129, 0.2);
+  animation: slideIn 0.6s ease-out;
+}
+
+.profile-avatar {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.profile-avatar:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 30px rgba(16, 185, 129, 0.3);
+}
+
+.stat-card {
+  animation: scaleIn 0.5s ease-out;
+  background: rgba(31, 41, 55, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(16, 185, 129, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.badge-item {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0.05));
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  transition: all 0.3s ease;
+}
+
+.badge-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
+}
+
+.activity-item {
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
+}
+
+.activity-item:hover {
+  background: rgba(31, 41, 55, 0.9);
+  border-color: rgba(16, 185, 129, 0.2);
+  transform: translateX(4px);
+}
+
+/* Grid layout improvements */
+.stats-grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .profile-header {
+    padding: 1.5rem;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.6s ease-out forwards;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.4s ease-out forwards;
+}
+
+.profile-card {
+  background: linear-gradient(to right, rgba(74, 222, 128, 0.1), rgba(59, 130, 246, 0.1));
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.profile-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.05),
+    transparent
+  );
+  transition: 0.5s;
+}
+
+.profile-card:hover::before {
+  left: 100%;
+}
+
+.profile-stats-card {
+  background: rgba(17, 24, 39, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(74, 222, 128, 0.2);
+  transition: all 0.3s ease;
+}
+
+.profile-stats-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(74, 222, 128, 0.1);
+}

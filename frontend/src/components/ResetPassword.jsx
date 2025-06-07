@@ -17,15 +17,36 @@ const ResetPassword = () => {
 
   const validateForm = () => {
     if (!password) {
-      toast.error('Password is required');
+      toast.error('Please enter your new password to complete the reset.', {
+        style: {
+          background: '#ef4444',
+          color: 'white',
+          fontWeight: '500'
+        },
+        duration: 3000
+      });
       return false;
     }
     if (password.length < 8) {
-      toast.error('Password must be at least 8 characters long');
+      toast.error('Password must be at least 8 characters long for better security.', {
+        style: {
+          background: '#ef4444',
+          color: 'white',
+          fontWeight: '500'
+        },
+        duration: 3000
+      });
       return false;
     }
     if (password !== confirmPassword) {
-      toast.error('Passwords do not match');
+      toast.error('Passwords don\'t match. Please make sure both passwords are identical.', {
+        style: {
+          background: '#ef4444',
+          color: 'white',
+          fontWeight: '500'
+        },
+        duration: 3000
+      });
       return false;
     }
     return true;
@@ -43,12 +64,26 @@ const ResetPassword = () => {
         resetToken,
         password,
       });
-      toast.success(response.data.message);
+      toast.success(`🎉 ${response.data.message}`, {
+        style: {
+          background: '#22c55e',
+          color: 'white',
+          fontWeight: '500'
+        },
+        duration: 4000
+      });
       setTimeout(() => {
         navigate('/login');
       }, 2000);
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Error resetting password');
+      toast.error(error.response?.data?.message || 'Unable to reset your password right now. Please try again or contact support.', {
+        style: {
+          background: '#ef4444',
+          color: 'white',
+          fontWeight: '500'
+        },
+        duration: 4000
+      });
     } finally {
       setIsSubmitting(false);
     }

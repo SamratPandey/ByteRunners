@@ -159,7 +159,15 @@ const Courses = () => {
   const CourseCard = ({ course }) => {
     const handleViewCourse = () => {
       if (!isAuthenticated) {
-        toast("Please login to view course details", { icon: 'ℹ️' });
+        toast("🎓 Please log in to access course details and start your learning journey!", { 
+          icon: 'ℹ️',
+          style: {
+            background: '#3b82f6',
+            color: 'white',
+            fontWeight: '500'
+          },
+          duration: 4000
+        });
         navigate('/login', { state: { from: { pathname: `/course-details/${course._id}` } } });
       } else {
         navigate(`/course-details/${course._id}`);

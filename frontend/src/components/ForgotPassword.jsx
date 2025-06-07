@@ -16,10 +16,24 @@ const ForgotPassword = () => {
 
   const validateForm = () => {
     if (!email) {
-      toast.error('Email is required');
+      toast.error('Please enter your email address to reset your password.', {
+        style: {
+          background: '#ef4444',
+          color: 'white',
+          fontWeight: '500'
+        },
+        duration: 3000
+      });
       return false;
     } else if (!/\S+@\S+\.\S+/.test(email)) {
-      toast.error('Please enter a valid email address');
+      toast.error('Please enter a valid email address (e.g., user@example.com).', {
+        style: {
+          background: '#ef4444',
+          color: 'white',
+          fontWeight: '500'
+        },
+        duration: 3000
+      });
       return false;
     }
     return true;
@@ -34,13 +48,27 @@ const ForgotPassword = () => {
     try {
       const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/auth/forgot-password`, { email });
       
-      toast.success('Password reset link sent to your email!');
+      toast.success('📧 Password reset link sent to your email! Check your inbox and spam folder.', {
+        style: {
+          background: '#22c55e',
+          color: 'white',
+          fontWeight: '500'
+        },
+        duration: 4000
+      });
       
       setTimeout(() => {
         navigate('/login');
       }, 2000);
     } catch (error) {
-      toast.error('Check your email. Please try again later.');
+      toast.error('Unable to send reset email right now. Please verify your email address and try again later.', {
+        style: {
+          background: '#ef4444',
+          color: 'white',
+          fontWeight: '500'
+        },
+        duration: 4000
+      });
       console.log(error);
     } finally {
       setIsSubmitting(false);

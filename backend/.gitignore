@@ -20,3 +20,9 @@ build/
 # OS-specific files
 .DS_Store
 Thumbs.db
+
+# Uploads
+uploads/
+uploads/**/*
+!uploads/avatars/
+!uploads/avatars/.gitkeep

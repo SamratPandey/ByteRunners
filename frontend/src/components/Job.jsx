@@ -50,11 +50,11 @@ const Job = () => {
                 toast.error("Error fetching jobs");
             } finally {
                 setIsLoading(false);
-            }
-        };
+            }        };
         fetchJobs();
     }, []);
 
+    // Effect for filtering jobs based on search term and filters
     useEffect(() => {
         let results = jobs;
         
@@ -366,9 +366,34 @@ const Job = () => {
                         </h1>
                         <p className="text-xl text-gray-400 max-w-3xl mx-auto">
                             Find your next career opportunity with top companies seeking talented professionals like you.
-                        </p>
-                    </div>
+                        </p>                    </div>
 
+                    {/* Search bar */}
+                    <div className="mb-8">
+                        <div className="bg-black/90 backdrop-blur-lg border border-green-900/50 rounded-lg p-4">
+                            <div className="relative">
+                                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-green-500 w-5 h-5" />
+                                <input
+                                    type="text"
+                                    placeholder="Search for jobs by title, description, or skills..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="w-full bg-black/40 border border-green-900/50 rounded-lg p-3 pl-12 text-white focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none"
+                                />
+                                {searchTerm && (
+                                    <button
+                                        onClick={() => setSearchTerm('')}
+                                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-green-400"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                                        </svg>
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    </div>
 
                     <FilterSection />
 

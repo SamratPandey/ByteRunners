@@ -47,10 +47,24 @@ const Dashboard = () => {
       } catch (error) {
         if (error.response?.status === 401) {
           dispatch(logout());
-          toast.error('Session expired. Please login again.');
+          toast.error('Your session has expired. Please log in again to continue.', {
+            style: {
+              background: '#ef4444',
+              color: 'white',
+              fontWeight: '500'
+            },
+            duration: 4000
+          });
           setShouldRedirect(true);
         } else {
-          toast.error('Failed to fetch user data');
+          toast.error('Unable to load your dashboard data. Please refresh the page or try again later.', {
+            style: {
+              background: '#ef4444',
+              color: 'white',
+              fontWeight: '500'
+            },
+            duration: 4000
+          });
         }
         setIsLoading(false);
       }
@@ -68,7 +82,14 @@ const Dashboard = () => {
   const handleLogout = () => {
     dispatch(logout());
     setUser(null);
-    toast.success('Logged out successfully!');
+    toast.success('👋 You\'ve been logged out successfully! Thanks for using ByteRunners!', {
+      style: {
+        background: '#22c55e',
+        color: 'white',
+        fontWeight: '500'
+      },
+      duration: 3000
+    });
     setShouldRedirect(true);
   };
 

@@ -22,14 +22,23 @@ const protect = (req, res, next) => {
   
   if (!token) {
     return res.status(401).json({ message: 'Not authorized, no token' });
-  }
-
-  try {
+  }  try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    // If verification succeeds but token is expired (shouldn't happen with jwt.verify, but just in case)
+    const currentTime = Math.floor(Date.now() / 1000);
+    if (decoded.exp && decoded.exp < currentTime) {
+      return res.status(401).json({ 
+        success: false,
+        message: 'Session expired'
+      });
+    }
+
     req.user = decoded;
     next(); 
   } catch (error) {
-    console.error(error);    // Special handling for check-auth endpoint
+    console.error('Auth middleware error:', error.message);
+    
     if (req.originalUrl.includes('/check-auth')) {
       return res.status(401).json({ 
         success: false,
@@ -37,7 +46,9 @@ const protect = (req, res, next) => {
       });
     }
     
-    return res.status(401).json({ message: 'Token not valid' });
+    return res.status(401).json({ 
+      message: error.name === 'TokenExpiredError' ? 'Session expired' : 'Token not valid' 
+    });
   }
 };
 

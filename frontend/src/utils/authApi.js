@@ -1,7 +1,6 @@
 import axios from 'axios';
 
 
-// Create a custom instance for user API calls
 const authApi = axios.create({
   baseURL: import.meta.env.VITE_BACKEND_URL,
   withCredentials: true, 
@@ -10,7 +9,6 @@ const authApi = axios.create({
 // Request interceptor to add common headers
 authApi.interceptors.request.use(
   (config) => {
-    // For auth check requests, add the special header
     if (config.url.includes('/check-auth')) {
       config.headers = {
         ...config.headers,
@@ -24,33 +22,32 @@ authApi.interceptors.request.use(
   }
 );
 
-// Response interceptor to handle token expiration and other errors
 authApi.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Handle different error scenarios
     if (!error.response) {
-      // Network error (could be CORS)
       console.error('Network error:', error.message);
       
-      // Don't show toast for auth check failures
       if (!error.config.url.includes('/check-auth')) {
-        console.error('API request failed:', error.message);
-      }
-    } else if (error.response.status === 401) {
-      // Check if this is an auth check request (has special header)
+        toast('Network error. Please check your connection.', { icon: '❌' });
+      }    } else if (error.response.status === 401) {
       const isCheckingAuth = error.config.headers['x-checking-auth'] === 'true';
-      // Also check if we're already on the login page
       const isLoginPage = window.location.pathname.includes('/login');
+      const message = error.response.data?.message;
       
-      if (!isCheckingAuth && !isLoginPage) {
-        // Only redirect if not checking auth and not already on login page
-        console.log('Auth error, redirecting to login');
+      if (!isCheckingAuth && !isLoginPage && message === 'Session expired') {
+        localStorage.removeItem('auth');
+        sessionStorage.removeItem('auth');
+        // Show message
+        toast('Session expired. Please login again.', { icon: '❌' });
         window.location.href = '/login';
+        return Promise.reject(new Error('Session expired'));
       }
     } else {
-      // Other errors
       const message = error.response.data?.message || 'An error occurred';
+      if (!error.config.url.includes('/check-auth')) {
+        toast(message, { icon: '❌' });
+      }
       console.error('API error:', message);
     }
     

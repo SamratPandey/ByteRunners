@@ -7,9 +7,10 @@ import { Badge } from '@/components/ui/badge';
 import { BookOpen, Code, Users, Terminal,  Github, Twitter, Linkedin, X, Play, Copy, Maximize2, Minimize2} from 'lucide-react';
 import Editor from '@monaco-editor/react';
 import Nav from './Nav';
+import UserProgress from './UserProgress';
 import { Value } from '@radix-ui/react-select';
 import authApi from '../utils/authApi';
-
+import { useSelector } from 'react-redux';
 
 //Problem code
 const problemCodes = {
@@ -313,6 +314,8 @@ const AnimatedCard = ({ children }) => {
 };
 
 const Home = () => {
+  const { isAuthenticated } = useSelector(state => state.auth);
+  const [userHasCompletedOnboarding, setUserHasCompletedOnboarding] = useState(false);
 
   const [selectedProblem, setSelectedProblem] = useState("Hello World");
   const [selectedLanguage, setSelectedLanguage] = useState("C++");
@@ -327,7 +330,6 @@ const Home = () => {
     setSelectedLanguage(language);
     setEditorCode(code || problemCodes[selectedProblem][language]);
   };
-
   const runCode = async (sourceCode, language) => {
     try {
         const response = await axios.post(
@@ -351,6 +353,24 @@ const Home = () => {
       };
     }
   };
+
+  // Check if user has completed onboarding when authenticated
+  useEffect(() => {
+    const checkOnboardingStatus = async () => {
+      if (isAuthenticated) {
+        try {
+          // In a real implementation, you'd fetch this from your backend
+          // For now, we'll check localStorage or assume completed
+          const onboardingCompleted = localStorage.getItem('onboardingCompleted');
+          setUserHasCompletedOnboarding(onboardingCompleted === 'true');
+        } catch (error) {
+          console.error('Error checking onboarding status:', error);
+        }
+      }
+    };
+    
+    checkOnboardingStatus();
+  }, [isAuthenticated]);
   
 
 
@@ -397,8 +417,16 @@ const Home = () => {
               <Terminal className="relative w-full h-96 text-green-500 opacity-80" />
             </div>
           </div>
-        </div>
-      </section>
+        </div>      </section>
+
+      {/* Conditional UserProgress Section for Authenticated Users */}
+      {isAuthenticated && userHasCompletedOnboarding && (
+        <section className="py-12 bg-gray-900/50">
+          <div className="container mx-auto px-6">
+            <UserProgress />
+          </div>
+        </section>
+      )}
 
       {/* Features Grid with Animated Cards */}
       <section className="py-20 bg-black relative">

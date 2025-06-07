@@ -8,6 +8,8 @@ const adminRoutes = require('./routes/adminRoutes');
 const siteRoutes = require('./routes/siteRoutes');
 const courseRoutes = require('./routes/courseRoutes')
 const jobRoutes = require('./routes/jobRoutes');
+const testRoutes = require('./routes/testRoutes');
+const onboardingRoutes = require('./routes/onboardingRoutes');
 const Admin = require('./models/Admin');  
 const { registerAdmin } = require('./controllers/adminController');
 
@@ -32,6 +34,8 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/site',siteRoutes);
 app.use('/api/course',courseRoutes);
 app.use('/api/jobs', jobRoutes);
+app.use('/api/test', testRoutes);
+app.use('/api/onboarding', onboardingRoutes);
 
 const createDefaultAdmin = async () => {
   try {

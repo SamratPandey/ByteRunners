@@ -57,8 +57,7 @@ const userSchema = new mongoose.Schema({
     twitter: String,
     instagram: String,
     facebook: String
-  },
-  solvedProblems: [{ 
+  },  solvedProblems: [{ 
     problemId: { type: mongoose.Schema.Types.ObjectId, ref: 'Problem' },
     solvedAt: { type: Date, default: Date.now },
     attempts: { type: Number, default: 1 }
@@ -70,10 +69,90 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ['free', 'premium', 'enterprise'],
     default: 'free'
-  },purchasedCourses: [{
+  },
+  purchasedCourses: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Course'
-  }]
+  }],
+  // Onboarding and Test Data
+  onboardingData: {
+    isCompleted: { type: Boolean, default: false },
+    completedAt: Date,
+    experience: {
+      type: String,
+      enum: ['beginner', 'intermediate', 'advanced', 'expert']
+    },
+    interests: [String],
+    goals: String,
+    preferredLanguages: [String],
+    skillAssessment: {
+      score: { type: Number, default: 0 },
+      totalQuestions: { type: Number, default: 0 },
+      correctAnswers: { type: Number, default: 0 },
+      answers: [{
+        questionId: String,
+        question: String,
+        selectedAnswer: Number,
+        correctAnswer: Number,
+        isCorrect: Boolean,
+        timeSpent: Number, // in seconds
+        answeredAt: { type: Date, default: Date.now }
+      }],
+      completedAt: Date
+    },
+    recommendations: [String]
+  },
+  // Test and Quiz History
+  testHistory: [{
+    testId: { type: mongoose.Schema.Types.ObjectId },
+    testType: {
+      type: String,
+      enum: ['skill_assessment', 'practice_quiz', 'interview_prep', 'custom']
+    },
+    subject: String, // JavaScript, Python, Data Structures, etc.
+    difficulty: {
+      type: String,
+      enum: ['easy', 'medium', 'hard']
+    },
+    questions: [{
+      questionId: String,
+      question: String,
+      options: [String],
+      selectedAnswer: Number,
+      correctAnswer: Number,
+      isCorrect: Boolean,
+      explanation: String,
+      timeSpent: Number,
+      aiGenerated: { type: Boolean, default: false },
+      topic: String
+    }],
+    score: { type: Number, default: 0 },
+    totalQuestions: { type: Number, default: 0 },
+    correctAnswers: { type: Number, default: 0 },
+    percentage: { type: Number, default: 0 },
+    timeSpent: Number, // total time in seconds
+    startedAt: { type: Date, default: Date.now },
+    completedAt: Date,
+    aiAnalysis: {
+      strengths: [String],
+      weaknesses: [String],
+      recommendations: [String],
+      nextSteps: [String],
+      studyPlan: String,
+      confidenceLevel: Number // 1-10
+    }
+  }],
+  // Learning Analytics
+  learningAnalytics: {
+    totalTestsTaken: { type: Number, default: 0 },
+    averageScore: { type: Number, default: 0 },
+    strongTopics: [String],
+    weakTopics: [String],
+    learningStreak: { type: Number, default: 0 },
+    lastTestDate: Date,
+    improvementTrend: Number, // percentage improvement over time
+    timeSpentLearning: { type: Number, default: 0 } // in minutes
+  }
   
 }, {
   timestamps: true

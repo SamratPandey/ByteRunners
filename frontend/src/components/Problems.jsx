@@ -13,6 +13,7 @@ const Problems = () => {
   const navigate = useNavigate(); 
   const { isAuthenticated } = useSelector(state => state.auth);
   const [problems, setProblems] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [categories, setCategories] = useState([]);
   const [selectedDifficulty, setSelectedDifficulty] = useState('All');
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -24,13 +25,13 @@ const Problems = () => {
 
   useEffect(() => {
     const fetchProblems = async () => {
+      setIsLoading(true);
       try {
         const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/site/problems`);
         const result = response.data;
   
         if (result.success) {
           const problemsData = result.data;
-  
           setProblems(problemsData);
   
           const categoryCounts = problemsData.reduce((acc, problem) => {
@@ -40,7 +41,6 @@ const Problems = () => {
             return acc;
           }, {});
   
-          // Format categories for easier rendering
           const formattedCategories = Object.entries(categoryCounts).map(([name, count]) => ({
             name,
             count,
@@ -49,13 +49,21 @@ const Problems = () => {
         }
       } catch (error) {
         console.error("Failed to fetch problems:", error);
+        toast.error("Unable to load coding problems right now. Please check your connection and try again.", {
+          style: {
+            background: '#ef4444',
+            color: 'white',
+            fontWeight: '500'
+          },
+          duration: 4000
+        });
+      } finally {
+        setIsLoading(false);
       }
     };
   
     fetchProblems();
   }, []);
-  
-  
 
   const getDifficultyColor = (difficulty) => {
     switch (difficulty.toLowerCase()) {
@@ -82,7 +90,15 @@ const Problems = () => {
   };
   const handleSolveProblem = (problemId) => {
     if (!isAuthenticated) {
-      toast("Please login to solve problems", { icon: 'ℹ️' });
+      toast("🔐 Please log in to start solving coding problems and track your progress!", { 
+        icon: 'ℹ️',
+        style: {
+          background: '#3b82f6',
+          color: 'white',
+          fontWeight: '500'
+        },
+        duration: 4000
+      });
       // Save the problem ID and redirect to login
       navigate('/login', { state: { from: { pathname: `/solve/${problemId}` } } });
     } else {
@@ -119,6 +135,45 @@ const Problems = () => {
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-black text-white">
+        <div className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-sm border-b border-green-900">
+          <Nav />
+        </div>
+        <main className="container min-h-screen mx-auto px-4 py-8 pt-20">
+          {/* Loading skeleton for stats */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            {[1, 2, 3, 4].map((index) => (
+              <div key={index} className="bg-gray-900/50 border-gray-800 rounded-lg p-4 animate-pulse">
+                <div className="h-4 bg-gray-800 rounded w-2/3 mb-2"></div>
+                <div className="h-6 bg-gray-800 rounded w-1/3"></div>
+              </div>
+            ))}
+          </div>
+
+          {/* Loading skeleton for filters */}
+          <div className="space-y-4 mb-8">
+            <div className="flex gap-4">
+              {[1, 2, 3, 4].map((index) => (
+                <div key={index} className="h-10 w-20 bg-gray-800 rounded-lg animate-pulse"></div>
+              ))}
+            </div>
+          </div>
+
+          {/* Loading skeleton for table */}
+          <div className="overflow-x-auto rounded-lg border border-gray-800">
+            <div className="space-y-4 p-4">
+              {[1, 2, 3, 4, 5].map((index) => (
+                <div key={index} className="h-16 bg-gray-800 rounded-lg animate-pulse"></div>
+              ))}
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-black text-white">
