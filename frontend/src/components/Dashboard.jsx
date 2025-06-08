@@ -8,6 +8,7 @@ import { logout } from '../redux/actions/authActions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { AnalyticsCardSkeleton } from '@/components/ui/skeleton';
 import { User, Code, Trophy, Star } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
@@ -92,11 +93,10 @@ const Dashboard = () => {
     });
     setShouldRedirect(true);
   };
-
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <p>Loading...</p>
+      <div className="min-h-screen bg-black text-white">
+        <AnalyticsCardSkeleton />
       </div>
     );
   }

@@ -51,7 +51,6 @@ Create `.env` file in the backend directory:
 
 ```env
 # Database
-MONGODB_URI="your-mongodb-connection-string"
 MONGO_URI="your-mongodb-connection-string"
 DB_NAME="byteRunners"
 

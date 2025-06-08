@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { AnalyticsCardSkeleton } from '@/components/ui/skeleton';
 import { testApi } from '../utils/testApi';
 import { toast } from 'react-hot-toast';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -332,13 +333,28 @@ const TestAnalytics = () => {
       </div>
     );
   };
-
   if (loading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-center">
-          <FontAwesomeIcon icon={faSpinner} spin className="text-4xl text-green-400 mb-4" />
-          <p className="text-white">Loading analytics...</p>
+      <div className="min-h-screen bg-black text-white p-6">
+        <div className="max-w-7xl mx-auto">
+          {/* Header Skeleton */}
+          <div className="mb-8">
+            <div className="h-8 bg-gray-800 rounded w-64 mb-4 animate-pulse"></div>
+            <div className="h-4 bg-gray-800 rounded w-96 animate-pulse"></div>
+          </div>
+          
+          {/* Analytics Cards Skeleton */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <AnalyticsCardSkeleton key={index} />
+            ))}
+          </div>
+          
+          {/* Charts and Additional Content Skeleton */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <AnalyticsCardSkeleton className="h-96" />
+            <AnalyticsCardSkeleton className="h-96" />
+          </div>
         </div>
       </div>
     );

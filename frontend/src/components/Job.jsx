@@ -7,6 +7,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/componen
 import { Button } from "@/components/ui/button";
 import { Eye, Search, Filter, ChevronDown, Briefcase, MapPin, Clock, Building, Star, Calendar, Zap } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
+import { JobCardSkeleton } from '@/components/ui/skeleton';
 import Nav from "@/components/Nav";
 
 const Job = () => {
@@ -443,12 +444,27 @@ const Job = () => {
                                 </button>
                             </div>
                         </div>
-                    )}
-
-                    {isLoading ? (
-                        <div className="bg-black/40 backdrop-blur-xl border border-green-900/50 rounded-lg flex flex-col items-center justify-center h-64">
-                            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500 mb-4"></div>
-                            <p className="text-gray-400">Discovering opportunities for you...</p>
+                    )}                    {isLoading ? (
+                        <div className="space-y-6">
+                            {/* Featured Jobs Skeleton */}
+                            <div className="mb-8">
+                                <div className="h-8 bg-gray-800 rounded animate-pulse mb-4 w-48"></div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {[...Array(3)].map((_, index) => (
+                                        <JobCardSkeleton key={`featured-${index}`} />
+                                    ))}
+                                </div>
+                            </div>
+                            
+                            {/* All Jobs Skeleton */}
+                            <div>
+                                <div className="h-8 bg-gray-800 rounded animate-pulse mb-4 w-32"></div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {[...Array(6)].map((_, index) => (
+                                        <JobCardSkeleton key={`job-${index}`} />
+                                    ))}
+                                </div>
+                            </div>
                         </div>
                     ) : filteredJobs.length === 0 ? (
                         <div className="text-center py-20 bg-black/40 backdrop-blur-xl border border-green-900/50 rounded-lg">

@@ -15,7 +15,6 @@ export const login = (email, password) => async (dispatch) => {
     });
     return true;
   } catch (error) {
-    console.error('Login error:', error);
     const errorMessage = error.response?.data?.message || error.message || 'An error occurred';
     dispatch({
       type: 'ADMIN_LOGIN_FAIL',
@@ -58,7 +57,6 @@ export const checkAdminAuthStatus = () => async (dispatch) => {
       return false;
     }
   } catch (error) {
-    console.log('Admin auth check failed:', error.message);
     dispatch({ type: 'ADMIN_LOGOUT' });
     // Don't show error toast for auth check failures
     return false;

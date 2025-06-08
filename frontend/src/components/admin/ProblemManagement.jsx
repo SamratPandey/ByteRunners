@@ -36,6 +36,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { TableSkeleton } from '@/components/ui/skeleton';
 import { Search, Edit, Trash2, Plus, Filter, ArrowUpDown } from 'lucide-react';
 
 const ProblemManagement = () => {
@@ -507,14 +508,14 @@ const ProblemManagement = () => {
   };
 
   const totalPages = Math.ceil(sortAndFilterProblems().length / problemsPerPage);
-
   if (loading) {
     return (
       <Card className="w-full">
-        <CardContent className="p-6">
-          <div className="flex justify-center items-center h-32">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
-          </div>
+        <CardHeader>
+          <CardTitle>Problem Management</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <TableSkeleton rows={10} />
         </CardContent>
       </Card>
     );

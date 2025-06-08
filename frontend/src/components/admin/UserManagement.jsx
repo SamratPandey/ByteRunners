@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { TableSkeleton } from '@/components/ui/skeleton';
 import { Search, Edit, Trash2, UserPlus, ArrowUpDown, Filter } from 'lucide-react';
 import adminApi from '../../utils/adminApi';
 
@@ -270,14 +271,14 @@ const UserManagement = () => {
     );
   };
   
-
   if (loading) {
     return (
       <Card className="w-full">
-        <CardContent className="p-6">
-          <div className="flex justify-center items-center h-32">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
-          </div>
+        <CardHeader>
+          <CardTitle>User Management</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <TableSkeleton rows={10} />
         </CardContent>
       </Card>
     );

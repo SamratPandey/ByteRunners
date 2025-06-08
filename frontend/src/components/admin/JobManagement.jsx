@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import adminApi from '../../utils/adminApi';  
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { JobCardSkeleton } from '@/components/ui/skeleton';
 import { Briefcase, Search, Plus, Eye, Edit, Trash2 } from 'lucide-react';
 import { Toaster, toast } from 'react-hot-toast';
 import { Badge } from "@/components/ui/badge";
@@ -50,11 +51,11 @@ const JobManagement = () => {
                         <Plus size={18} className="mr-2" /> Add Job
                     </Button>
                 </div>
-            </div>
-
-            {isLoading ? (
-                <div className="flex items-center justify-center h-64">
-                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+            </div>            {isLoading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {[...Array(6)].map((_, index) => (
+                        <JobCardSkeleton key={index} />
+                    ))}
                 </div>
             ) : jobs.length === 0 ? (
                 <div className="text-center py-16 bg-gray-50 rounded-lg">

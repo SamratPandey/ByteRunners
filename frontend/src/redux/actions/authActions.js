@@ -65,8 +65,6 @@ export const checkAuthStatus = () => async (dispatch) => {
       return false;
     }
   } catch (error) {
-    // Only log the error, don't show it to the user
-    console.log('Auth check failed:', error.message);
     dispatch({ type: 'LOGOUT' });
     return false;
   } finally {
@@ -78,7 +76,6 @@ export const checkAuthStatus = () => async (dispatch) => {
 // Action to handle logout
 export const logout = () => async (dispatch) => {
   try {
-    // Call logout endpoint to clear the cookie
     await authApi.post('/api/auth/logout');
   } catch (error) {
     console.error('Logout error:', error);

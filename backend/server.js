@@ -22,12 +22,31 @@ const app = express();
 connectDB();
 
 // CORS configuration
-app.use(cors({
-  origin: `${process.env.FRONTEND_URL}`,  
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],  
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = [
+      process.env.FRONTEND_URL || 'http://localhost:5173',
+      'http://localhost:5173',
+      'http://127.0.0.1:5173'
+    ];
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log('CORS blocked origin:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],  
   allowedHeaders: ['Content-Type', 'Authorization', 'x-checking-auth'],  
-  credentials: true,  
-}));
+  credentials: true,
+  optionsSuccessStatus: 200 // Some legacy browsers choke on 204
+};
+
+app.use(cors(corsOptions));
 
 // Middleware
 app.use(express.json());

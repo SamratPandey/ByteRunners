@@ -1,13 +1,36 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { ResizablePanel, ResizablePanelGroup, ResizableHandle } from '@/components/ui/resizable';
-import { Copy, Maximize2, Minimize2, X, Play, Pause, RotateCcw, Send } from 'lucide-react';
+import { Copy, Maximize2, Minimize2, X, Play, Pause, RotateCcw, Send, Settings, Save, FileText } from 'lucide-react';
 import Editor from '@monaco-editor/react';
 import { toast, Toaster } from 'react-hot-toast';
+import axios from 'axios';
 import Nav from './Nav';
 import authApi from '../utils/authApi';
+import { FormSkeleton } from './ui/skeleton';
 
-const ProblemDetailsPanel = ({ problem }) => {
+
+
+const ProblemDetailsPanel = ({ problem, loading }) => {
+  if (loading) {
+    return (
+      <div className="h-full w-full overflow-y-auto bg-black/90 text-gray-200 border-r border-green-800/70 p-4">
+        <FormSkeleton />
+      </div>
+    );
+  }
+
+  if (!problem || Object.keys(problem).length === 0) {
+    return (
+      <div className="h-full w-full overflow-y-auto bg-black/90 text-gray-200 border-r border-green-800/70 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-gray-400 mb-2">No problem loaded</div>
+          <div className="text-sm text-gray-500">Please check the problem ID and try again</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="h-full w-full overflow-y-auto bg-black/90 text-gray-200 border-r border-green-800/70">
       <div className="p-4 border-b border-green-800/70">
@@ -93,12 +116,17 @@ const CodeEditorPanel = ({
     timerDisplayRef,
     toggleTimer,
     resetTimer,
-    problemId 
+    problemId,
+    autoSaveEnabled,
+    setAutoSaveEnabled 
   }) => {
     const editorRef = useRef(null);
     const [isRunning, setIsRunning] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [output, setOutput] = useState(null);
+    const [showSettings, setShowSettings] = useState(false);
+    const [fontSize, setFontSize] = useState(14);
+    const [theme, setTheme] = useState('vs-dark');
     
     const handleEditorDidMount = (editor, monaco) => {
       editorRef.current = editor;
@@ -108,6 +136,15 @@ const CodeEditorPanel = ({
           lineNumber: e.position.lineNumber,
           column: e.position.column
         });
+      });
+
+      // Add keyboard shortcuts
+      editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
+        manualSave();
+      });
+      
+      editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
+        runCode();
       });
     };
     
@@ -122,10 +159,49 @@ const CodeEditorPanel = ({
         duration: 2000
       });
     };
-    
 
-    
-    const runCode = async () => {
+    const manualSave = () => {
+      if (problemId && code) {
+        const saveKey = `problem_${problemId}_${selectedLanguage}`;
+        localStorage.setItem(saveKey, code);
+        toast.success('💾 Code saved successfully!', {
+          style: {
+            background: '#22c55e',
+            color: 'white',
+            fontWeight: '500'
+          },
+          duration: 1500
+        });
+      }
+    };
+
+    const resetCode = () => {
+      if (window.confirm('Are you sure you want to reset your code? This will remove all your current work.')) {
+        const defaultTemplates = {
+          javascript: `// Write your JavaScript solution here\nfunction solution() {\n    // Your code here\n    \n    return result;\n}\n\n// Test your solution\nconsole.log("Hello World");`,
+          python: `# Write your Python solution here\ndef solution():\n    \"\"\"\n    Your solution goes here\n    \"\"\"\n    # Your code here\n    \n    return result\n\n# Test your solution\nprint("Hello World")`,
+          java: `// Write your Java solution here\npublic class Solution {\n    public static void main(String[] args) {\n        // Your code here\n        System.out.println("Hello World");\n    }\n    \n    // Add your solution methods here\n}`,
+          cpp: `// Write your C++ solution here\n#include <iostream>\n#include <vector>\n#include <string>\nusing namespace std;\n\nint main() {\n    // Your code here\n    cout << "Hello World" << endl;\n    return 0;\n}`
+        };
+        onCodeChange(defaultTemplates[selectedLanguage] || '// Start coding here');
+        
+        // Clear saved code
+        if (problemId) {
+          const saveKey = `problem_${problemId}_${selectedLanguage}`;
+          localStorage.removeItem(saveKey);
+        }
+        
+        toast.success('🔄 Code reset to default template', {
+          style: {
+            background: '#22c55e',
+            color: 'white',
+            fontWeight: '500'
+          },
+          duration: 2000
+        });
+      }
+    };
+        const runCode = async () => {
       if (!code.trim()) {
         toast.error('Please write some code first before running tests!', { 
           id: 'runCode',
@@ -147,7 +223,8 @@ const CodeEditorPanel = ({
           '/api/auth/run-code',
           {
             source_code: code,
-            language_id: languageIdMap[selectedLanguage],
+            language: selectedLanguage,
+            problemId: problemId || null, // Include problemId for test case execution
             stdin: '' 
           }
         );
@@ -155,38 +232,66 @@ const CodeEditorPanel = ({
         setIsRunning(false);
         
         if (response.data.success) {
-          toast.success('✅ Code executed successfully! Check the output below.', { 
-            id: 'runCode',
-            style: {
-              background: '#22c55e',
-              color: 'white',
-              fontWeight: '500'
-            },
-            duration: 2000
-          });
-          setOutput({
-            status: 'success',
-            stdout: response.data.stdout || 'No output',
-            time: response.data.time,
-            memory: response.data.memory
-          });
+          // Check if we have test case results
+          if (response.data.testResults && Array.isArray(response.data.testResults)) {
+            const passedTests = response.data.testResults.filter(test => test.status === 'passed').length;
+            const totalTests = response.data.testResults.length;
+            
+            toast.success(`✅ ${passedTests}/${totalTests} visible test cases passed!`, { 
+              id: 'runCode',
+              style: {
+                background: '#22c55e',
+                color: 'white',
+                fontWeight: '500'
+              },
+              duration: 3000
+            });
+            
+            setOutput({
+              status: 'success',
+              type: 'testResults',
+              testResults: response.data.testResults,
+              passedTests,
+              totalTests
+            });
+          } else {
+            // Regular execution without test cases
+            toast.success('✅ Code executed successfully! Check the output below.', { 
+              id: 'runCode',
+              style: {
+                background: '#22c55e',
+                color: 'white',
+                fontWeight: '500'
+              },
+              duration: 2000
+            });
+            setOutput({
+              status: 'success',
+              type: 'execution',
+              stdout: response.data.stdout || 'No output',
+              time: response.data.time,
+              memory: response.data.memory
+            });
+          }
         } else {
           setOutput({
-            status: 'success',
-            stderr: response.data|| response.data.compile_output || 'Unknown error',
+            status: 'error',
+            type: 'execution',
+            stderr: response.data.stderr || response.data.compile_output || 'Unknown error',
             error: response.data.message || 'Execution failed'
           });
         }
       } catch (error) {
         setIsRunning(false);
+        console.error('Run code error:', error);
         setOutput({
           status: 'error',
+          type: 'execution',
           error: error.response?.data?.error || error.message || 'Network error'
         });
+        toast.error('Failed to run code: ' + (error.response?.data?.error || error.message), { id: 'runCode' });
       }
-    };
-    
-    const submitCode = async () => {
+    };    const submitCode = async () => {
       if (!code.trim()) {
         toast.error('Please write your solution code before submitting!', {
           style: {
@@ -203,36 +308,46 @@ const CodeEditorPanel = ({
       toast.loading('Submitting solution...', { id: 'submitCode' });
       
       try {
-        const userId = localStorage.getItem("userId"); 
-        
-        const response = await axios.post(
-          `${import.meta.env.VITE_BACKEND_URL}/api/auth/submit`,
+        const response = await authApi.post(
+          '/api/auth/submit',
           {
-            userId,
             problemId,
-            code
-          },
-          {
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${localStorage.getItem("token")}`
-            }
+            code,
+            language: selectedLanguage
           }
         );
         
         setIsSubmitting(false);
         
-        if (response.data.status === 'solved') {
-          toast.success('🎉 ' + response.data.message, { id: 'submitCode', duration: 3000 });
+        if (response.data.status === 'solved' || response.data.status === 'accepted') {
+          toast.success('🎉 ' + response.data.message, { id: 'submitCode', duration: 4000 });
           setOutput({
             status: 'success',
-            message: 'Problem solved! Solution accepted.'
+            type: 'submission',
+            message: response.data.message,
+            testResults: response.data.testResults || [],
+            userStats: response.data.userStats,
+            problemStats: response.data.problemStats,
+            submission: {
+              passedTests: response.data.passedTests || 0,
+              totalTests: response.data.totalTests || 0,
+              executionTime: response.data.executionTime,
+              alreadySolved: response.data.alreadySolved || false
+            }
           });
         } else {
-          toast.error(response.data.message, { id: 'submitCode' });
+          const failedMessage = response.data.message || 'Some test cases failed';
+          toast.error(failedMessage, { id: 'submitCode', duration: 4000 });
           setOutput({
             status: 'error',
-            message: response.data.message || 'Submission failed'
+            type: 'submission',
+            message: failedMessage,
+            testResults: response.data.testResults || [],
+            submission: {
+              passedTests: response.data.passedTests || 0,
+              totalTests: response.data.totalTests || 0,
+              executionTime: response.data.executionTime
+            }
           });
         }
       } catch (error) {
@@ -248,6 +363,7 @@ const CodeEditorPanel = ({
         });
         setOutput({
           status: 'error',
+          type: 'submission',
           error: error.response?.data?.error || error.message || 'Network error'
         });
       }
@@ -259,10 +375,9 @@ const CodeEditorPanel = ({
       'Java': 'java',
       'C++': 'cpp'
     };
-    
-    const editorOptions = {
+      const editorOptions = {
       minimap: { enabled: false },
-      fontSize: 14,
+      fontSize: fontSize,
       scrollBeyondLastLine: false,
       automaticLayout: true,
       lineNumbers: 'on',
@@ -271,10 +386,87 @@ const CodeEditorPanel = ({
       lineDecorationsWidth: 10,
       lineNumbersMinChars: 3,
       tabSize: 2,
+      wordWrap: 'on',
+      bracketPairColorization: { enabled: true },
+      suggest: {
+        enabled: true,
+        showStatusBar: true
+      },
+      quickSuggestions: true,
+      parameterHints: { enabled: true },
+      hover: { enabled: true }
     };
-    
-    return (
-      <div className="flex flex-col h-full">
+
+    // Settings Panel Component
+    const SettingsPanel = () => (
+      showSettings && (
+        <div className="absolute top-12 right-4 z-50 bg-black/95 border border-green-800/70 rounded-lg p-4 min-w-[280px] shadow-lg">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-green-400 font-medium">Editor Settings</h3>
+            <button 
+              onClick={() => setShowSettings(false)}
+              className="text-gray-400 hover:text-green-400"
+            >
+              <X size={16} />
+            </button>
+          </div>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm text-gray-300 mb-2">Font Size</label>
+              <input
+                type="range"
+                min="10"
+                max="24"
+                value={fontSize}
+                onChange={(e) => setFontSize(Number(e.target.value))}
+                className="w-full accent-green-500"
+              />
+              <div className="text-xs text-gray-400 mt-1">{fontSize}px</div>
+            </div>
+            
+            <div>
+              <label className="block text-sm text-gray-300 mb-2">Theme</label>
+              <select
+                value={theme}
+                onChange={(e) => setTheme(e.target.value)}
+                className="w-full bg-black/60 border border-green-800 text-green-400 px-2 py-1 rounded text-sm"
+              >
+                <option value="vs-dark">Dark</option>
+                <option value="vs-light">Light</option>
+                <option value="hc-black">High Contrast</option>
+              </select>
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <label className="text-sm text-gray-300">Auto Save</label>
+              <button
+                onClick={() => setAutoSaveEnabled(!autoSaveEnabled)}
+                className={`px-3 py-1 text-xs rounded ${
+                  autoSaveEnabled 
+                    ? 'bg-green-600 text-white' 
+                    : 'bg-gray-600 text-gray-300'
+                }`}
+              >
+                {autoSaveEnabled ? 'ON' : 'OFF'}
+              </button>
+            </div>
+            
+            <div className="border-t border-green-800/50 pt-3">
+              <div className="text-xs text-gray-400 space-y-1">
+                <div>• Ctrl+S: Save code</div>
+                <div>• Ctrl+Enter: Run code</div>
+                <div>• Auto-save: Every 2 seconds</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )
+    );
+      return (
+      <div className="flex flex-col h-full relative">
+        <SettingsPanel />
+        
         <div className="flex justify-between items-center bg-black/90 backdrop-blur-md border-b border-green-800/70 px-4 py-2">
           <div className="flex items-center space-x-4">
             <select 
@@ -293,6 +485,7 @@ const CodeEditorPanel = ({
               <button 
                 onClick={toggleTimer}
                 className="text-gray-400 hover:text-green-400 transition-colors text-xs bg-black/60 border border-green-800/50 px-2 py-1 rounded flex items-center space-x-1"
+                title={timerRunningRef.current ? 'Pause timer' : 'Start timer'}
               >
                 <span className="inline-block">
                   {timerRunningRef.current ? <Pause size={10} /> : <Play size={10} />}
@@ -303,6 +496,7 @@ const CodeEditorPanel = ({
               <button 
                 onClick={resetTimer}
                 className="text-gray-400 hover:text-green-400 transition-colors text-xs bg-black/60 border border-green-800/50 px-2 py-1 rounded flex items-center space-x-1"
+                title="Reset timer"
               >
                 <RotateCcw size={10} />
                 <span>Reset</span>
@@ -315,18 +509,24 @@ const CodeEditorPanel = ({
                 00:00:00
               </span>
             </div>
+
+            {autoSaveEnabled && (
+              <div className="text-xs text-green-500/70 flex items-center space-x-1">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span>Auto-save enabled</span>
+              </div>
+            )}
           </div>
-          
-          <div className="flex items-center space-x-3">
-            <button 
+            <div className="flex items-center space-x-3">            <button 
               onClick={runCode}
               disabled={isRunning}
               className={`text-gray-200 hover:text-black transition-colors text-xs ${
                 isRunning ? 'bg-green-700/50 cursor-not-allowed' : 'bg-green-600 hover:bg-green-500'
               } border border-green-800/50 px-2 py-1 rounded flex items-center space-x-1`}
+              title={problemId ? "Run against visible test cases (Ctrl+Enter)" : "Run code (Ctrl+Enter)"}
             >
               <Play size={10}/>
-              <span>{isRunning ? 'Running...' : 'Run'}</span>
+              <span>{isRunning ? 'Running...' : (problemId ? 'Run Tests' : 'Run')}</span>
             </button>
             
             <button 
@@ -339,19 +539,54 @@ const CodeEditorPanel = ({
               <Send size={10} />
               <span>{isSubmitting ? 'Submitting...' : 'Submit'}</span>
             </button>
+
+            <div className="h-4 w-px bg-green-800/50"></div>
+
+            <button 
+              onClick={manualSave}
+              className="text-gray-400 hover:text-green-400 transition-colors duration-200 p-1 rounded-full hover:bg-green-900/30"
+              aria-label="Save code (Ctrl+S)"
+              title="Save code (Ctrl+S)"
+            >
+              <Save size={16} />
+            </button>
   
             <button 
               onClick={copyCode}
               className="text-gray-400 hover:text-green-400 transition-colors duration-200 p-1 rounded-full hover:bg-green-900/30"
               aria-label="Copy code"
+              title="Copy to clipboard"
             >
               <Copy size={16} />
+            </button>
+
+            <button 
+              onClick={resetCode}
+              className="text-gray-400 hover:text-red-400 transition-colors duration-200 p-1 rounded-full hover:bg-red-900/30"
+              aria-label="Reset code"
+              title="Reset to default template"
+            >
+              <FileText size={16} />
+            </button>
+
+            <button 
+              onClick={() => setShowSettings(!showSettings)}
+              className={`transition-colors duration-200 p-1 rounded-full ${
+                showSettings 
+                  ? 'text-green-400 bg-green-900/30' 
+                  : 'text-gray-400 hover:text-green-400 hover:bg-green-900/30'
+              }`}
+              aria-label="Settings"
+              title="Editor settings"
+            >
+              <Settings size={16} />
             </button>
             
             <button 
               onClick={toggleFullscreen}
               className="text-gray-400 hover:text-green-400 transition-colors duration-200 p-1 rounded-full hover:bg-green-900/30"
               aria-label={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+              title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
             >
               {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
             </button>
@@ -361,6 +596,7 @@ const CodeEditorPanel = ({
                 onClick={toggleFullscreen}
                 className="text-gray-400 hover:text-green-400 transition-colors duration-200 p-1 rounded-full hover:bg-green-900/30"
                 aria-label="Close"
+                title="Close fullscreen"
               >
                 <X size={16} />
               </button>
@@ -368,11 +604,10 @@ const CodeEditorPanel = ({
           </div>
         </div>
         
-        <div className="flex-grow relative flex flex-col">
-          <div className={`${output ? 'h-3/5' : 'h-full'}`}>
+        <div className="flex-grow relative flex flex-col">          <div className={`${output ? 'h-3/5' : 'h-full'}`}>
             <Editor
               height="100%"
-              theme="vs-dark"
+              theme={theme}
               language={selectedLanguage}
               value={code}
               onChange={onCodeChange}
@@ -380,14 +615,15 @@ const CodeEditorPanel = ({
               options={editorOptions}
             />
           </div>
-          
-          {output && (
+            {output && (
             <div className="h-2/5 border-t border-green-800/70 bg-black/90 p-4 overflow-auto">
-              <div className="flex justify-between items-center mb-2">
+              <div className="flex justify-between items-center mb-3">
                 <h3 className={`text-sm font-medium ${
                   output.status === 'success' ? 'text-green-400' : 'text-red-400'
                 }`}>
-                  {output.status === 'success' ? 'Output' : 'Error'}
+                  {output.type === 'testResults' ? 'Test Results' :
+                   output.type === 'submission' ? 'Submission Results' : 
+                   output.status === 'success' ? 'Output' : 'Error'}
                 </h3>
                 <button 
                   onClick={() => setOutput(null)}
@@ -398,7 +634,162 @@ const CodeEditorPanel = ({
                 </button>
               </div>
               
-              {output.status === 'success' && (
+              {/* Test Results Display */}
+              {output.type === 'testResults' && output.testResults && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className={`text-sm font-medium ${
+                      output.passedTests === output.totalTests ? 'text-green-400' : 'text-yellow-400'
+                    }`}>
+                      Passed: {output.passedTests}/{output.totalTests} test cases
+                    </div>
+                    <div className="text-xs text-gray-400">
+                      Visible test cases only
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    {output.testResults.map((test, index) => (
+                      <div key={index} className={`border rounded p-3 ${
+                        test.status === 'passed' 
+                          ? 'border-green-800/50 bg-green-900/10' 
+                          : 'border-red-800/50 bg-red-900/10'
+                      }`}>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className={`text-xs font-medium ${
+                            test.status === 'passed' ? 'text-green-400' : 'text-red-400'
+                          }`}>
+                            Test Case {index + 1}: {test.status === 'passed' ? 'PASSED' : 'FAILED'}
+                          </span>
+                          {test.executionTime && (
+                            <span className="text-xs text-gray-400">
+                              {test.executionTime}ms
+                            </span>
+                          )}
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                          <div>
+                            <div className="text-gray-400 mb-1">Input:</div>
+                            <pre className="bg-black/30 p-2 rounded font-mono text-gray-300 max-h-20 overflow-auto">
+                              {test.input || 'No input'}
+                            </pre>
+                          </div>
+                          
+                          <div>
+                            <div className="text-gray-400 mb-1">Expected:</div>
+                            <pre className="bg-black/30 p-2 rounded font-mono text-gray-300 max-h-20 overflow-auto">
+                              {test.expectedOutput || 'No expected output'}
+                            </pre>
+                          </div>
+                          
+                          <div>
+                            <div className="text-gray-400 mb-1">Your Output:</div>
+                            <pre className={`bg-black/30 p-2 rounded font-mono max-h-20 overflow-auto ${
+                              test.status === 'passed' ? 'text-green-300' : 'text-red-300'
+                            }`}>
+                              {test.actualOutput || 'No output'}
+                            </pre>
+                          </div>
+                        </div>
+                        
+                        {test.error && (
+                          <div className="mt-2">
+                            <div className="text-red-400 text-xs mb-1">Error:</div>
+                            <pre className="bg-red-900/20 p-2 rounded text-xs font-mono text-red-300">
+                              {test.error}
+                            </pre>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Submission Results Display */}
+              {output.type === 'submission' && (
+                <div className="space-y-4">
+                  {output.message && (
+                    <div className={`p-3 rounded border ${
+                      output.status === 'success' 
+                        ? 'bg-green-900/20 border-green-800/50 text-green-400' 
+                        : 'bg-red-900/20 border-red-800/50 text-red-400'
+                    }`}>
+                      <div className="font-medium text-sm mb-1">
+                        {output.status === 'success' ? '🎉 Congratulations!' : '❌ Submission Failed'}
+                      </div>
+                      <div className="text-sm">{output.message}</div>
+                    </div>
+                  )}
+                  
+                  {output.submission && (
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div className="bg-black/30 p-3 rounded">
+                        <div className="text-gray-400 mb-1">Test Cases</div>
+                        <div className={`font-medium ${
+                          output.submission.passedTests === output.submission.totalTests 
+                            ? 'text-green-400' : 'text-red-400'
+                        }`}>
+                          {output.submission.passedTests}/{output.submission.totalTests} passed
+                        </div>
+                      </div>
+                      
+                      {output.submission.executionTime && (
+                        <div className="bg-black/30 p-3 rounded">
+                          <div className="text-gray-400 mb-1">Execution Time</div>
+                          <div className="text-green-400 font-medium">
+                            {output.submission.executionTime}ms
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  {output.userStats && (
+                    <div className="border-t border-green-800/50 pt-3">
+                      <div className="text-green-400 font-medium mb-2">📊 Your Progress</div>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                        <div className="bg-black/30 p-2 rounded text-center">
+                          <div className="text-gray-400">Problems Solved</div>
+                          <div className="text-green-400 font-bold text-lg">
+                            {output.userStats.problemsSolved}
+                          </div>
+                        </div>
+                        <div className="bg-black/30 p-2 rounded text-center">
+                          <div className="text-gray-400">Accuracy</div>
+                          <div className="text-green-400 font-bold text-lg">
+                            {output.userStats.accuracy}%
+                          </div>
+                        </div>
+                        <div className="bg-black/30 p-2 rounded text-center">
+                          <div className="text-gray-400">Current Streak</div>
+                          <div className="text-green-400 font-bold text-lg">
+                            {output.userStats.currentStreak}
+                          </div>
+                        </div>
+                        <div className="bg-black/30 p-2 rounded text-center">
+                          <div className="text-gray-400">Score</div>
+                          <div className="text-green-400 font-bold text-lg">
+                            {output.userStats.score}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {output.submission?.alreadySolved && (
+                    <div className="bg-blue-900/20 border border-blue-800/50 p-3 rounded">
+                      <div className="text-blue-400 text-sm">
+                        ℹYou've already solved this problem! This submission updates your attempt count.
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {/* Regular Execution Output */}
+              {output.type === 'execution' && output.status === 'success' && (
                 <>
                   {output.stdout && (
                     <div className="mb-2">
@@ -426,6 +817,7 @@ const CodeEditorPanel = ({
                 </>
               )}
               
+              {/* Error Display */}
               {output.status === 'error' && (
                 <>
                   {output.stderr && (
@@ -473,16 +865,24 @@ const CodeEditorPanel = ({
 
 const Solve = () => {
     const [problem, setProblem] = useState({});
+    const [loading, setLoading] = useState(true);
     const { problemId } = useParams();
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [selectedLanguage, setSelectedLanguage] = useState('javascript');
     const [code, setCode] = useState('// Start coding here');
     const [editorPosition, setEditorPosition] = useState({ lineNumber: 1, column: 1 });
+    const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
   
     const timerRef = useRef(0);
     const timerRunningRef = useRef(false);
     const timerDisplayRef = useRef(null);
     const timerIntervalRef = useRef(null);
+    const autoSaveTimeoutRef = useRef(null);
+
+    // Debug: Add logging for component mount
+    useEffect(() => {
+      console.log('Solve component mounted with problemId:', problemId);
+    }, []);
   
     const formatTime = (seconds) => {
       const hrs = Math.floor(seconds / 3600);
@@ -491,20 +891,68 @@ const Solve = () => {
       return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     };
 
-    useEffect(() => {
+    // Auto-save functionality
+    const autoSaveCode = useCallback(() => {
+      if (autoSaveEnabled && problemId && code && code !== '// Start coding here') {
+        const saveKey = `problem_${problemId}_${selectedLanguage}`;
+        localStorage.setItem(saveKey, code);
+        console.log('Code auto-saved for', saveKey);
+      }
+    }, [problemId, selectedLanguage, code, autoSaveEnabled]);
+
+    // Load saved code
+    const loadSavedCode = useCallback(() => {
+      if (problemId) {
+        const saveKey = `problem_${problemId}_${selectedLanguage}`;
+        const savedCode = localStorage.getItem(saveKey);
+        if (savedCode && savedCode !== '// Start coding here') {
+          setCode(savedCode);
+          toast.success('📁 Restored your previous work!', {
+            style: {
+              background: '#22c55e',
+              color: 'white',
+              fontWeight: '500'
+            },
+            duration: 2000
+          });
+          return true;
+        }
+      }
+      return false;
+    }, [problemId, selectedLanguage]);    useEffect(() => {
       const fetchProblem = async () => {
-        if (!problemId) return;
+        if (!problemId) {
+          setLoading(false);
+          return;
+        }
         
         try {
-          const response = await axios.get(
-            `${import.meta.env.VITE_BACKEND_URL}/api/auth/problem/${problemId}`,
-            {
-              headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
+          setLoading(true);
+          console.log('Fetching problem with ID:', problemId);
+          
+          // Check if user is authenticated first
+          try {
+            await authApi.get('/api/auth/check-auth');
+          } catch (authError) {
+            console.log('Auth check failed:', authError);
+            toast.error("Please log in to access problems.", {
+              style: {
+                background: '#ef4444',
+                color: 'white',
+                fontWeight: '500'
               },
-            }
-          );
+              duration: 4000
+            });
+            setLoading(false);
+            // Redirect to login page
+            window.location.href = '/login';
+            return;
+          }
+          
+          const response = await authApi.get(`/api/auth/problem/${problemId}`);
   
+          console.log('Problem response:', response.data);
+
           if (!response.data) {
             toast.error("Problem not found. It may have been removed or you don't have access.", {
               style: {
@@ -514,16 +962,47 @@ const Solve = () => {
               },
               duration: 4000
             });
+            setLoading(false);
             return;
           }
   
           setProblem(response.data);
           
-          if (response.data.codeTemplates && response.data.codeTemplates[selectedLanguage]) {
-            setCode(response.data.codeTemplates[selectedLanguage]);
+          // Try to load saved code first
+          const hasSavedCode = loadSavedCode();
+          
+          if (!hasSavedCode) {
+            // Set initial code template if available and no saved code
+            if (response.data.codeTemplates && response.data.codeTemplates[selectedLanguage]) {
+              setCode(response.data.codeTemplates[selectedLanguage]);
+            } else {
+              // Set enhanced default templates based on language
+              const defaultTemplates = {
+                javascript: `// ${response.data.title || 'Problem Solution'}\n// Write your JavaScript solution here\n\nfunction solution() {\n    // Your code here\n    \n    return result;\n}\n\n// Test your solution\nconsole.log("Hello World");`,
+                python: `# ${response.data.title || 'Problem Solution'}\n# Write your Python solution here\n\ndef solution():\n    \"\"\"\n    Your solution goes here\n    \"\"\"\n    # Your code here\n    \n    return result\n\n# Test your solution\nprint("Hello World")`,
+                java: `// ${response.data.title || 'Problem Solution'}\n// Write your Java solution here\n\npublic class Solution {\n    public static void main(String[] args) {\n        // Your code here\n        System.out.println("Hello World");\n    }\n    \n    // Add your solution methods here\n}`,
+                cpp: `// ${response.data.title || 'Problem Solution'}\n// Write your C++ solution here\n\n#include <iostream>\n#include <vector>\n#include <string>\nusing namespace std;\n\nint main() {\n    // Your code here\n    cout << "Hello World" << endl;\n    return 0;\n}`
+              };
+              setCode(defaultTemplates[selectedLanguage] || '// Start coding here');
+            }
           }
+          
+          setLoading(false);
         } catch (error) {
-          toast.error("Unable to load the problem. Please refresh the page or try again later.", {
+          console.error('Error fetching problem:', error);
+          console.error('Error response:', error.response?.data);
+          
+          let errorMessage = "Unable to load the problem. Please refresh the page or try again later.";
+          
+          if (error.response?.status === 401) {
+            errorMessage = "Authentication expired. Please log in again.";
+          } else if (error.response?.status === 404) {
+            errorMessage = "Problem not found. It may have been removed.";
+          } else if (error.response?.status === 403) {
+            errorMessage = "You don't have permission to access this problem.";
+          }
+          
+          toast.error(errorMessage, {
             style: {
               background: '#ef4444',
               color: 'white',
@@ -531,11 +1010,29 @@ const Solve = () => {
             },
             duration: 4000
           });
+          setLoading(false);
         }
       };
   
       fetchProblem();
-    }, [problemId]);
+    }, [problemId, selectedLanguage, loadSavedCode]);
+
+    // Auto-save effect
+    useEffect(() => {
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+      
+      autoSaveTimeoutRef.current = setTimeout(() => {
+        autoSaveCode();
+      }, 2000); // Auto-save after 2 seconds of inactivity
+      
+      return () => {
+        if (autoSaveTimeoutRef.current) {
+          clearTimeout(autoSaveTimeoutRef.current);
+        }
+      };
+    }, [code, autoSaveCode]);
 
     useEffect(() => {
       if (problem.codeTemplates && problem.codeTemplates[selectedLanguage]) {
@@ -592,8 +1089,7 @@ const Solve = () => {
     return (
       <>
         {!isFullscreen && <Nav />}
-        <div className={`${isFullscreen ? 'fixed inset-0 z-50 bg-black/95' : 'relative w-full mt-[65px]'}`}>
-          {isFullscreen ? (
+        <div className={`${isFullscreen ? 'fixed inset-0 z-50 bg-black/95' : 'relative w-full mt-[65px]'}`}>          {isFullscreen ? (
             <div className="h-full overflow-hidden shadow-lg shadow-green-900/20">
               <CodeEditorPanel
                 selectedLanguage={selectedLanguage}
@@ -610,17 +1106,17 @@ const Solve = () => {
                 toggleTimer={toggleTimer}
                 resetTimer={resetTimer}
                 problemId={problemId}
+                autoSaveEnabled={autoSaveEnabled}
+                setAutoSaveEnabled={setAutoSaveEnabled}
               />
             </div>
-          ) : (
-            <ResizablePanelGroup direction="horizontal" className="max-w-full md:min-w-[450px]">
+          ) : (<ResizablePanelGroup direction="horizontal" className="max-w-full md:min-w-[450px]">
               <ResizablePanel className="overflow-hidden shadow-lg shadow-green-900/20">
                 <div className="h-[102vh]">
-                  <ProblemDetailsPanel problem={problem} />
+                  <ProblemDetailsPanel problem={problem} loading={loading} />
                 </div>
               </ResizablePanel>
-              <ResizableHandle withHandle className="bg-green-800/30 hover:bg-green-700/40 transition-colors" />
-              <ResizablePanel defaultSize={50} className="overflow-hidden shadow-lg shadow-green-900/20">
+              <ResizableHandle withHandle className="bg-green-800/30 hover:bg-green-700/40 transition-colors" />              <ResizablePanel defaultSize={50} className="overflow-hidden shadow-lg shadow-green-900/20">
                 <CodeEditorPanel
                   selectedLanguage={selectedLanguage}
                   code={code}
@@ -636,6 +1132,8 @@ const Solve = () => {
                   toggleTimer={toggleTimer}
                   resetTimer={resetTimer}
                   problemId={problemId}
+                  autoSaveEnabled={autoSaveEnabled}
+                  setAutoSaveEnabled={setAutoSaveEnabled}
                 />
               </ResizablePanel>
             </ResizablePanelGroup>

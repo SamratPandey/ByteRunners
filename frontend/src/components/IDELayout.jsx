@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Split from 'react-split';
 import { Button } from "@/components/ui/button";
+import { FormSkeleton } from '@/components/ui/skeleton';
 import MonacoEditor from '@monaco-editor/react';
 import axios from 'axios';
 
@@ -78,10 +79,9 @@ const IDELayout = () => {
   return (
     <div className="h-screen">
       <Split sizes={[50, 50]} minSize={200} direction="horizontal" className="flex">
-        {/* Problem Section */}
-        <div className="p-6 overflow-y-auto bg-gray-900 text-white">
+        {/* Problem Section */}        <div className="p-6 overflow-y-auto bg-gray-900 text-white">
           {loading ? (
-            <p>Loading problem...</p>
+            <FormSkeleton />
           ) : error ? (
             <p className="text-red-500">{error}</p>
           ) : (

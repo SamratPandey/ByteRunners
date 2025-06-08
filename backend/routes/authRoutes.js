@@ -30,7 +30,7 @@ router.post("/forgot-password", forgotPassword);
 router.post("/reset-password", resetPassword);
 
 router.post("/run-code", async (req, res) => {
-  const { source_code, language, stdin = "" } = req.body;
+  const { source_code, language, stdin = "", problemId = null } = req.body;
 
   if (!source_code || !language) {
     return res
@@ -44,6 +44,58 @@ router.post("/run-code", async (req, res) => {
   }
 
   try {
+    // If problemId is provided, run against visible test cases
+    if (problemId) {
+      const problem = await Problem.findById(problemId);
+      if (problem) {
+        const visibleTestCases = problem.testCases.filter(tc => !tc.isHidden);
+        if (visibleTestCases.length > 0) {
+          const testResults = [];
+          
+          for (let i = 0; i < Math.min(visibleTestCases.length, 3); i++) { // Limit to first 3 visible test cases
+            const testCase = visibleTestCases[i];
+            try {
+              const result = await executeCode(source_code, language_id, testCase.input);
+              const userOutput = result.stdout?.trim() || '';
+              const expectedOutput = testCase.output?.trim() || '';
+              const passed = result.status?.id === 3 && userOutput === expectedOutput;
+              
+              testResults.push({
+                testNumber: i + 1,
+                passed,
+                input: testCase.input,
+                expectedOutput,
+                userOutput,
+                executionTime: result.time,
+                memory: result.memory,
+                status: result.status?.description || 'Unknown'
+              });
+            } catch (testError) {
+              testResults.push({
+                testNumber: i + 1,
+                passed: false,
+                input: testCase.input,
+                expectedOutput: testCase.output,
+                userOutput: 'Execution Error',
+                executionTime: null,
+                memory: null,
+                status: 'Runtime Error',
+                error: testError.message
+              });
+            }
+          }
+          
+          return res.status(200).json({ 
+            success: true, 
+            type: 'testCases',
+            testResults,
+            totalVisible: visibleTestCases.length
+          });
+        }
+      }
+    }
+
+    // Fallback to regular execution with provided stdin
     const result = await executeCode(source_code, language_id, stdin);
     const success = result.status?.id === 3;
 
@@ -54,7 +106,8 @@ router.post("/run-code", async (req, res) => {
 });
 
 router.post("/submit", protect, async (req, res) => {
-  const { userId, problemId, code, language, stdin = "" } = req.body;
+  const { problemId, code, language } = req.body;
+  const userId = req.user.id;
 
   if (!code || !language) {
     return res.status(400).json({ error: "Code and language are required." });
@@ -73,31 +126,156 @@ router.post("/submit", protect, async (req, res) => {
       return res.status(404).json({ error: "User or problem not found." });
     }
 
-    if (user.solvedProblems.includes(problemId)) {
-      return res.status(400).json({ error: "Problem already solved." });
+    // Check if problem already solved
+    const alreadySolved = user.solvedProblems.some(
+      solved => solved.problemId.toString() === problemId
+    );
+
+    // Execute code against all test cases
+    const testResults = [];
+    let passedCount = 0;
+    let totalTests = problem.testCases.length;
+    
+    for (let i = 0; i < problem.testCases.length; i++) {
+      const testCase = problem.testCases[i];
+      
+      try {
+        const result = await executeCode(code, language_id, testCase.input);
+        const userOutput = result.stdout?.trim() || '';
+        const expectedOutput = testCase.output?.trim() || '';
+        const passed = result.status?.id === 3 && userOutput === expectedOutput;
+        
+        if (passed) passedCount++;
+        
+        testResults.push({
+          testNumber: i + 1,
+          passed,
+          input: testCase.isHidden ? '[Hidden]' : testCase.input,
+          expectedOutput: testCase.isHidden ? '[Hidden]' : expectedOutput,
+          userOutput: testCase.isHidden && !passed ? '[Hidden]' : userOutput,
+          executionTime: result.time,
+          memory: result.memory,
+          isHidden: testCase.isHidden,
+          status: result.status?.description || 'Unknown',
+          stderr: result.stderr
+        });
+      } catch (testError) {
+        testResults.push({
+          testNumber: i + 1,
+          passed: false,
+          input: testCase.isHidden ? '[Hidden]' : testCase.input,
+          expectedOutput: testCase.isHidden ? '[Hidden]' : testCase.output,
+          userOutput: 'Execution Error',
+          executionTime: null,
+          memory: null,
+          isHidden: testCase.isHidden,
+          status: 'Runtime Error',
+          stderr: testError.message
+        });
+      }
     }
 
-    const result = await executeCode(code, language_id, stdin);
-    const output = result.stdout?.trim();
-    const expected = problem.expectedOutput?.trim();
-
-    const isSolved = result.status?.id === 3 && output === expected;
-
+    const allTestsPassed = passedCount === totalTests;
+    const submissionStatus = allTestsPassed ? 'Accepted' : 'Wrong Answer';
+    
+    // Update user statistics
     user.totalSubmissions += 1;
-    if (isSolved) {
-      user.solvedProblems.push(problemId);
-      user.problemsSolved += 1;
-      await user.save();
-      return res
-        .status(200)
-        .json({ status: "solved", message: "Problem solved!" });
+    
+    // Calculate new accuracy
+    const newAccuracy = user.totalSubmissions > 0 
+      ? ((user.problemsSolved + (allTestsPassed ? 1 : 0)) / user.totalSubmissions * 100).toFixed(1)
+      : 0;
+    user.accuracy = parseFloat(newAccuracy);
+    
+    // Add to recent activity
+    user.recentActivity.unshift({
+      problemId: problem._id,
+      problemTitle: problem.title,
+      status: submissionStatus,
+      language: language,
+      executionTime: testResults[0]?.executionTime || null,
+      memoryUsed: testResults[0]?.memory || null,
+      timestamp: new Date()
+    });
+    
+    // Keep only last 20 activities
+    if (user.recentActivity.length > 20) {
+      user.recentActivity = user.recentActivity.slice(0, 20);
     }
 
+    // If all tests passed and not previously solved
+    if (allTestsPassed && !alreadySolved) {
+      user.solvedProblems.push({
+        problemId: problem._id,
+        solvedAt: new Date(),
+        attempts: 1
+      });
+      user.problemsSolved += 1;
+      
+      // Update streak logic
+      const today = new Date().toDateString();
+      const lastActiveDate = user.lastActive ? user.lastActive.toDateString() : null;
+      const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toDateString();
+      
+      if (lastActiveDate === yesterday) {
+        user.streak += 1;
+      } else if (lastActiveDate !== today) {
+        user.streak = 1;
+      }
+      
+      // Award points based on difficulty
+      const difficultyPoints = {
+        'Easy': 10,
+        'Medium': 25,
+        'Hard': 50
+      };
+      user.score += difficultyPoints[problem.difficulty] || 10;
+    } else if (alreadySolved) {
+      // Update attempts for already solved problem
+      const solvedProblem = user.solvedProblems.find(
+        solved => solved.problemId.toString() === problemId
+      );
+      if (solvedProblem) {
+        solvedProblem.attempts += 1;
+      }
+    }
+    
+    user.lastActive = new Date();
     await user.save();
-    res.status(400).json({ status: "failed", message: "Incorrect solution." });
+
+    // Update problem statistics
+    problem.totalSubmissions += 1;
+    if (allTestsPassed && !alreadySolved) {
+      problem.acceptedSubmissions += 1;
+    }
+    await problem.save();
+
+    // Return detailed results
+    const response = {
+      status: allTestsPassed ? "solved" : "failed",
+      message: allTestsPassed 
+        ? (alreadySolved ? "Problem solved again! Great practice!" : "🎉 Congratulations! Problem solved!")
+        : `${passedCount}/${totalTests} test cases passed`,
+      testResults: {
+        passed: passedCount,
+        total: totalTests,
+        details: testResults
+      },
+      alreadySolved,
+      userStats: {
+        problemsSolved: user.problemsSolved,
+        totalSubmissions: user.totalSubmissions,
+        accuracy: user.accuracy,
+        streak: user.streak,
+        score: user.score
+      }
+    };
+
+    return res.status(200).json(response);
+
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Server error." });
+    console.error('Submit error:', err);
+    res.status(500).json({ error: "Server error during submission." });
   }
 });
 

@@ -15,14 +15,15 @@ const authReducer = (state = initialState, action) => {
         error: null,
         user: action.payload,
         isInitialized: true 
-      };
-
-    case 'LOGIN_FAILURE':
+      };    case 'LOGIN_FAILURE':
     case 'SIGNUP_FAILURE':
       return { ...state, error: action.payload, isAuthenticated: false };
 
     case 'LOGOUT':
-      return { ...state, isAuthenticated: false, error: null };
+      return { ...state, isAuthenticated: false, error: null, user: null };
+
+    case 'AUTH_INITIALIZED':
+      return { ...state, isInitialized: true };
 
     default:
       return state;

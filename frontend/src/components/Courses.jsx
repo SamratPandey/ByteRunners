@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Alert } from '@/components/ui/alert';
+import { CourseCardSkeleton } from '@/components/ui/skeleton';
 import Nav from './Nav';
 import axios from 'axios';
 
@@ -321,11 +322,11 @@ const Courses = () => {
               From beginner to advanced, discover courses crafted by industry experts to elevate your coding journey.
             </p>
           </div>
-          <FilterSection />
-          {loading ? (
-            <div className="text-center py-20">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto"></div>
-              <p className="text-gray-400 mt-4">Loading courses...</p>
+          <FilterSection />          {loading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[...Array(6)].map((_, index) => (
+                <CourseCardSkeleton key={index} />
+              ))}
             </div>
           ) : error ? (
             <Alert className="bg-red-500/10 border-red-500 text-red-500 max-w-md mx-auto">

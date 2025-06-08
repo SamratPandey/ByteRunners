@@ -7,6 +7,7 @@ import ProblemManagement from './ProblemManagement';
 import JobManagement from './JobManagement';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { AnalyticsCardSkeleton } from '@/components/ui/skeleton';
 import { Users, Code, BarChart, Settings, LogOut } from 'lucide-react';
 import { useDispatch } from 'react-redux';
 import { logout } from '../../redux/actions/adminActions';
@@ -72,10 +73,9 @@ const AdminDashboard = () => {
     dispatch(logout());
     window.location.href = '/admin/login';
   };
-
   const renderActiveComponent = () => {
     if (isLoading) {
-      return <div className="flex justify-center items-center h-full">Loading...</div>;
+      return <AnalyticsCardSkeleton />;
     }
 
     switch (activeSection) {

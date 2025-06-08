@@ -29,6 +29,7 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { ProfileCardSkeleton, CardSkeleton } from '@/components/ui/skeleton';
 import Nav from './Nav';
 import { logout } from '../redux/actions/authActions';
 import authApi from '../utils/authApi';
@@ -400,11 +401,32 @@ const Profile = () => {
       solvedProblems: []
     }
   };
-
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
-        <div className="animate-pulse w-16 h-16 bg-green-500 rounded-full" />
+      <div className="profile-container min-h-screen pb-12">
+        <Nav />
+        
+        {/* Header Skeleton */}
+        <div className="profile-header p-8 mb-8">
+          <div className="max-w-7xl mx-auto">
+            <ProfileCardSkeleton className="mb-6" />
+          </div>
+        </div>
+
+        {/* Stats Grid Skeleton */}
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <CardSkeleton key={index} className="h-48" />
+            ))}
+          </div>
+          
+          {/* Additional Content Skeleton */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <CardSkeleton className="h-64" />
+            <CardSkeleton className="h-64" />
+          </div>
+        </div>
       </div>
     );
   }
