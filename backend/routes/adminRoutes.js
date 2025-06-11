@@ -15,6 +15,31 @@ const {
   getTopPerformers,
   getRecentActivity  
 } = require('../controllers/adminController');
+
+// Import course management controllers
+const {
+  getAllCourses,
+  getCourse,
+  createCourse,
+  updateCourse,
+  deleteCourse,
+  updateCurriculum,
+  addCoupon,
+  updateCoupon,
+  deleteCoupon,
+  getCourseAnalytics
+} = require('../controllers/adminCourseController');
+
+// Import order management controllers
+const {
+  getAllOrders,
+  getOrder,
+  updateOrderStatus,
+  processRefund,
+  getOrderAnalytics,
+  exportOrders
+} = require('../controllers/orderController');
+
 const { adminProtect } = require('../middleware/adminAuth');
 
 // Import the logoutAdmin function
@@ -47,6 +72,26 @@ router.get('/problems/:id', getProblem);
 router.put('/problems/:id', updateProblem);
 router.delete('/problems/:id', deleteProblem);
 router.get('/problem-stats', getProblemStats);
+
+// Course management routes
+router.get('/courses', getAllCourses);
+router.get('/courses/:id', getCourse);
+router.post('/courses', createCourse);
+router.put('/courses/:id', updateCourse);
+router.delete('/courses/:id', deleteCourse);
+router.put('/courses/:id/curriculum', updateCurriculum);
+router.post('/courses/:id/coupons', addCoupon);
+router.put('/courses/:id/coupons/:couponId', updateCoupon);
+router.delete('/courses/:id/coupons/:couponId', deleteCoupon);
+router.get('/courses/:id/analytics', getCourseAnalytics);
+
+// Order management routes
+router.get('/orders', getAllOrders);
+router.get('/orders/:id', getOrder);
+router.put('/orders/:id/status', updateOrderStatus);
+router.post('/orders/:id/refund', processRefund);
+router.get('/orders/analytics/data', getOrderAnalytics);
+router.get('/orders/export/csv', exportOrders);
 
 // Routes for top performers and recent activity
 router.get('/top-performers', getTopPerformers); 

@@ -8,6 +8,7 @@ import { BookOpen, Code, Users, Terminal,  Github, Twitter, Linkedin, X, Play, C
 import Editor from '@monaco-editor/react';
 import Nav from './Nav';
 import UserProgress from './UserProgress';
+import NotificationTest from './NotificationTest';
 import { Value } from '@radix-ui/react-select';
 import authApi from '../utils/authApi';
 import { useSelector } from 'react-redux';
@@ -417,9 +418,7 @@ const Home = () => {
               <Terminal className="relative w-full h-96 text-green-500 opacity-80" />
             </div>
           </div>
-        </div>      </section>
-
-      {/* Conditional UserProgress Section for Authenticated Users */}
+        </div>      </section>      {/* Conditional UserProgress Section for Authenticated Users */}
       {isAuthenticated && userHasCompletedOnboarding && (
         <section className="py-12 bg-gray-900/50">
           <div className="container mx-auto px-6">
@@ -427,7 +426,6 @@ const Home = () => {
           </div>
         </section>
       )}
-
       {/* Features Grid with Animated Cards */}
       <section className="py-20 bg-black relative">
         <div className="container mx-auto px-6">

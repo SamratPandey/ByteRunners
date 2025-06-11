@@ -69,10 +69,48 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ['free', 'premium', 'enterprise'],
     default: 'free'
-  },
-  purchasedCourses: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Course'
+  },  purchasedCourses: [{
+    course: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Course'
+    },
+    purchasedAt: {
+      type: Date,
+      default: Date.now
+    },
+    price: Number,
+    orderId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Order'
+    }
+  }],
+  enrolledCourses: [{
+    course: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Course'
+    },
+    enrolledAt: {
+      type: Date,
+      default: Date.now
+    },
+    progress: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 100
+    },
+    completedLessons: [{
+      type: mongoose.Schema.Types.ObjectId
+    }],
+    lastAccessedAt: {
+      type: Date,
+      default: Date.now
+    },
+    certificateEarned: {
+      type: Boolean,
+      default: false
+    },
+    certificateUrl: String
   }],
   // Onboarding and Test Data
   onboardingData: {

@@ -5,12 +5,15 @@ import UserManagement from "./UserManagement";
 import DashboardOverview from "./DashboardOverview";
 import ProblemManagement from './ProblemManagement';
 import JobManagement from './JobManagement';
+import CourseManagement from './CourseManagement';
+import OrderManagement from './OrderManagement';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AnalyticsCardSkeleton } from '@/components/ui/skeleton';
-import { Users, Code, BarChart, Settings, LogOut } from 'lucide-react';
-import { useDispatch } from 'react-redux';
-import { logout } from '../../redux/actions/adminActions';
+import { Users, Code, BarChart, Settings, LogOut, BookOpen, ShoppingCart } from 'lucide-react';
+import { useDispatch, useSelector } from 'react-redux';
+import { logout, checkAdminAuthStatus } from '../../redux/actions/adminActions';
+import { toast } from 'react-hot-toast';
 
 const AdminDashboard = () => {
   const [activeSection, setActiveSection] = useState('dashboard');
@@ -24,56 +27,77 @@ const AdminDashboard = () => {
     recentActivity: [],
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [authChecked, setAuthChecked] = useState(false);
   const dispatch = useDispatch();
+  const { isAuthenticated } = useSelector(state => state.admin);
 
-  useEffect(() => {    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-        
-        // Use the adminApi utility for all admin API calls
-        const statsResponse = await adminApi.get('/api/admin/user-stats');
-        const statsData = statsResponse.data;
-
-        // Fetch problem statistics
-        const problemStatsResponse = await adminApi.get('/api/admin/problem-stats');
-        const problemStatsData = problemStatsResponse.data;
-
-        // Fetch all users
-        const usersResponse = await adminApi.get('/api/admin/users');
-        const usersData = usersResponse.data;
-
-        // Fetch top performers
-        const topPerformersResponse = await adminApi.get('/api/admin/top-performers');
-        const topPerformersData = topPerformersResponse.data;
-
-        // Fetch recent activity
-        const recentActivityResponse = await adminApi.get('/api/admin/recent-activity');
-        const recentActivityData = recentActivityResponse.data;
-
-        setAdminData({
-          totalUsers: statsData?.data?.totalUsers || 0,
-          totalProblems: problemStatsData?.data?.totalProblems || 0,
-          userGrowth: statsData?.data?.userGrowth || [],
-          problemGrowth: problemStatsData?.data?.problemGrowth || [],
-          users: usersData?.data || [],
-          topPerformers: topPerformersData?.data || [],
-          recentActivity: recentActivityData?.data || [],
-        });      } catch (error) {
-        console.error('Error fetching admin data:', error);
-        // Token expiration is now handled by the adminApi utility
-      } finally {
-        setIsLoading(false);
+  // Check authentication on component mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      const isAuth = await dispatch(checkAdminAuthStatus());
+      setAuthChecked(true);
+      if (!isAuth) {
+        toast.error('Please log in to access admin dashboard');
+        window.location.href = '/admin/login';
       }
     };
+    checkAuth();
+  }, [dispatch]);
 
-    fetchData();
-  }, []);
+  useEffect(() => {
+    // Only fetch data if authenticated and auth has been checked
+    if (authChecked && isAuthenticated) {
+      fetchData();
+    }
+  }, [authChecked, isAuthenticated]);
+
+  const fetchData = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Use Promise.allSettled to handle partial failures gracefully
+      const promises = [
+        adminApi.get('/api/admin/user-stats'),
+        adminApi.get('/api/admin/problem-stats'),
+        adminApi.get('/api/admin/users'),
+        adminApi.get('/api/admin/top-performers'),
+        adminApi.get('/api/admin/recent-activity')
+      ];
+
+      const results = await Promise.allSettled(promises);
+      
+      // Extract data from successful requests
+      const [statsResult, problemStatsResult, usersResult, topPerformersResult, recentActivityResult] = results;
+
+      setAdminData({
+        totalUsers: statsResult.status === 'fulfilled' ? (statsResult.value.data?.data?.totalUsers || 0) : 0,
+        totalProblems: problemStatsResult.status === 'fulfilled' ? (problemStatsResult.value.data?.data?.totalProblems || 0) : 0,
+        userGrowth: statsResult.status === 'fulfilled' ? (statsResult.value.data?.data?.userGrowth || []) : [],
+        problemGrowth: problemStatsResult.status === 'fulfilled' ? (problemStatsResult.value.data?.data?.problemGrowth || []) : [],
+        users: usersResult.status === 'fulfilled' ? (usersResult.value.data?.data || []) : [],
+        topPerformers: topPerformersResult.status === 'fulfilled' ? (topPerformersResult.value.data?.data || []) : [],
+        recentActivity: recentActivityResult.status === 'fulfilled' ? (recentActivityResult.value.data?.data || []) : [],
+      });
+
+      // Log any failed requests for debugging
+      results.forEach((result, index) => {
+        if (result.status === 'rejected') {
+          console.error(`Admin API request ${index} failed:`, result.reason);
+        }
+      });
+
+    } catch (error) {
+      console.error('Error fetching admin data:', error);
+      toast.error('Failed to load dashboard data');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleLogout = () => {
     dispatch(logout());
     window.location.href = '/admin/login';
-  };
-  const renderActiveComponent = () => {
+  };  const renderActiveComponent = () => {
     if (isLoading) {
       return <AnalyticsCardSkeleton />;
     }
@@ -91,6 +115,10 @@ const AdminDashboard = () => {
         return <ProblemManagement />
       case 'jobs':
         return <JobManagement />
+      case 'courses':
+        return <CourseManagement />
+      case 'orders':
+        return <OrderManagement />
       default:
         return <DashboardOverview data={adminData} />;
     }
@@ -128,8 +156,7 @@ const AdminDashboard = () => {
             onClick={() => setActiveSection('problems')}
           >
             <Code className="mr-2" /> Problem Management
-          </Button>
-          <Button
+          </Button>          <Button
             variant="ghost"
             className={`w-full justify-start mb-2 text-white hover:bg-green-700 ${
               activeSection === 'jobs' ? 'bg-green-700' : ''
@@ -137,6 +164,24 @@ const AdminDashboard = () => {
             onClick={() => setActiveSection('jobs')}
           >
             <Code className="mr-2" /> Job Management
+          </Button>
+          <Button
+            variant="ghost"
+            className={`w-full justify-start mb-2 text-white hover:bg-green-700 ${
+              activeSection === 'courses' ? 'bg-green-700' : ''
+            }`}
+            onClick={() => setActiveSection('courses')}
+          >
+            <BookOpen className="mr-2" /> Course Management
+          </Button>
+          <Button
+            variant="ghost"
+            className={`w-full justify-start mb-2 text-white hover:bg-green-700 ${
+              activeSection === 'orders' ? 'bg-green-700' : ''
+            }`}
+            onClick={() => setActiveSection('orders')}
+          >
+            <ShoppingCart className="mr-2" /> Order Management
           </Button>
           <Button
             variant="destructive"

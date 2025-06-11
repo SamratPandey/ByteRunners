@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-hot-toast';
-import { Search, Filter, Star, ChevronDown, Clock, Book, BarChart } from 'lucide-react';
+import { Search, Filter, Star, ChevronDown, Clock, Book, BarChart, Users, Heart } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -24,16 +24,15 @@ const Courses = () => {
     level: 'all',
     price: 'all'
   });
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
-
-  useEffect(() => {
+  const [isFilterOpen, setIsFilterOpen] = useState(false);  useEffect(() => {
     const fetchCourses = async () => {
       try {
         const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/course/all`);
-        setCourses(response.data.courses);
-        setFilteredCourses(response.data.courses);
+        setCourses(response.data.courses || []);
+        setFilteredCourses(response.data.courses || []);
         setLoading(false);
       } catch (err) {
+        console.error('Error fetching courses:', err);
         setError('Failed to load courses');
         setLoading(false);
       }
@@ -156,7 +155,6 @@ const Courses = () => {
       </div>
     );
   };
-
   const CourseCard = ({ course }) => {
     const handleViewCourse = () => {
       if (!isAuthenticated) {
@@ -174,9 +172,45 @@ const Courses = () => {
         navigate(`/course-details/${course._id}`);
       }
     };
+
+    const handleAddToWishlist = async (e) => {
+      e.stopPropagation();
+      if (!isAuthenticated) {
+        toast.error('Please log in to add to wishlist');
+        return;
+      }
+      
+      try {
+        await axios.post(
+          `${import.meta.env.VITE_BACKEND_URL}/api/course/wishlist`,
+          { courseId: course._id },
+          {
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+          }
+        );
+        toast.success('Added to wishlist!');
+      } catch (error) {
+        toast.error(error.response?.data?.message || 'Failed to add to wishlist');
+      }
+    };
+
+    const getOriginalPrice = () => {
+      if (course.originalPrice && course.originalPrice > course.price) {
+        return course.originalPrice;
+      }
+      return null;
+    };
+
+    const getDiscountPercentage = () => {
+      const originalPrice = getOriginalPrice();
+      if (originalPrice) {
+        return Math.round(((originalPrice - course.price) / originalPrice) * 100);
+      }
+      return 0;
+    };
     
     return (
-      <Card className="bg-black/40 backdrop-blur-xl border-l-4 border border-green-900/50 hover:border-l-green-500 transition-all duration-300 overflow-hidden group h-full flex flex-col shadow-lg">
+      <Card className="bg-black/40 backdrop-blur-xl border-l-4 border border-green-900/50 hover:border-l-green-500 transition-all duration-300 overflow-hidden group h-full flex flex-col shadow-lg hover:shadow-2xl hover:shadow-green-500/10">
         <div className="relative">
           <img 
             src={course.thumbnail} 
@@ -185,11 +219,37 @@ const Courses = () => {
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           
-          {course.isFree && (
-            <Badge className="absolute top-4 left-4 bg-green-600 text-white font-medium px-3 py-1 rounded-full shadow-md">
-              Free
-            </Badge>
-          )}
+          {/* Badges */}
+          <div className="absolute top-4 left-4 flex flex-col gap-2">
+            {course.isFree && (
+              <Badge className="bg-green-600 text-white font-medium px-3 py-1 rounded-full shadow-md">
+                Free
+              </Badge>
+            )}
+            {course.bestseller && (
+              <Badge className="bg-yellow-500 text-white font-medium px-3 py-1 rounded-full shadow-md">
+                Bestseller
+              </Badge>
+            )}
+            {course.featured && (
+              <Badge className="bg-purple-600 text-white font-medium px-3 py-1 rounded-full shadow-md">
+                Featured
+              </Badge>
+            )}
+            {getDiscountPercentage() > 0 && (
+              <Badge className="bg-red-500 text-white font-medium px-3 py-1 rounded-full shadow-md">
+                {getDiscountPercentage()}% Off
+              </Badge>
+            )}
+          </div>
+          
+          {/* Wishlist Button */}
+          <button
+            onClick={handleAddToWishlist}
+            className="absolute top-4 right-4 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all duration-300 opacity-0 group-hover:opacity-100"
+          >
+            <Heart className="w-4 h-4" />
+          </button>
           
           <Badge className={`absolute bottom-4 left-4 px-3 py-1 rounded-full shadow-md ${getLevelColor(course.level)}`}>
             {course.level.charAt(0).toUpperCase() + course.level.slice(1)}
@@ -201,30 +261,55 @@ const Courses = () => {
             {course.title}
           </h3>
           
-          <p className="text-gray-400 text-sm line-clamp-2">
-            {course.summary}
-          </p>
+          {course.subtitle && (
+            <p className="text-gray-400 text-sm line-clamp-1">
+              {course.subtitle}
+            </p>
+          )}
           
-          <div className="flex items-center justify-between pt-3">
+          <p className="text-gray-400 text-sm line-clamp-2">
+            {course.summary || course.description}
+          </p>
+            <div className="flex items-center justify-between pt-3">
             <div className="flex items-center gap-2">
               <img 
-                src={course.instructor.avatar} 
-                alt={course.instructor.name} 
+                src={course.instructor?.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50&h=50&fit=crop&crop=face'} 
+                alt={course.instructor?.name || 'Instructor'} 
                 className="w-8 h-8 rounded-full object-cover ring-1 ring-green-900"
               />
-              <span className="text-gray-300 text-sm">{course.instructor.name}</span>
+              <span className="text-gray-300 text-sm">{course.instructor?.name || 'ByteRunners Instructor'}</span>
             </div>
             
             <RatingStars rating={course.averageRating} />
           </div>
-          
-          <div className="flex flex-wrap items-center justify-between gap-2 mt-3 pt-3 border-t border-green-900/30">
+
+          {/* Course Stats */}
+          <div className="flex items-center justify-between text-sm text-gray-400 pt-2">
             <div className="flex items-center gap-4">
-              <div className="flex items-center text-gray-400 text-sm">
-                <Book className="w-4 h-4 mr-1" />
+              <div className="flex items-center gap-1">
+                <Book className="w-4 h-4" />
                 <span>{getTotalLessons(course)} lessons</span>
               </div>
               
+              <div className="flex items-center gap-1">
+                <Clock className="w-4 h-4" />
+                <span>{Math.floor((course.totalDuration || 0) / 60)}h</span>
+              </div>
+              
+              <div className="flex items-center gap-1">
+                <Users className="w-4 h-4" />
+                <span>{course.totalEnrollments || 0}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex flex-wrap items-center justify-between gap-2 mt-auto pt-4 border-t border-green-900/30">
+            <div className="flex flex-col">
+              {getOriginalPrice() && (
+                <span className="text-gray-400 text-sm line-through">
+                  ₹{getOriginalPrice().toFixed(2)}
+                </span>
+              )}
               <div className="text-xl font-bold text-green-500">
                 {formatPrice(course.price, course.isFree)}
               </div>
@@ -232,7 +317,7 @@ const Courses = () => {
             
             <Button 
               onClick={handleViewCourse} 
-              className="bg-green-600 hover:bg-green-700 text-white rounded-full px-4 py-2 text-sm font-medium shadow-md transition-all duration-300 hover:shadow-lg"
+              className="bg-green-600 hover:bg-green-700 text-white rounded-full px-6 py-2 text-sm font-medium shadow-md transition-all duration-300 hover:shadow-lg hover:shadow-green-500/25"
             >
               View Course
             </Button>
@@ -308,8 +393,7 @@ const Courses = () => {
       </div>
 
       <main className="flex-1 relative z-10 pt-24">
-        <div className="container mx-auto px-6 py-12">
-          <div className="mb-12 text-center">
+        <div className="container mx-auto px-6 py-12">          <div className="mb-12 text-center">
             <Badge className="bg-green-500/10 text-green-500 text-lg px-4 py-2 mb-4">
               Knowledge Hub
             </Badge>
@@ -318,11 +402,62 @@ const Courses = () => {
                 Explore Our Courses
               </span>
             </h1>
-            <p className="text-xl text-gray-400 max-w-3xl mx-auto">
+            <p className="text-xl text-gray-400 max-w-3xl mx-auto mb-8">
               From beginner to advanced, discover courses crafted by industry experts to elevate your coding journey.
             </p>
+            
+            {/* Search Bar */}
+            <div className="relative max-w-2xl mx-auto mb-8">
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  type="text"
+                  placeholder="Search courses by title, description, or tags..."
+                  className="w-full bg-black/40 backdrop-blur-lg border border-green-900/50 rounded-full py-4 pl-12 pr-4 text-white placeholder-gray-400 focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none transition-all duration-300"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+            </div>
           </div>
-          <FilterSection />          {loading ? (
+
+          {/* Search and Filter Section */}
+          <div className="mb-8 space-y-4">
+            {/* Search Bar */}
+            <div className="relative max-w-2xl mx-auto">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                placeholder="Search for courses, topics, or skills..."
+                className="w-full bg-black/40 border border-green-900/50 rounded-lg py-4 pl-12 pr-4 text-white placeholder-gray-400 focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+
+            {/* Quick Filter Tags */}
+            <div className="flex flex-wrap justify-center gap-2">
+              {['Free', 'Beginner', 'JavaScript', 'Python', 'React', 'Node.js'].map((tag) => (
+                <button
+                  key={tag}
+                  className="px-4 py-2 bg-black/40 hover:bg-green-600 border border-green-900/50 hover:border-green-500 rounded-full text-sm text-gray-300 hover:text-white transition-all duration-300"
+                  onClick={() => {
+                    if (tag === 'Free') {
+                      setFilters(prev => ({ ...prev, price: prev.price === 'free' ? 'all' : 'free' }));
+                    } else if (tag === 'Beginner') {
+                      setFilters(prev => ({ ...prev, level: prev.level === 'beginner' ? 'all' : 'beginner' }));
+                    } else {
+                      setSearchTerm(tag);
+                    }
+                  }}
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <FilterSection />{loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[...Array(6)].map((_, index) => (
                 <CourseCardSkeleton key={index} />

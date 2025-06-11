@@ -19,6 +19,7 @@ const {
   updateProfile,
   updateAvatar,
 } = require("../controllers/userProfileController");
+const { createAchievementNotification } = require("../controllers/notificationController");
 const multer = require("multer");
 const path = require("path");
 const { checkAuth } = require("../controllers/tempCheckAuth");
@@ -222,14 +223,22 @@ router.post("/submit", protect, async (req, res) => {
       } else if (lastActiveDate !== today) {
         user.streak = 1;
       }
-      
-      // Award points based on difficulty
+        // Award points based on difficulty
       const difficultyPoints = {
         'Easy': 10,
         'Medium': 25,
         'Hard': 50
       };
-      user.score += difficultyPoints[problem.difficulty] || 10;
+      const pointsAwarded = difficultyPoints[problem.difficulty] || 10;
+      user.score += pointsAwarded;
+
+      // Create achievement notification
+      try {
+        await createAchievementNotification(userId, problem.title, pointsAwarded);
+      } catch (notificationError) {
+        console.error('Error creating achievement notification:', notificationError);
+        // Don't fail the submission if notification creation fails
+      }
     } else if (alreadySolved) {
       // Update attempts for already solved problem
       const solvedProblem = user.solvedProblems.find(

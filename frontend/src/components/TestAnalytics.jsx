@@ -29,11 +29,11 @@ const TestAnalytics = () => {
     loadAnalytics();
     loadRecommendations();
   }, []);
-
   const loadAnalytics = async () => {
     try {
-      const response = await testApi.getAnalytics();
-      setAnalytics(response.data);    } catch (error) {
+      const response = await testApi.getDetailedAnalytics();
+      setAnalytics(response.data);
+    } catch (error) {
       console.error('Error loading analytics:', error);
       toast.error('Unable to load your performance analytics right now. Please refresh the page or try again later.', {
         style: {
@@ -48,8 +48,8 @@ const TestAnalytics = () => {
 
   const loadRecommendations = async () => {
     try {
-      const response = await testApi.getRecommendations();
-      setRecommendations(response.data);    } catch (error) {
+      const response = await testApi.getAIRecommendations();
+      setRecommendations(response.data);} catch (error) {
       console.error('Error loading recommendations:', error);
       toast.error('We couldn\'t generate your personalized recommendations right now. Your progress data is safe!', {
         style: {

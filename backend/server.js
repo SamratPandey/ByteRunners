@@ -12,6 +12,8 @@ const jobRoutes = require('./routes/jobRoutes');
 const testRoutes = require('./routes/testRoutes');
 const onboardingRoutes = require('./routes/onboardingRoutes');
 const userProfileRoutes = require('./routes/userProfileRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
+const leaderboardRoutes = require('./routes/leaderboardRoutes');
 const Admin = require('./models/Admin');  
 const { registerAdmin } = require('./controllers/adminController');
 const multer = require('multer');
@@ -26,11 +28,11 @@ const corsOptions = {
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
-    
-    const allowedOrigins = [
+      const allowedOrigins = [
       process.env.FRONTEND_URL || 'http://localhost:5173',
-      'http://localhost:5173',
-      'http://127.0.0.1:5173'
+      'http://localhost:5174',
+      'http://127.0.0.1:5173',
+      'http://127.0.0.1:5174'
     ];
     
     if (allowedOrigins.indexOf(origin) !== -1) {
@@ -64,6 +66,8 @@ app.use('/api/course', courseRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/test', testRoutes);
 app.use('/api/onboarding', onboardingRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/leaderboard', leaderboardRoutes);
 
 // Generic error handler
 app.use((err, req, res, next) => {

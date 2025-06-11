@@ -4,12 +4,14 @@ import { Provider } from 'react-redux';
 
 // Import the reducers
 import authReducer from './reducers/authReducer';  
-import adminReducer from './reducers/adminReducer';  // Add the adminReducer
+import adminReducer from './reducers/adminReducer';
+import courseReducer from './reducers/courseReducer';
 
 // Combine the reducers
 const rootReducer = combineReducers({
   auth: authReducer,
-  admin: adminReducer,  // Add admin reducer to the store
+  admin: adminReducer,
+  courses: courseReducer,
 });
 
 const store = createStore(

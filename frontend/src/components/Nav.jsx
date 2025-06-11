@@ -5,7 +5,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faBars, 
   faXmark, 
-  faSearch, 
   faBell, 
   faUser,
   faTrophy,
@@ -16,18 +15,25 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { User } from "lucide-react";
 import { logout } from '../redux/actions/authActions';
+import { useNotifications } from '../contexts/NotificationContext';
 
 const Nav = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAvatarDropdownOpen, setIsAvatarDropdownOpen] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [isHidden, setIsHidden] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isSearchVisible, setIsSearchVisible] = useState(false);
-  const navigate = useNavigate();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);  const [isNotificationOpen, setIsNotificationOpen] = useState(false);  const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { isAuthenticated } = useSelector(state => state.auth);
+  const { isAuthenticated, user } = useSelector(state => state.auth);
+  const { 
+    notifications, 
+    unreadCount, 
+    markAsRead, 
+    markAllAsRead, 
+    loading, 
+    error,
+    refreshNotifications 
+  } = useNotifications();
 
   const navigationItems = [
     { label: 'PROBLEMS', path: '/problems' },
@@ -45,9 +51,8 @@ const Nav = () => {
     setIsMenuOpen(!isMenuOpen);
     setIsAvatarDropdownOpen(false);
   };
-
-  const toggleSearch = () => {
-    setIsSearchVisible(!isSearchVisible);
+  const toggleNotification = () => {
+    setIsNotificationOpen(!isNotificationOpen);
   };
 
   const toggleAvatarDropdown = (e) => {
@@ -62,25 +67,50 @@ const Nav = () => {
       setIsHidden(false);
     }
     setLastScrollY(window.scrollY);
-  };
-
-  const handleSearch = () => {
-    if (searchQuery.trim()) {
-      console.log(`Searching for: ${searchQuery}`);
-    }
-  };
-
-  const handleClickOutside = (e) => {
-    if (!e.target.closest('.search-container')) {
-      setIsSearchVisible(false);
+  };  const handleClickOutside = (e) => {
+    if (!e.target.closest('.notification-container')) {
+      setIsNotificationOpen(false);
     }
     setIsAvatarDropdownOpen(false);
   };
-
   const handleLogout = () => {
     dispatch(logout());
     setIsLoggedIn(false);
     navigate('/');
+  };
+
+  const handleNotificationClick = async (notification) => {
+    // Mark as read when clicked
+    if (!notification.read) {
+      await markAsRead(notification.id);
+    }
+    
+    // Navigate to relevant page based on notification type
+    if (notification.actionUrl) {
+      navigate(notification.actionUrl);
+    } else {
+      // Default navigation based on type
+      switch (notification.type) {
+        case 'achievement':
+          navigate('/problems');
+          break;
+        case 'course':
+          navigate('/courses');
+          break;
+        case 'job':
+          navigate('/job');
+          break;
+        case 'contest':
+          navigate('/problems'); // or contests page when available
+          break;
+        default:
+          // Don't navigate for unknown types
+          break;
+      }
+    }
+    
+    // Close notification dropdown
+    setIsNotificationOpen(false);
   };
 
   useEffect(() => {
@@ -127,49 +157,72 @@ const Nav = () => {
               </span>
             </li>
           ))}
-        </ul>
-
-        {/* Desktop Actions */}
+        </ul>        {/* Desktop Actions */}
         <div className="hidden min-[840px]:flex items-center space-x-6">
-          <div className="search-container relative">
+          <div className="notification-container relative">
             <button
-              onClick={toggleSearch}
-              className="text-gray-400 hover:text-green-400 transition-colors duration-200 p-2 rounded-full hover:bg-green-900/30"
-              aria-label="Search"
-            >
-              <FontAwesomeIcon icon={faSearch} />
+              onClick={toggleNotification}
+              className="text-gray-400 hover:text-green-400 transition-colors duration-200 p-2 rounded-full hover:bg-green-900/30 relative"
+              aria-label="Notifications"
+            >              <FontAwesomeIcon icon={faBell} />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
             </button>
             
-            {isSearchVisible && (
-              <div className="absolute right-0 top-12 w-72 bg-black/95 border border-green-800/70 rounded-lg p-3 shadow-lg shadow-green-900/20">
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Search..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-black/60 border border-green-800 text-gray-300 px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-transparent placeholder-gray-500"
-                    autoFocus
-                  />
-                  <button
-                    onClick={handleSearch}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-green-400 transition-colors duration-200"
-                    aria-label="Submit search"
+            {isNotificationOpen && (
+              <div className="absolute right-0 top-12 w-80 bg-black/95 border border-green-800/70 rounded-lg shadow-lg shadow-green-900/20 max-h-96 overflow-y-auto">
+                <div className="p-4 border-b border-green-800/70">
+                  <h3 className="text-green-400 font-semibold">Notifications</h3>
+                  {unreadCount > 0 && (
+                    <p className="text-xs text-gray-400">{unreadCount} unread notifications</p>
+                  )}
+                </div>                <div className="py-2">
+                  {notifications.length > 0 ? (
+                    notifications.map((notification) => (
+                      <div
+                        key={notification.id}
+                        onClick={() => handleNotificationClick(notification)}
+                        className={`p-3 border-b border-green-800/30 hover:bg-green-900/20 transition-colors duration-200 cursor-pointer ${
+                          !notification.read ? 'bg-green-900/10' : ''
+                        }`}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <h4 className={`text-sm font-medium ${!notification.read ? 'text-green-400' : 'text-gray-300'}`}>
+                              {notification.title}
+                            </h4>
+                            <p className="text-xs text-gray-400 mt-1">{notification.message}</p>
+                            <p className="text-xs text-gray-500 mt-1">{notification.time}</p>
+                          </div>
+                          {!notification.read && (
+                            <div className="w-2 h-2 bg-green-500 rounded-full mt-1 ml-2"></div>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-4 text-center text-gray-400">
+                      <p>No notifications</p>
+                    </div>
+                  )}
+                </div>
+                <div className="p-3 border-t border-green-800/70 text-center">
+                  <button 
+                    onClick={markAllAsRead}
+                    className="text-green-400 hover:text-green-300 text-sm font-medium mr-4"
                   >
-                    <FontAwesomeIcon icon={faSearch} />
+                    Mark All Read
+                  </button>
+                  <button className="text-green-400 hover:text-green-300 text-sm font-medium">
+                    View All Notifications
                   </button>
                 </div>
               </div>
             )}
           </div>
-
-          <button 
-            className="text-gray-400 hover:text-green-400 transition-colors duration-200 relative p-2 rounded-full hover:bg-green-900/30"
-            aria-label="Notifications"
-          >
-            <FontAwesomeIcon icon={faBell} />
-          
-          </button>
 
           {!isLoggedIn ? (
             <Link to="/login">
@@ -185,12 +238,11 @@ const Nav = () => {
               >
                 <User className="h-5 w-5 text-green-500" />
               </div>
-              
-              {isAvatarDropdownOpen && (
+                {isAvatarDropdownOpen && (
                 <div className="absolute right-0 mt-2 w-52 rounded-lg shadow-lg bg-black/95 border border-green-800 text-gray-300 overflow-hidden">
                   <div className="py-3 px-4 border-b border-green-800/70">
-                    <p className="font-medium text-green-400">User Name</p>
-                    <p className="text-xs text-gray-400">user@example.com</p>
+                    <p className="font-medium text-green-400">{user?.name || user?.username || 'User'}</p>
+                    <p className="text-xs text-gray-400">{user?.email || 'user@example.com'}</p>
                   </div>
                   <div className="py-1">
                     {avatarMenuItems.map((item, index) => (
@@ -219,48 +271,73 @@ const Nav = () => {
               )}
             </div>
           )}
-        </div>
-
-        {/* Mobile Actions */}
+        </div>        {/* Mobile Actions */}
         <div className="min-[840px]:hidden flex items-center space-x-4">
-          <div className="search-container relative">
+          <div className="notification-container relative">
             <button
-              onClick={toggleSearch}
-              className="text-gray-400 hover:text-green-400 transition-colors duration-200 p-2 rounded-full hover:bg-green-900/30"
-              aria-label="Search"
+              onClick={toggleNotification}
+              className="text-gray-400 hover:text-green-400 transition-colors duration-200 p-2 rounded-full hover:bg-green-900/30 relative"
+              aria-label="Notifications"
             >
-              <FontAwesomeIcon icon={faSearch} />
+              <FontAwesomeIcon icon={faBell} />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-bold">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
             </button>
             
-            {isSearchVisible && (
-              <div className="absolute right-0 top-12 w-64 bg-black/95 border border-green-800/70 rounded-lg p-3 shadow-lg shadow-green-900/20">
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Search..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-black/60 border border-green-800 text-gray-300 px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-transparent placeholder-gray-500"
-                    autoFocus
-                  />
-                  <button
-                    onClick={handleSearch}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-green-400 transition-colors duration-200"
-                    aria-label="Submit search"
+            {isNotificationOpen && (
+              <div className="absolute right-0 top-12 w-72 bg-black/95 border border-green-800/70 rounded-lg shadow-lg shadow-green-900/20 max-h-80 overflow-y-auto z-50">
+                <div className="p-3 border-b border-green-800/70">
+                  <h3 className="text-green-400 font-semibold text-sm">Notifications</h3>
+                  {unreadCount > 0 && (
+                    <p className="text-xs text-gray-400">{unreadCount} unread</p>
+                  )}
+                </div>                <div className="py-1">
+                  {notifications.length > 0 ? (
+                    notifications.map((notification) => (
+                      <div
+                        key={notification.id}
+                        onClick={() => handleNotificationClick(notification)}
+                        className={`p-3 border-b border-green-800/30 hover:bg-green-900/20 transition-colors duration-200 cursor-pointer ${
+                          !notification.read ? 'bg-green-900/10' : ''
+                        }`}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <h4 className={`text-xs font-medium ${!notification.read ? 'text-green-400' : 'text-gray-300'}`}>
+                              {notification.title}
+                            </h4>
+                            <p className="text-xs text-gray-400 mt-1">{notification.message}</p>
+                            <p className="text-xs text-gray-500 mt-1">{notification.time}</p>
+                          </div>
+                          {!notification.read && (
+                            <div className="w-2 h-2 bg-green-500 rounded-full mt-1 ml-2"></div>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-4 text-center text-gray-400">
+                      <p className="text-sm">No notifications</p>
+                    </div>
+                  )}
+                </div>
+                <div className="p-2 border-t border-green-800/70 text-center">
+                  <button 
+                    onClick={markAllAsRead}
+                    className="text-green-400 hover:text-green-300 text-xs font-medium mr-3"
                   >
-                    <FontAwesomeIcon icon={faSearch} />
+                    Mark All Read
+                  </button>
+                  <button className="text-green-400 hover:text-green-300 text-xs font-medium">
+                    View All
                   </button>
                 </div>
               </div>
             )}
           </div>
-          
-          <button 
-            className="text-gray-400 hover:text-green-400 transition-colors duration-200 relative p-2 rounded-full hover:bg-green-900/30"
-            aria-label="Notifications"
-          >
-            <FontAwesomeIcon icon={faBell} />
-          </button>
           
           <button
             onClick={toggleMenu}
@@ -294,14 +371,13 @@ const Nav = () => {
                   </button>
                 </Link>
               ) : (
-                <div className="space-y-3 pt-2">
-                  <div className="flex items-center space-x-3 px-1 py-2">
+                <div className="space-y-3 pt-2">                  <div className="flex items-center space-x-3 px-1 py-2">
                     <div className="rounded-full p-2 bg-green-800/30 ring-2 ring-green-500/50">
                       <User className="h-5 w-5 text-green-500" />
                     </div>
                     <div>
-                      <p className="font-medium text-green-400">User Name</p>
-                      <p className="text-xs text-gray-400">user@example.com</p>
+                      <p className="font-medium text-green-400">{user?.name || user?.username || 'User'}</p>
+                      <p className="text-xs text-gray-400">{user?.email || 'user@example.com'}</p>
                     </div>
                   </div>
                   {avatarMenuItems.map((item, index) => (

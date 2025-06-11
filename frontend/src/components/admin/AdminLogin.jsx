@@ -54,12 +54,11 @@ const AdminLogin = () => {
     }
     return isValid;
   };
-
   const handleLogin = async () => {
     if (!validateForm()) return;
     setIsSubmitting(true);
     const result = await dispatch(login(email, password));
-    if (!result) {
+    if (result) {
       toast.success('Logged in successfully!');
     } else {
       setIsSubmitting(false);

@@ -26,13 +26,12 @@ adminApi.interceptors.request.use(
 
 // Response interceptor to handle token expiration and other errors
 adminApi.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    return response;
+  },
   (error) => {
     // Handle different error scenarios
     if (!error.response) {
-      // Network error (could be CORS)
-      console.error('Network error:', error.message);
-      
       // Don't show toast for auth check failures
       if (!error.config.url.includes('/check-auth')) {
         console.error('Admin API request failed:', error.message);
@@ -42,10 +41,7 @@ adminApi.interceptors.response.use(
       const isCheckingAuth = error.config.headers['x-checking-auth'] === 'true';
       // Also check if we're already on the admin login page
       const isLoginPage = window.location.pathname.includes('/admin/login');
-      
       if (!isCheckingAuth && !isLoginPage) {
-        // Only redirect if not checking auth and not already on login page
-        console.log('Admin auth error, redirecting to admin login');
         window.location.href = '/admin/login';
       }
     } else if (error.response.status === 403) {

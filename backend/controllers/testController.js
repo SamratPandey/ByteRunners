@@ -1,5 +1,6 @@
 const aiService = require('../utils/aiService');
 const TestQuestion = require('../models/TestQuestion');
+const TestResult = require('../models/TestResult');
 const User = require('../models/User');
 
 // Generate AI-powered test questions
@@ -347,9 +348,223 @@ const calculateTimeBasedAnalytics = (testHistory) => {
   };
 };
 
+// Enhanced analytics endpoint for TestAnalytics component
+const getDetailedAnalytics = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // Get comprehensive analytics data
+    const [
+      overallStats,
+      subjectPerformance,
+      difficultyProgress,
+      timeBasedAnalytics,
+      testHistory
+    ] = await Promise.all([
+      TestResult.getUserAnalytics(userId),
+      TestResult.getSubjectPerformance(userId),
+      TestResult.getDifficultyProgress(userId),
+      TestResult.getTimeBasedAnalytics(userId),
+      TestResult.find({ userId })
+        .sort({ completedAt: -1 })
+        .limit(20)
+        .select('subject topic difficulty score totalQuestions correctAnswers completedAt totalTimeSpent')
+    ]);
+
+    // Get user level and experience from User model
+    const user = await User.findById(userId).select('level experience');
+
+    // Transform subject performance to object format
+    const subjectPerformanceObj = {};
+    subjectPerformance.forEach(perf => {
+      subjectPerformanceObj[perf.subject] = {
+        totalTests: perf.totalTests,
+        averageScore: perf.averageScore,
+        bestScore: perf.bestScore,
+        lastTestDate: perf.lastTestDate
+      };
+    });
+
+    // Transform difficulty progress to object format
+    const difficultyProgressObj = {};
+    difficultyProgress.forEach(diff => {
+      difficultyProgressObj[diff.difficulty] = {
+        tests: diff.tests,
+        averageScore: diff.averageScore,
+        bestScore: diff.bestScore
+      };
+    });
+
+    // Format test history
+    const formattedHistory = testHistory.map(test => ({
+      subject: test.subject,
+      topic: test.topic,
+      difficulty: test.difficulty,
+      score: test.score,
+      totalQuestions: test.totalQuestions,
+      correctAnswers: test.correctAnswers,
+      timestamp: test.completedAt,
+      timeSpent: test.totalTimeSpent
+    }));
+
+    const analyticsData = {
+      overview: {
+        level: user?.level || 1,
+        experience: user?.experience || 0,
+        totalTests: overallStats.totalTests,
+        averageScore: overallStats.averageScore,
+        bestScore: overallStats.bestScore,
+        overallAccuracy: overallStats.overallAccuracy
+      },
+      subjectPerformance: subjectPerformanceObj,
+      difficultyProgress: difficultyProgressObj,
+      timeBasedAnalytics,
+      testHistory: formattedHistory
+    };
+
+    res.status(200).json({
+      success: true,
+      data: analyticsData
+    });
+
+  } catch (error) {
+    console.error('Error getting detailed analytics:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Unable to load analytics data',
+      error: error.message
+    });
+  }
+};
+
+// Get AI-powered recommendations
+const getRecommendations = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // Get recent test results for analysis
+    const recentTests = await TestResult.find({ userId })
+      .sort({ completedAt: -1 })
+      .limit(10)
+      .populate('questions.questionId', 'subject topic difficulty');
+
+    // Get subject performance
+    const subjectPerformance = await TestResult.getSubjectPerformance(userId);
+
+    // Analyze weak areas
+    const weakSubjects = subjectPerformance
+      .filter(perf => perf.averageScore < 70)
+      .sort((a, b) => a.averageScore - b.averageScore)
+      .slice(0, 3)
+      .map(perf => perf.subject);
+
+    // Get topics that need improvement
+    const weakTopics = [];
+    recentTests.forEach(test => {
+      const wrongAnswers = test.questions.filter(q => !q.isCorrect);
+      wrongAnswers.forEach(q => {
+        if (q.topic && !weakTopics.includes(q.topic)) {
+          weakTopics.push(q.topic);
+        }
+      });
+    });
+
+    // Generate recommendations
+    const recommendations = {
+      recommendedTopics: weakTopics.slice(0, 5),
+      skillGaps: weakSubjects.map(subject => `Improve ${subject.replace('_', ' ')} fundamentals`),
+      studyResources: [
+        "Practice more coding problems in weak areas",
+        "Review fundamental concepts",
+        "Take practice tests weekly",
+        "Focus on understanding rather than memorization"
+      ],
+      learningPath: generateLearningPath(subjectPerformance, weakSubjects)
+    };
+
+    res.status(200).json({
+      success: true,
+      data: recommendations
+    });
+
+  } catch (error) {
+    console.error('Error getting recommendations:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Unable to generate recommendations',
+      error: error.message
+    });
+  }
+};
+
+// Helper function to generate learning path
+const generateLearningPath = (subjectPerformance, weakSubjects) => {
+  if (weakSubjects.length === 0) {
+    return "Great job! Continue practicing advanced topics to maintain your strong performance.";
+  }
+
+  const primaryWeakness = weakSubjects[0];
+  const pathMap = {
+    'javascript': 'Start with JavaScript basics, then move to ES6+ features, DOM manipulation, and async programming.',
+    'python': 'Focus on Python syntax, data structures, then advance to object-oriented programming and libraries.',
+    'java': 'Master Java fundamentals, OOP concepts, then explore frameworks and advanced features.',
+    'data_structures': 'Begin with arrays and linked lists, progress to trees, graphs, and advanced structures.',
+    'algorithms': 'Start with sorting and searching, then move to dynamic programming and graph algorithms.',
+    'web_development': 'Learn HTML/CSS fundamentals, then JavaScript, and finally frameworks like React.',
+    'databases': 'Understand SQL basics, database design, then advance to NoSQL and optimization.',
+    'system_design': 'Start with basic system components, scalability concepts, then complex architectures.'
+  };
+
+  return pathMap[primaryWeakness] || `Focus on improving ${primaryWeakness.replace('_', ' ')} through consistent practice and study.`;
+};
+
+// Get user test history
+const getUserTestHistory = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { page = 1, limit = 20, subject, difficulty } = req.query;
+
+    const filter = { userId };
+    if (subject) filter.subject = subject;
+    if (difficulty) filter.difficulty = difficulty;
+
+    const testHistory = await TestResult.find(filter)
+      .sort({ completedAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit))
+      .select('subject topic difficulty score totalQuestions correctAnswers completedAt totalTimeSpent');
+
+    const total = await TestResult.countDocuments(filter);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        tests: testHistory,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total,
+          pages: Math.ceil(total / limit)
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Error getting test history:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Unable to load test history',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   generateTestQuestions,
   submitTestAnswers,
   getPersonalizedRecommendations,
-  getTestAnalytics
+  getTestAnalytics,
+  getDetailedAnalytics,
+  getUserTestHistory,
+  getRecommendations
 };

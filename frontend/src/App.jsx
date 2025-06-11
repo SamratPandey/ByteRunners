@@ -4,7 +4,8 @@ import { useDispatch } from 'react-redux';
 import { checkAuthStatus } from './redux/actions/authActions';
 import { checkAdminAuthStatus } from './redux/actions/adminActions';
 import { Toaster } from 'react-hot-toast';
-import Home from './components/Home';  
+import { NotificationProvider } from './contexts/NotificationContext';
+import Home from './components/Home';
 import Login from './components/Login';  
 import ForgotPassword from './components/ForgotPassword'; 
 import ResetPassword from './components/ResetPassword';
@@ -40,15 +41,15 @@ function App() {
   useEffect(() => {
     dispatch(checkAuthStatus());
     dispatch(checkAdminAuthStatus());
-  }, [dispatch]);
-  return (
-    <Router>
-      {/* Global toast container for notifications */}
-      <Toaster position="top-right" />
-        <Routes>
-        {/* Public routes - accessible by anyone */}
-        <Route path="/" element={<Home />} /> 
-        <Route path="/home" element={<Home />} />
+  }, [dispatch]);  return (
+    <NotificationProvider>
+      <Router>
+        {/* Global toast container for notifications */}
+        <Toaster position="top-right" />
+          <Routes>
+          {/* Public routes - accessible by anyone */}
+          <Route path="/" element={<Home />} /> 
+          <Route path="/home" element={<Home />} />
         <Route path="/login"
         element={
           <PublicRoute>
@@ -84,11 +85,11 @@ function App() {
         {/* Admin routes */}
         <Route path="/admin/login" element={<AdminPublicRoute><AdminLogin /></AdminPublicRoute>} />
         <Route path='/admin-dashboard' element={<AdminProtectedRouter><AdminDashboard /></AdminProtectedRouter>}/>
-        
-        {/* Fallback route */}
+          {/* Fallback route */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
+    </NotificationProvider>
   );
 }
 

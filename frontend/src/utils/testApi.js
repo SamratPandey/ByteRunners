@@ -68,14 +68,33 @@ export const testApi = {
     });
   },
 
-  // Get personalized recommendations
+  // Get personalized recommendations (legacy endpoint)
   getRecommendations: async () => {
     return makeAuthenticatedRequest(`${API_BASE_URL}/test/recommendations`);
   },
 
-  // Get test analytics and history
+  // Get test analytics and history (legacy endpoint)
   getAnalytics: async () => {
     return makeAuthenticatedRequest(`${API_BASE_URL}/test/analytics`);
+  },
+
+  // Enhanced analytics endpoints for TestAnalytics component
+  getDetailedAnalytics: async () => {
+    return makeAuthenticatedRequest(`${API_BASE_URL}/test/detailed-analytics`);
+  },
+
+  // Get AI-powered recommendations
+  getAIRecommendations: async () => {
+    return makeAuthenticatedRequest(`${API_BASE_URL}/test/ai-recommendations`);
+  },
+
+  // Get user test history with pagination and filters
+  getTestHistory: async (page = 1, limit = 20, subject, difficulty) => {
+    const params = new URLSearchParams({ page, limit });
+    if (subject) params.append('subject', subject);
+    if (difficulty) params.append('difficulty', difficulty);
+    
+    return makeAuthenticatedRequest(`${API_BASE_URL}/test/test-history?${params}`);
   },
 };
 

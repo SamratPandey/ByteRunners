@@ -360,14 +360,7 @@ const Job = () => {
                         <Badge className="bg-green-500/10 text-green-500 text-lg px-4 py-2 mb-4">
                             Career Opportunities
                         </Badge>
-                        <h1 className="text-5xl font-bold mb-6">
-                            <span className="bg-gradient-to-r from-green-400 via-green-500 to-green-600 bg-clip-text text-transparent">
-                                Explore Job Listings
-                            </span>
-                        </h1>
-                        <p className="text-xl text-gray-400 max-w-3xl mx-auto">
-                            Find your next career opportunity with top companies seeking talented professionals like you.
-                        </p>                    </div>
+                    </div>
 
                     {/* Search bar */}
                     <div className="mb-8">
