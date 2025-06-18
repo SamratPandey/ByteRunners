@@ -559,6 +559,111 @@ const getCourseStats = async (req, res) => {
     }
 };
 
+// Get user's enrolled courses
+const getUserEnrolledCourses = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        
+        const user = await User.findById(userId)
+            .populate({
+                path: 'enrolledCourses.course',
+                populate: {
+                    path: 'instructor',
+                    select: 'name avatar'
+                }
+            })
+            .populate({
+                path: 'purchasedCourses.course',
+                populate: {
+                    path: 'instructor',
+                    select: 'name avatar'
+                }
+            });
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+
+        // Filter out null courses (in case some courses were deleted)
+        const enrolledCourses = user.enrolledCourses.filter(ec => ec.course).map(ec => ({
+            ...ec.course.toObject(),
+            enrollmentDetails: {
+                enrolledAt: ec.enrolledAt,
+                progress: ec.progress,
+                lastAccessedLesson: ec.lastAccessedLesson,
+                totalTimeSpent: ec.totalTimeSpent,
+                completedLessons: ec.completedLessons
+            }
+        }));
+
+        const purchasedCourses = user.purchasedCourses.filter(pc => pc.course).map(pc => ({
+            ...pc.course.toObject(),
+            purchaseDetails: {
+                purchasedAt: pc.purchasedAt,
+                price: pc.price,
+                orderId: pc.orderId
+            }
+        }));
+
+        res.status(200).json({
+            success: true,
+            message: "User courses fetched successfully",
+            data: {
+                enrolledCourses,
+                purchasedCourses,
+                totalEnrolled: enrolledCourses.length,
+                totalPurchased: purchasedCourses.length
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+// Get user's course progress
+const getUserCourseProgress = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { courseId } = req.params;
+        
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+
+        const enrolledCourse = user.enrolledCourses.find(ec => 
+            ec.course.toString() === courseId
+        );
+
+        if (!enrolledCourse) {
+            return res.status(404).json({
+                success: false,
+                message: "Course not found in user's enrolled courses"
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Course progress fetched successfully",
+            data: enrolledCourse
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
 module.exports = {
     getCourses,
     getCourseById,
@@ -568,6 +673,8 @@ module.exports = {
     getWishlist,
     addReview,
     getFeaturedCourses,
-    getCourseStats
+    getCourseStats,
+    getUserEnrolledCourses,
+    getUserCourseProgress
 };
 

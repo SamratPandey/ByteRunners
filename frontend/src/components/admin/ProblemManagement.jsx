@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import adminApi from '../../utils/adminApi';
+import { Badge } from '@/components/ui/badge';
 import {
   Card,
   CardContent,
@@ -610,10 +611,9 @@ const ProblemManagement = () => {
       </Card>
     );
   }
-
   if (error) {
     return (
-      <Card className="w-full">
+      <Card className="w-full bg-gray-950 border-gray-800">
         <CardContent className="p-6">
           <Alert variant="destructive">
             <AlertTitle>Error</AlertTitle>
@@ -621,34 +621,35 @@ const ProblemManagement = () => {
           </Alert>
         </CardContent>
       </Card>
-    );  }
+    );
+  }
 
   const getStatusBadge = (status) => {
-    const statusColors = {
-      'draft': 'bg-gray-500/20 text-gray-700 border-gray-500/20',
-      'published': 'bg-green-500/20 text-green-700 border-green-500/20',
-      'archived': 'bg-red-500/20 text-red-700 border-red-500/20'
+    const statusVariants = {
+      'draft': 'secondary',
+      'published': 'success',
+      'archived': 'destructive'
     };
     
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium border ${statusColors[status] || statusColors.draft}`}>
+      <Badge variant={statusVariants[status] || statusVariants.draft}>
         {status || 'draft'}
-      </span>
+      </Badge>
     );
   };
 
   return (
     <>
-      <Card className="w-full">
-    <CardHeader>
-      <div className="flex justify-between items-center">
-        <CardTitle>Problem Management ({problems.length} Problems)</CardTitle>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={fetchProblems}
-            disabled={loading}
-          >
+      <Card className="w-full bg-gray-950 border-gray-800">
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <CardTitle className="text-white">Problem Management ({problems.length} Problems)</CardTitle>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={fetchProblems}
+                disabled={loading}
+              >
             <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>

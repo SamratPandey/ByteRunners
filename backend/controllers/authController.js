@@ -2,7 +2,11 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Activity = require('../models/Activity'); 
 const crypto = require('crypto');
-const sendEmail = require('../controllers/sendMail');
+const { 
+  sendWelcomeEmail, 
+  sendPasswordResetEmail, 
+  sendPasswordResetSuccessEmail 
+} = require('../controllers/sendMail');
 
 require('dotenv').config();
 
@@ -14,9 +18,7 @@ const registerUser = async (req, res) => {
     const userExists = await User.findOne({ email });
     if (userExists) {
       return res.status(400).json({ message: "User already exists" });
-    }
-
-    const user = new User({ name, email, password });
+    }    const user = new User({ name, email, password });
     await user.save();
 
     const activity = new Activity({
@@ -24,7 +26,20 @@ const registerUser = async (req, res) => {
       description: `New user ${user.name} (${user.email}) has registered.`,
     });
     await activity.save();     
+    
     const token = jwt.sign({ id: user._id, accountType: user.accountType }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    
+    // Send welcome email
+    try {
+      await sendWelcomeEmail(user.email, {
+        name: user.name,
+        email: user.email
+      });
+      console.log('Welcome email sent successfully');
+    } catch (emailError) {
+      console.error('Failed to send welcome email:', emailError);
+      // Don't fail registration if email fails
+    }
     
     // Set cookie with the token
     res.cookie('userToken', token, {
@@ -95,11 +110,18 @@ const forgotPassword = async (req, res) => {
       type: 'Password Reset Requested',
       description: `User ${user.name} requested a password reset.`,
     });
-    await activity.save();
+    await activity.save();    const resetLink = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
 
-    const resetLink = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
-
-    await sendEmail(user.email, 'Password Reset Request', `You requested a password reset. Click the link below to reset your password:\n\n${resetLink}`);
+    try {
+      await sendPasswordResetEmail(user.email, {
+        name: user.name,
+        resetLink: resetLink
+      });
+      console.log('Password reset email sent successfully');
+    } catch (emailError) {
+      console.error('Failed to send password reset email:', emailError);
+      throw new Error('Failed to send password reset email');
+    }
 
     res.status(200).json({ message: 'Password reset link sent to your email.' });
   } catch (error) {
@@ -120,9 +142,7 @@ const resetPassword = async (req, res) => {
 
     if (!user) {
       return res.status(400).json({ message: "Invalid or expired reset token" });
-    }
-
-    user.password = password; 
+    }    user.password = password; 
     user.resetPasswordToken = undefined;
     user.resetPasswordExpire = undefined; 
     await user.save();
@@ -132,6 +152,28 @@ const resetPassword = async (req, res) => {
       description: `User ${user.name} reset their password successfully.`,
     });
     await activity.save();
+
+    // Send password reset success email
+    try {
+      await sendPasswordResetSuccessEmail(user.email, {
+        name: user.name
+      });
+      console.log('Password reset success email sent successfully');
+    } catch (emailError) {
+      console.error('Failed to send password reset success email:', emailError);
+      // Don't fail the password reset if email fails
+    }
+
+    // Send password reset success email
+    try {
+      await sendPasswordResetSuccessEmail(user.email, {
+        name: user.name
+      });
+      console.log('Password reset success email sent successfully');
+    } catch (emailError) {
+      console.error('Failed to send password reset success email:', emailError);
+      // Don't fail the password reset if email fails
+    }
 
     res.status(200).json({ message: 'Password has been reset successfully' });
   } catch (error) {

@@ -1,13 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import authApi from '../utils/authApi';
+import Nav from './Nav';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../redux/actions/authActions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { AnalyticsCardSkeleton } from '@/components/ui/skeleton';
 import { User, Code, Trophy, Star } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -108,9 +110,14 @@ const Dashboard = () => {
   if (!user) {
     return null;
   }
-
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Fixed Navigation */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-sm border-b border-green-900">
+        <Nav />
+      </div>
+      
+      <div className="pt-20 p-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div className="flex items-center gap-4">
@@ -126,13 +133,14 @@ const Dashboard = () => {
             <h1 className="text-3xl font-bold dark:text-white">Welcome back, {user.name}!</h1>
             <p className="text-gray-600 dark:text-gray-300">Rank #{user.rank} | ⭐ {user.streak} day streak</p>
           </div>
-        </div>
-        <button
+        </div>        <Button
           onClick={handleLogout}
-          className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+          variant="destructive"
+          size="lg"
+          className="font-medium"
         >
           Logout
-        </button>
+        </Button>
       </div>
 
       {/* Stats Grid */}
@@ -256,9 +264,9 @@ const Dashboard = () => {
                 ))}
               </div>
             </CardContent>
-          </Card>
-        )}
+          </Card>        )}
       </div>
+    </div>
     </div>
   );
 };

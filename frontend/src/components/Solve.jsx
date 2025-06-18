@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { ResizablePanel, ResizablePanelGroup, ResizableHandle } from '@/components/ui/resizable';
 import { Copy, Maximize2, Minimize2, X, Play, Pause, RotateCcw, Send, Settings, Save, FileText } from 'lucide-react';
@@ -1085,11 +1085,14 @@ const Solve = () => {
     const handleLanguageChange = useCallback((e) => {
       setSelectedLanguage(e.target.value);
     }, []);
-  
     return (
       <>
-        {!isFullscreen && <Nav />}
-        <div className={`${isFullscreen ? 'fixed inset-0 z-50 bg-black/95' : 'relative w-full mt-[65px]'}`}>          {isFullscreen ? (
+        {!isFullscreen && (
+          <div className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-sm border-b border-green-900">
+            <Nav />
+          </div>
+        )}
+        <div className={`${isFullscreen ? 'fixed inset-0 z-50 bg-black/95' : 'relative w-full pt-20'}`}>{isFullscreen ? (
             <div className="h-full overflow-hidden shadow-lg shadow-green-900/20">
               <CodeEditorPanel
                 selectedLanguage={selectedLanguage}

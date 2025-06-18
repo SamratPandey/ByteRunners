@@ -45,9 +45,8 @@ export default {
 		  xl: '1rem',
 		},
 	  },
-	},
-	plugins: [
-	  require("tailwindcss-animate"), 
+	},	plugins: [
+	  require("tailwindcss-animate"), // eslint-disable-line no-undef
 	],
   };
   

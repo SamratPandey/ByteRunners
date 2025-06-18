@@ -1,4 +1,4 @@
-import React from 'react';
+// React import removed - not used
 import { Link } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';

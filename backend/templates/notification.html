@@ -1,0 +1,29 @@
+<div class="greeting">
+    Hi {{userName}},
+</div>
+
+<div class="main-content">
+    <div class="alert alert-info">
+        <strong>New Notification</strong> from ByteRunners
+    </div>
+    
+    <h2 style="color: #333; margin-bottom: 20px;">{{notificationTitle}}</h2>
+    
+    <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+        {{notificationContent}}
+    </div>
+    
+    {{#if actionUrl}}
+    <div class="btn-center">
+        <a href="{{actionUrl}}" class="btn">{{actionText}}</a>
+    </div>
+    {{/if}}
+    
+    <p style="margin-top: 20px; font-size: 14px; color: #666;">
+        This notification was sent on {{timestamp}}. You can manage your notification preferences in your dashboard.
+    </p>
+    
+    <div class="btn-center">
+        <a href="{{dashboardUrl}}" class="btn" style="background: linear-gradient(135deg, #6c757d 0%, #495057 100%);">Go to Dashboard</a>
+    </div>
+</div>

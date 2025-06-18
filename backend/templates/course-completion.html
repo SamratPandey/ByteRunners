@@ -1,0 +1,45 @@
+<div class="greeting">
+    Congratulations, {{userName}}! 🎉
+</div>
+
+<div class="main-content">
+    <div class="alert alert-success">
+        <strong>Course Completed!</strong> You've successfully completed {{courseName}}.
+    </div>
+    
+    <p>Outstanding work! You've just completed the <strong>{{courseName}}</strong> course. This is a significant milestone in your coding journey!</p>
+    
+    <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+        <h3 style="color: #333; margin-bottom: 15px;">Your Achievement Summary:</h3>
+        <ul style="list-style: none; padding: 0; margin: 0;">
+            <li style="margin: 8px 0;"><strong>Course:</strong> {{courseName}}</li>
+            <li style="margin: 8px 0;"><strong>Completion Date:</strong> {{completionDate}}</li>
+            <li style="margin: 8px 0;"><strong>Final Score:</strong> {{finalScore}}%</li>
+            <li style="margin: 8px 0;"><strong>Time Spent:</strong> {{timeSpent}} hours</li>
+            <li style="margin: 8px 0;"><strong>Lessons Completed:</strong> {{lessonsCompleted}}/{{totalLessons}}</li>
+        </ul>
+    </div>
+    
+    <div class="btn-center">
+        <a href="{{certificateUrl}}" class="btn">Download Certificate</a>
+    </div>
+    
+    <p>Here's what you can do next:</p>
+    <ul style="margin-left: 20px; margin-bottom: 15px;">
+        <li>📜 Download your completion certificate</li>
+        <li>📚 Explore related advanced courses</li>
+        <li>💼 Check out relevant job opportunities</li>
+        <li>🏆 Compete on the leaderboard</li>
+        <li>💡 Apply your new skills to real projects</li>
+    </ul>
+    
+    <div class="alert alert-info">
+        <strong>Keep Learning:</strong> Check out our recommended courses based on what you just completed!
+    </div>
+    
+    <div class="btn-center">
+        <a href="{{recommendedCoursesUrl}}" class="btn" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">View Recommended Courses</a>
+    </div>
+    
+    <p>We're proud of your dedication and hard work. Keep up the excellent progress! 🚀</p>
+</div>

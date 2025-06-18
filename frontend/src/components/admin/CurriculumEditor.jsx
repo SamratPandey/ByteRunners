@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'react-hot-toast';
 import {
   Plus,
@@ -436,7 +436,7 @@ const CurriculumEditor = ({ course, onSuccess, onCancel }) => {
         <Button variant="outline" onClick={onCancel}>
           Cancel
         </Button>
-        <Button onClick={handleSave} disabled={loading} className="bg-green-600 hover:bg-green-700">
+        <Button onClick={handleSave} disabled={loading} variant="success">
           {loading ? 'Saving...' : 'Save Curriculum'}
         </Button>
       </div>

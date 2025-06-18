@@ -3,31 +3,22 @@ const TestQuestion = require('../models/TestQuestion');
 
 class AIService {
   constructor() {
-    // You can configure different AI providers here
-    this.providers = {
-      openai: {
-        apiKey: process.env.OPENAI_API_KEY,
-        baseURL: 'https://api.openai.com/v1',
-        model: 'gpt-3.5-turbo'
-      },
-      huggingface: {
-        apiKey: process.env.HUGGINGFACE_API_KEY,
-        baseURL: 'https://api-inference.huggingface.co/models'
-      }
-    };
-    this.defaultProvider = 'openai';
-  }
+    // Using only OpenAI for all AI operations
+    this.provider = {
+      apiKey: process.env.OPENAI_API_KEY,
+      baseURL: 'https://api.openai.com/v1',
+      model: 'gpt-3.5-turbo'
+    };  }
 
-  // Generate questions using AI
-  async generateQuestions(subject, topic, difficulty, count = 5) {
+  // Generate questions using AI with enhanced context
+  async generateQuestions(subject, topic, difficulty, count = 5, userContext = {}) {
     try {
-      const prompt = this.createQuestionGenerationPrompt(subject, topic, difficulty, count);
+      const prompt = this.createQuestionGenerationPrompt(subject, topic, difficulty, count, userContext);
       
       const response = await this.callAI(prompt, 'question_generation');
       
       const questions = this.parseGeneratedQuestions(response);
-      
-      // Save generated questions to database
+        // Save generated questions to database
       const savedQuestions = await this.saveQuestionsToDatabase(questions, subject, topic, difficulty);
       
       return savedQuestions;
@@ -35,6 +26,22 @@ class AIService {
       console.error('Error generating questions:', error);
       // Fallback to predefined questions if AI fails
       return await this.getFallbackQuestions(subject, topic, difficulty, count);
+    }
+  }
+
+  // Generate personalized onboarding questions using AI
+  async generateOnboardingQuestions(userProfile = {}) {
+    try {
+      const prompt = this.createOnboardingQuestionsPrompt(userProfile);
+      
+      const response = await this.callAI(prompt, 'onboarding_questions');
+      
+      const questions = this.parseOnboardingQuestions(response);
+      
+      return questions;
+    } catch (error) {
+      console.error('Error generating onboarding questions:', error);
+      return this.getFallbackOnboardingQuestions();
     }
   }
 
@@ -64,36 +71,32 @@ class AIService {
       console.error('Error generating recommendations:', error);
       return this.createFallbackRecommendations(userProfile);
     }
-  }
-  // Core AI calling function
+  }  // Core AI calling function - using only OpenAI
   async callAI(prompt, type = 'general') {
-    // Check if AI service is configured
-    if (!this.providers.openai.apiKey && !this.providers.huggingface.apiKey) {
-      console.warn('No AI service configured, using fallback');
+    // Check if OpenAI API key is configured
+    if (!this.provider.apiKey) {
+      console.warn('OpenAI API key not configured, using fallback');
       return this.getFallbackResponse(type, prompt);
     }
 
-    const provider = this.providers[this.defaultProvider];
-    
-    if (this.defaultProvider === 'openai' && provider.apiKey) {
-      return await this.callOpenAI(prompt, provider);
-    } else if (this.defaultProvider === 'huggingface' && this.providers.huggingface.apiKey) {
-      return await this.callHuggingFace(prompt, this.providers.huggingface);
+    try {
+      return await this.callOpenAI(prompt);
+    } catch (error) {
+      console.error('OpenAI API error:', error);
+      console.warn('OpenAI call failed, using fallback');
+      return this.getFallbackResponse(type, prompt);
     }
-    
-    console.warn('Configured AI provider not available, using fallback');
-    return this.getFallbackResponse(type, prompt);
   }
 
-  async callOpenAI(prompt, provider) {
+  async callOpenAI(prompt) {
     const response = await axios.post(
-      `${provider.baseURL}/chat/completions`,
+      `${this.provider.baseURL}/chat/completions`,
       {
-        model: provider.model,
+        model: this.provider.model,
         messages: [
           {
             role: 'system',
-            content: 'You are an expert programming instructor and assessment creator. Generate high-quality, accurate programming questions and provide detailed analysis.'
+            content: 'You are an expert programming instructor and assessment creator. Generate high-quality, accurate programming questions and provide detailed analysis. Always respond in valid JSON format when requested.'
           },
           {
             role: 'user',
@@ -105,34 +108,21 @@ class AIService {
       },
       {
         headers: {
-          'Authorization': `Bearer ${provider.apiKey}`,
+          'Authorization': `Bearer ${this.provider.apiKey}`,
           'Content-Type': 'application/json'
         }
       }
     );
 
     return response.data.choices[0].message.content;
-  }
-
-  async callHuggingFace(prompt, provider) {
-    // Implement HuggingFace API call as alternative
-    const response = await axios.post(
-      `${provider.baseURL}/microsoft/DialoGPT-large`,
-      {
-        inputs: prompt
-      },
-      {
-        headers: {
-          'Authorization': `Bearer ${provider.apiKey}`,
-          'Content-Type': 'application/json'
-        }
-      }
-    );
-
-    return response.data[0].generated_text;
-  }
-
-  createQuestionGenerationPrompt(subject, topic, difficulty, count) {
+  }  createQuestionGenerationPrompt(subject, topic, difficulty, count, userContext = {}) {
+    const { name = 'User', experience = 0, level = 1, previousTests = 0 } = userContext;
+    
+    let contextualNote = '';
+    if (name !== 'User') {
+      contextualNote = `\n\nUser Context: This is for ${name} (Level ${level}, ${experience} XP, ${previousTests} previous tests). Tailor the questions appropriately for their experience level.`;
+    }
+    
     return `Generate ${count} multiple-choice questions about ${topic} in ${subject} programming language with ${difficulty} difficulty level.
 
 For each question, provide:
@@ -156,7 +146,8 @@ Make sure questions are:
 - Technically accurate
 - Appropriate for ${difficulty} level
 - Focused on practical programming concepts
-- Clear and unambiguous`;
+- Clear and unambiguous
+- Engaging and educational${contextualNote}`;
   }
 
   createAnalysisPrompt(testData) {
@@ -214,6 +205,42 @@ Provide JSON response:
 }`;
   }
 
+  createOnboardingQuestionsPrompt(userProfile = {}) {
+    const { name = 'User', interests = [], experience = 'beginner' } = userProfile;
+    
+    return `Generate personalized onboarding questions for a new user named ${name} with ${experience} programming experience interested in ${interests.join(', ') || 'general programming'}.
+
+Create 5-7 engaging questions to understand their:
+1. Programming background and goals
+2. Preferred learning style
+3. Time availability for learning
+4. Specific technology interests
+5. Career aspirations
+6. Project experience
+7. Challenges they want to overcome
+
+Format the response as JSON array:
+[
+  {
+    "id": "question_1",
+    "question": "What programming languages have you worked with before?",
+    "type": "multiple_choice",
+    "options": ["JavaScript", "Python", "Java", "C++", "None", "Other"],
+    "allowMultiple": true,
+    "category": "background"
+  },
+  {
+    "id": "question_2", 
+    "question": "What's your primary goal for learning programming?",
+    "type": "single_choice",
+    "options": ["Career change", "Skill improvement", "Personal projects", "Academic requirements"],
+    "category": "goals"
+  }
+]
+
+Make questions personalized, engaging, and relevant to their experience level.`;
+  }
+
   parseGeneratedQuestions(response) {
     try {
       // Clean the response and parse JSON
@@ -245,6 +272,16 @@ Provide JSON response:
     }
   }
 
+  parseOnboardingQuestions(response) {
+    try {
+      const cleanResponse = response.replace(/```json\n?|\n?```/g, '').trim();
+      return JSON.parse(cleanResponse);
+    } catch (error) {
+      console.error('Error parsing onboarding questions response:', error);
+      return this.getFallbackOnboardingQuestions();
+    }
+  }
+
   async saveQuestionsToDatabase(questions, subject, topic, difficulty) {
     const savedQuestions = [];
     
@@ -259,7 +296,7 @@ Provide JSON response:
           topic: questionData.topic || topic,
           difficulty: difficulty.toLowerCase(),
           aiGenerated: true,
-          aiModel: this.providers[this.defaultProvider].model,
+          aiModel: this.provider.model,
           tags: [subject, topic, difficulty]
         });
 

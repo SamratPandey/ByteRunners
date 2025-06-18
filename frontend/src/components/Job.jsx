@@ -203,9 +203,7 @@ const Job = () => {
             toast("Please login to view job details", { icon: 'ℹ️' });
             navigate('/login', { state: { from: { pathname: `/job/${jobId}` } } });
         } else {
-            // Handle viewing job details here
-            toast.success(`Viewing job ${jobId}`);
-            // TODO: Navigate to job details page when implemented
+            navigate(`/job/${jobId}`);
         }
     };
 
@@ -346,15 +344,13 @@ const Job = () => {
                 </Button>
             </div>
         </div>
-    );
-
-    return(
+    );    return(
         <div className="min-h-screen flex flex-col bg-black text-white">
-
-
             <BackgroundPattern />
-            <Nav />
-            <main className="flex-1 mt-11 relative z-10">
+            <div className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-sm border-b border-green-900">
+                <Nav />
+            </div>
+            <main className="flex-1 pt-24 relative z-10">
                 <div className="container mx-auto px-6 py-12">
                     <div className="mb-12 text-center">
                         <Badge className="bg-green-500/10 text-green-500 text-lg px-4 py-2 mb-4">

@@ -530,3 +530,133 @@ exports.getRecentActivity = async (req, res) => {
     });
   }
 };
+
+// Get user growth statistics for charts
+exports.getUserGrowthStats = async (req, res) => {
+  try {
+    const { period = 'daily', days = 7 } = req.query;
+    
+    // Calculate date range
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(endDate.getDate() - days);
+    
+    // Aggregate user registrations by day
+    const userGrowth = await User.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: startDate, $lte: endDate }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            year: { $year: '$createdAt' },
+            month: { $month: '$createdAt' },
+            day: { $dayOfMonth: '$createdAt' }
+          },
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $project: {
+          date: {
+            $dateToString: {
+              format: '%b %d',
+              date: {
+                $dateFromParts: {
+                  year: '$_id.year',
+                  month: '$_id.month',
+                  day: '$_id.day'
+                }
+              }
+            }
+          },
+          users: '$count',
+          _id: 0
+        }
+      },
+      { $sort: { date: 1 } }
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        userGrowth,
+        totalUsers: await User.countDocuments()
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching user growth stats:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching user growth statistics',
+      error: error.message
+    });
+  }
+};
+
+// Get problem growth statistics for charts  
+exports.getProblemGrowthStats = async (req, res) => {
+  try {
+    const { period = 'daily', days = 7 } = req.query;
+    
+    // Calculate date range
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(endDate.getDate() - days);
+    
+    // Aggregate problem creation by day
+    const problemGrowth = await Problem.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: startDate, $lte: endDate }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            year: { $year: '$createdAt' },
+            month: { $month: '$createdAt' },
+            day: { $dayOfMonth: '$createdAt' }
+          },
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $project: {
+          date: {
+            $dateToString: {
+              format: '%b %d',
+              date: {
+                $dateFromParts: {
+                  year: '$_id.year',
+                  month: '$_id.month',
+                  day: '$_id.day'
+                }
+              }
+            }
+          },
+          problems: '$count',
+          _id: 0
+        }
+      },
+      { $sort: { date: 1 } }
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        problemGrowth,
+        totalProblems: await Problem.countDocuments()
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching problem growth stats:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching problem growth statistics',
+      error: error.message
+    });
+  }
+};

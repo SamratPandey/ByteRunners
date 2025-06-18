@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import {
   Search,
@@ -176,38 +176,36 @@ const OrderManagement = () => {
     
     return `${headers}\n${rows}`;
   };
-
   const getStatusBadge = (status) => {
     const statusConfig = {
-      completed: { color: 'bg-green-500 text-white', icon: CheckCircle },
-      pending: { color: 'bg-yellow-500 text-white', icon: Clock },
-      failed: { color: 'bg-red-500 text-white', icon: XCircle },
-      cancelled: { color: 'bg-gray-500 text-white', icon: XCircle },
-      refunded: { color: 'bg-purple-500 text-white', icon: RefreshCcw }
+      completed: { variant: 'success', icon: CheckCircle },
+      pending: { variant: 'warning', icon: Clock },
+      failed: { variant: 'destructive', icon: XCircle },
+      cancelled: { variant: 'secondary', icon: XCircle },
+      refunded: { variant: 'info', icon: RefreshCcw }
     };
 
     const config = statusConfig[status] || statusConfig.pending;
     const Icon = config.icon;
 
     return (
-      <Badge className={config.color}>
+      <Badge variant={config.variant}>
         <Icon className="w-3 h-3 mr-1" />
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </Badge>
     );
   };
-
   const getPaymentMethodBadge = (method) => {
-    const colors = {
-      razorpay: 'bg-blue-100 text-blue-800',
-      stripe: 'bg-purple-100 text-purple-800',
-      paypal: 'bg-yellow-100 text-yellow-800',
-      upi: 'bg-green-100 text-green-800',
-      card: 'bg-gray-100 text-gray-800'
+    const variants = {
+      razorpay: 'info',
+      stripe: 'premium',
+      paypal: 'warning',
+      upi: 'success',
+      card: 'secondary'
     };
 
     return (
-      <Badge className={colors[method] || colors.card}>
+      <Badge variant={variants[method] || variants.card}>
         {method.toUpperCase()}
       </Badge>
     );

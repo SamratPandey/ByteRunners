@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'react-hot-toast';
 import {
   Plus,
@@ -187,7 +187,7 @@ const CouponManagement = ({ course, onClose }) => {
             Create and manage discount coupons for {course?.title}
           </p>
         </div>
-        <Button onClick={handleAddCoupon} className="bg-green-600 hover:bg-green-700">
+        <Button onClick={handleAddCoupon} variant="success">
           <Plus className="w-4 h-4 mr-2" />
           Add Coupon
         </Button>
@@ -391,10 +391,9 @@ const CouponManagement = ({ course, onClose }) => {
               >
                 Cancel
               </Button>
-              <Button
-                type="submit"
+              <Button                type="submit"
                 disabled={loading}
-                className="bg-green-600 hover:bg-green-700"
+                variant="success"
               >
                 {loading ? 'Saving...' : editingCoupon ? 'Update' : 'Create'} Coupon
               </Button>

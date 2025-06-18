@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-hot-toast';
@@ -269,13 +269,14 @@ const CourseDetails = () => {
       </div>
     );
   }
- 
-  return (
+   return (
     <div className="min-h-screen bg-black text-white">
-      <Nav />
+      <div className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-sm border-b border-green-900">
+        <Nav />
+      </div>
       
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-black via-gray-900 to-black">
+      <div className="bg-gradient-to-r from-black via-gray-900 to-black pt-24">
         <div className="container mx-auto px-6 py-12">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left Content */}

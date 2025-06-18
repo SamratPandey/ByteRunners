@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { X, AlertTriangle, DollarSign, FileText } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const RefundModal = ({ isOpen, onClose, order, onRefund }) => {
   const [refundData, setRefundData] = useState({
@@ -97,7 +98,7 @@ const RefundModal = ({ isOpen, onClose, order, onRefund }) => {
   if (!isOpen || !order) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b">
@@ -290,18 +291,18 @@ const RefundModal = ({ isOpen, onClose, order, onRefund }) => {
         </form>
 
         {/* Footer */}
-        <div className="flex items-center justify-end space-x-3 px-6 py-4 bg-gray-50 border-t">
-          <button
+        <div className="flex items-center justify-end space-x-3 px-6 py-4 bg-gray-50 border-t">          <Button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            variant="outline"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={handleSubmit}
             disabled={isProcessing}
-            className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+            variant="destructive"
+            className="flex items-center space-x-2"
           >
             {isProcessing ? (
               <>
@@ -314,7 +315,7 @@ const RefundModal = ({ isOpen, onClose, order, onRefund }) => {
                 <span>Process Refund</span>
               </>
             )}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

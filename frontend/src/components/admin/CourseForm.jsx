@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { toast } from 'react-hot-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,6 +17,8 @@ import { X } from 'lucide-react';
 import { courseApi } from '@/utils/adminCourseApi';
 
 const CourseForm = ({ course, mode, onSuccess, onCancel }) => {
+  const isMountedRef = useRef(true);
+
   const [formData, setFormData] = useState({
     title: '',
     subtitle: '',
@@ -82,8 +84,50 @@ const CourseForm = ({ course, mode, onSuccess, onCancel }) => {
         metaDescription: course.metaDescription || '',
         metaKeywords: course.metaKeywords || []
       });
+    } else if (mode === 'create' || !course) {
+      resetForm();
     }
   }, [course, mode]);
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  const resetForm = () => {
+    setFormData({
+      title: '',
+      subtitle: '',
+      description: '',
+      summary: '',
+      thumbnail: '',
+      previewVideo: '',
+      introVideo: '',
+      price: 0,
+      originalPrice: 0,
+      isFree: false,
+      category: '',
+      subcategory: '',
+      level: 'beginner',
+      language: 'English',
+      tags: [],
+      whatYouWillLearn: [''],
+      prerequisites: [''],
+      targetAudience: [''],
+      isPublished: false,
+      featured: false,
+      bestseller: false,
+      hasSubtitles: false,
+      hasCertificate: true,
+      lifetime_access: true,
+      mobile_access: true,
+      metaDescription: '',
+      metaKeywords: []
+    });
+    setNewTag('');
+    setNewKeyword('');
+  };
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -613,11 +657,18 @@ const CourseForm = ({ course, mode, onSuccess, onCancel }) => {
       </div>
 
       {/* Actions */}
-      <div className="flex justify-end space-x-4 pt-4 border-t">
-        <Button type="button" variant="outline" onClick={onCancel}>
+      <div className="flex justify-end space-x-4 pt-4 border-t">        <Button 
+          type="button" 
+          variant="outline" 
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onCancel();
+          }}
+        >
           Cancel
         </Button>
-        <Button type="submit" disabled={loading} className="bg-green-600 hover:bg-green-700">
+        <Button type="submit" disabled={loading} variant="success">
           {loading ? 'Saving...' : mode === 'create' ? 'Create Course' : 'Update Course'}
         </Button>
       </div>

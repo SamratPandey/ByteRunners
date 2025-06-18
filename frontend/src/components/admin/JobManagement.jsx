@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import adminApi from '../../utils/adminApi';  
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -165,14 +165,14 @@ const JobManagement = () => {
         job.company?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         job.location?.toLowerCase().includes(searchQuery.toLowerCase())
     );    return (
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-8 bg-black text-white min-h-screen">
             {/* Page Header */}
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-900 flex items-center">
+                <h1 className="text-3xl font-bold text-green-400 flex items-center">
                     <Briefcase className="mr-3" size={32} />
                     Job Management
                 </h1>
-                <p className="mt-2 text-gray-600">Manage job postings and opportunities</p>
+                <p className="mt-2 text-gray-400">Manage job postings and opportunities</p>
             </div>
 
             {/* Search and Actions */}
@@ -182,51 +182,53 @@ const JobManagement = () => {
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                         <Input
                             placeholder="Search jobs..."
-                            className="pl-10 w-full md:w-64"
+                            className="pl-10 w-full md:w-64 bg-gray-900 border-gray-700 text-white placeholder-gray-400"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
-                    </div>                    <Button 
+                    </div>
+                    <Button 
                         className="flex items-center"
+                        variant="success"
                         onClick={() => setIsAddModalOpen(true)}
                     >
                         <Plus size={18} className="mr-2" /> Add Job
                     </Button>
                 </div>
-            </div>            {isLoading ? (
+            </div>{isLoading ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {[...Array(6)].map((_, index) => (
                         <JobCardSkeleton key={index} />
                     ))}
                 </div>            ) : filteredJobs.length === 0 ? (
-                <div className="text-center py-16 bg-gray-50 rounded-lg">
+                <div className="text-center py-16 bg-gray-950 border border-gray-800 rounded-lg">
                     <Briefcase size={48} className="mx-auto text-gray-400" />
-                    <h3 className="mt-4 text-lg font-medium text-gray-900">No jobs found</h3>
-                    <p className="mt-2 text-gray-500">
+                    <h3 className="mt-4 text-lg font-medium text-white">No jobs found</h3>
+                    <p className="mt-2 text-gray-400">
                         {searchQuery ? "No jobs match your search criteria" : "Start by adding a new job posting"}
                     </p>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredJobs.map((job) => (
-                        <Card key={job._id} className="overflow-hidden transition-all duration-300 hover:shadow-lg">
-                            <CardHeader className="bg-gray-50 pb-3">
+                        <Card key={job._id} className="overflow-hidden transition-all duration-300 hover:shadow-lg bg-gray-950 border-gray-800">
+                            <CardHeader className="bg-gray-900 pb-3">
                                 <div className="flex justify-between items-start">
-                                    <CardTitle className="text-lg">{job.title}</CardTitle>
+                                    <CardTitle className="text-lg text-white">{job.title}</CardTitle>
                                     <Badge variant="outline">{job.type || "Full-time"}</Badge>
                                 </div>
-                                <p className="text-sm text-gray-500">{job.location || "Remote"}</p>
-                                <p className="text-sm text-gray-600 font-medium">{job.company}</p>
+                                <p className="text-sm text-gray-400">{job.location || "Remote"}</p>
+                                <p className="text-sm text-gray-300 font-medium">{job.company}</p>
                             </CardHeader>
                             <CardContent className="pt-4">
-                                <p className="text-sm text-gray-600 line-clamp-3">{job.description}</p>
+                                <p className="text-sm text-gray-300 line-clamp-3">{job.description}</p>
                                 <div className="mt-3">
-                                    <p className="text-sm font-medium text-green-600">
+                                    <p className="text-sm font-medium text-green-400">
                                         Salary: ₹{job.salary?.toLocaleString() || 'Not specified'} per/year
                                     </p>
                                 </div>
                             </CardContent>
-                            <CardFooter className="flex justify-between border-t pt-4">
+                            <CardFooter className="flex justify-between border-t border-gray-800 pt-4">
                                 <Button 
                                     variant="outline" 
                                     size="sm" 
@@ -242,10 +244,10 @@ const JobManagement = () => {
                                         className="h-8 w-8"
                                         onClick={() => handleEditJob(job)}
                                     >
-                                        <Edit size={16} className="text-blue-500" />
+                                        <Edit size={16} className="text-blue-400" />
                                     </Button>
                                     <Button 
-                                        variant="ghost" 
+                                        variant="ghost"
                                         size="icon" 
                                         className="h-8 w-8" 
                                         onClick={() => handleDeleteJob(job)}
@@ -257,42 +259,44 @@ const JobManagement = () => {
                         </Card>
                     ))}
                 </div>            )}
-            
-            {/* Add Job Modal */}
+              {/* Add Job Modal */}
             <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-                <DialogContent className="max-w-2xl">
+                <DialogContent className="max-w-2xl bg-gray-950 border-gray-800 text-white">
                     <DialogHeader>
-                        <DialogTitle>Add New Job</DialogTitle>
+                        <DialogTitle className="text-white">Add New Job</DialogTitle>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                         <div className="grid gap-2">
-                            <Label htmlFor="title">Job Title</Label>
+                            <Label htmlFor="title" className="text-gray-300">Job Title</Label>
                             <Input
                                 id="title"
                                 name="title"
                                 placeholder="Enter job title"
                                 value={formData.title}
                                 onChange={handleInputChange}
+                                className="bg-gray-900 border-gray-700 text-white placeholder-gray-400"
                             />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="company">Company</Label>
+                            <Label htmlFor="company" className="text-gray-300">Company</Label>
                             <Input
                                 id="company"
                                 name="company"
                                 placeholder="Enter company name"
                                 value={formData.company}
                                 onChange={handleInputChange}
+                                className="bg-gray-900 border-gray-700 text-white placeholder-gray-400"
                             />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="location">Location</Label>
+                            <Label htmlFor="location" className="text-gray-300">Location</Label>
                             <Input
                                 id="location"
                                 name="location"
                                 placeholder="Enter job location"
                                 value={formData.location}
                                 onChange={handleInputChange}
+                                className="bg-gray-900 border-gray-700 text-white placeholder-gray-400"
                             />
                         </div>
                         <div className="grid gap-2">

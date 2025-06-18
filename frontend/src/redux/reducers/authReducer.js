@@ -13,14 +13,28 @@ const authReducer = (state = initialState, action) => {
         ...state, 
         isAuthenticated: true, 
         error: null,
-        user: action.payload,
+        user: action.payload || state.user, // Keep existing user if no payload
         isInitialized: true 
-      };    case 'LOGIN_FAILURE':
+      };
+
+    case 'LOGIN_FAILURE':
     case 'SIGNUP_FAILURE':
-      return { ...state, error: action.payload, isAuthenticated: false };
+      return { 
+        ...state, 
+        error: action.payload, 
+        isAuthenticated: false, 
+        user: null,
+        isInitialized: true 
+      };
 
     case 'LOGOUT':
-      return { ...state, isAuthenticated: false, error: null, user: null };
+      return { 
+        ...state, 
+        isAuthenticated: false, 
+        error: null, 
+        user: null,
+        isInitialized: true 
+      };
 
     case 'AUTH_INITIALIZED':
       return { ...state, isInitialized: true };

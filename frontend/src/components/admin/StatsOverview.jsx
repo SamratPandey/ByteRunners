@@ -1,4 +1,4 @@
-import React from 'react';
+// React import removed - not used
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Users, Code, Target, Activity, TrendingUp, Award } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
@@ -18,8 +18,7 @@ const StatsOverview = ({ adminData }) => {
     ? ((userGrowth[userGrowth.length - 1]?.value - 
         userGrowth[0]?.value) / userGrowth[0]?.value * 100).toFixed(1)
     : 0;
-
-  const activeUsers = Math.round(totalUsers * 0.7);
+  const activeUsers = 0; // Active users data not available from backend
   const topPerformersCount = topPerformers.length;
 
   return (
@@ -56,11 +55,10 @@ const StatsOverview = ({ adminData }) => {
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-lg font-medium">Active Users</CardTitle>
             <Activity className="h-6 w-6 text-purple-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-purple-600">{activeUsers}</div>
+          </CardHeader>          <CardContent>
+            <div className="text-3xl font-bold text-purple-600">{activeUsers > 0 ? activeUsers : 'N/A'}</div>
             <p className="text-sm text-muted-foreground mt-2">
-              {totalUsers ? ((activeUsers / totalUsers) * 100).toFixed(1) : 0}% engagement
+              {activeUsers > 0 && totalUsers ? ((activeUsers / totalUsers) * 100).toFixed(1) + '% engagement' : 'Data not available'}
             </p>
           </CardContent>
         </Card>

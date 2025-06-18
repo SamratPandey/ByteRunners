@@ -9,6 +9,10 @@ const {
   getRecommendations,
   getUserTestHistory
 } = require('../controllers/testController');
+const {
+  checkAIStatus,
+  testAIConnection
+} = require('../controllers/aiController');
 const { protect } = require('../middleware/auth');
 
 // All test routes require authentication
@@ -30,5 +34,9 @@ router.get('/analytics', getTestAnalytics);
 router.get('/detailed-analytics', getDetailedAnalytics);
 router.get('/ai-recommendations', getRecommendations);
 router.get('/test-history', getUserTestHistory);
+
+// AI status and connection testing routes
+router.get('/ai-status', checkAIStatus);
+router.get('/test-ai-connection', testAIConnection);
 
 module.exports = router;

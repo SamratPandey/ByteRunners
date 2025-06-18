@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -9,11 +9,13 @@ import {
   faUser,
   faTrophy,
   faBook,
+  faBriefcase,
   faSignOut,
   faBrain,
   faChartLine
 } from '@fortawesome/free-solid-svg-icons';
 import { User } from "lucide-react";
+import { Button } from '@/components/ui/button';
 import { logout } from '../redux/actions/authActions';
 import { useNotifications } from '../contexts/NotificationContext';
 
@@ -127,6 +129,7 @@ const Nav = () => {
     { icon: faUser, label: 'My Profile', path: '/profile' },
     { icon: faTrophy, label: 'Leaderboard', path: '/leaderboard' },
     { icon: faBook, label: 'My Courses', path: '/my-courses' },
+    { icon: faBriefcase, label: 'My Applications', path: '/my-applications' },
     { icon: faBrain, label: 'AI Test', path: '/ai-test' },
     { icon: faChartLine, label: 'Test Analytics', path: '/test-analytics' },
     { icon: faSignOut, label: 'Logout'},
@@ -363,12 +366,15 @@ const Nav = () => {
                 </span>
               </li>
             ))}
-            <li className="pt-2 border-t border-green-800/50">
-              {!isLoggedIn ? (
+            <li className="pt-2 border-t border-green-800/50">              {!isLoggedIn ? (
                 <Link to="/login">
-                  <button className="w-full bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200 shadow-md shadow-green-900/20">
+                  <Button 
+                    className="w-full font-medium shadow-md" 
+                    size="lg"
+                    variant="success"
+                  >
                     Sign In
-                  </button>
+                  </Button>
                 </Link>
               ) : (
                 <div className="space-y-3 pt-2">                  <div className="flex items-center space-x-3 px-1 py-2">

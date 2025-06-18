@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { 
@@ -42,15 +42,26 @@ const MyCourses = () => {
     }
     fetchUserCourses();
   }, [isAuthenticated, navigate]);
-
   const fetchUserCourses = async () => {
     try {
       setLoading(true);
       const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
       
-      // Fetch user's enrolled courses - using mock data for now
-      // In a real app, you'd have endpoints like:
-      // const enrolledResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/user/enrolled-courses`, { headers });
+      // Fetch user's enrolled and purchased courses
+      try {
+        const coursesResponse = await axios.get(
+          `${import.meta.env.VITE_BACKEND_URL}/api/course/user/enrolled`,
+          { headers }
+        );
+        
+        const { enrolledCourses, purchasedCourses } = coursesResponse.data.data;
+        setEnrolledCourses(enrolledCourses || []);
+        setPurchasedCourses(purchasedCourses || []);
+      } catch (error) {
+        console.log('Courses fetch failed:', error);
+        setEnrolledCourses([]);
+        setPurchasedCourses([]);
+      }
       
       // Fetch wishlist
       try {
@@ -63,10 +74,6 @@ const MyCourses = () => {
         console.log('Wishlist fetch failed:', error);
         setWishlist([]);
       }
-      
-      // Mock enrolled courses for demo
-      setEnrolledCourses([]);
-      setPurchasedCourses([]);
     } catch (error) {
       console.error('Error fetching user courses:', error);
     } finally {

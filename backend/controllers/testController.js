@@ -3,19 +3,33 @@ const TestQuestion = require('../models/TestQuestion');
 const TestResult = require('../models/TestResult');
 const User = require('../models/User');
 
-// Generate AI-powered test questions
+// Generate AI-powered test questions (Enhanced)
 const generateTestQuestions = async (req, res) => {
   try {
     const { subject, topic, difficulty, count = 5 } = req.body;
-    const userId = req.user?.id;    if (!subject || !topic || !difficulty) {
+    const userId = req.user?.id;
+
+    if (!subject || !topic || !difficulty) {
       return res.status(400).json({
         success: false,
         message: 'Please specify the subject, topic, and difficulty level to generate your personalized test questions.'
       });
     }
 
-    // Generate questions using AI
-    const questions = await aiService.generateQuestions(subject, topic, difficulty, count);
+    // Get user context for better personalization
+    let userContext = {};
+    if (userId) {
+      const user = await User.findById(userId).select('name experience level testHistory');
+      userContext = {
+        name: user?.name || 'User',
+        experience: user?.experience || 0,
+        level: user?.level || 1,
+        previousTests: user?.testHistory?.length || 0
+      };
+    }
+
+    // Generate questions using AI with enhanced context
+    const questions = await aiService.generateQuestions(subject, topic, difficulty, count, userContext);
 
     // Log question generation for analytics
     if (userId) {
@@ -26,20 +40,26 @@ const generateTestQuestions = async (req, res) => {
             topic,
             difficulty,
             count: questions.length,
-            timestamp: new Date()
+            timestamp: new Date(),
+            aiGenerated: true
           }
         }
       });
-    }    res.status(200).json({
+    }
+
+    res.status(200).json({
       success: true,
-      message: 'Your personalized test questions have been generated successfully!',
+      message: `Your personalized ${difficulty} level ${subject} test on ${topic} has been generated using AI! 🤖`,
       data: {
         questions,
         metadata: {
           subject,
           topic,
           difficulty,
-          count: questions.length
+          count: questions.length,
+          generatedAt: new Date(),
+          aiPowered: true,
+          userContext: userContext.name
         }
       }
     });
@@ -47,7 +67,7 @@ const generateTestQuestions = async (req, res) => {
     console.error('Error generating test questions:', error);
     res.status(500).json({
       success: false,
-      message: 'We\'re having trouble generating your test questions right now. Please try again in a few moments.',
+      message: 'We\'re having trouble generating your personalized test questions right now. Our AI is working to resolve this!',
       error: error.message
     });
   }

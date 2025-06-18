@@ -1,4 +1,5 @@
 const Job = require('../models/Job');
+const mongoose = require('mongoose');
 
 const getAllJobs = async(req, res) =>{
     try {
@@ -20,6 +21,12 @@ const getJobById = async(req, res) =>{
     if (!id) {
         return res.status(400).json({ message: 'Job ID is required' });
     }
+    
+    // Validate if id is a valid ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({ message: 'Invalid job ID format' });
+    }
+    
     try {
         const job = await Job.findById(id);
         if (!job) {
@@ -63,6 +70,12 @@ const updateJob = async(req, res) =>{
     if (!id) {
         return res.status(400).json({ message: 'Job ID is required' });
     }
+    
+    // Validate if id is a valid ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({ message: 'Invalid job ID format' });
+    }
+    
     if (!title || !description || !company || !location || !salary) {
         return res.status(400).json({ message: 'All fields are required' });
     }
@@ -93,6 +106,12 @@ const deleteJob = async(req, res) =>{
     if (!id) {
         return res.status(400).json({ message: 'Job ID is required' });
     }
+    
+    // Validate if id is a valid ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({ message: 'Invalid job ID format' });
+    }
+    
     try {
         const job = await Job.findById(id);
         if (!job) {

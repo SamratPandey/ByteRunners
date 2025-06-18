@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -402,14 +402,17 @@ const Home = () => {
               <p className="text-xl text-gray-300">
                 Your campus coding sanctuary. Practice programming, share knowledge, and build your 
                 tech career alongside fellow students.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4">
+              </p>              <div className="flex flex-col sm:flex-row gap-4">
                 <Button className="relative group bg-green-600 hover:bg-green-700 text-white px-8 py-6 text-lg overflow-hidden">
-                  <Link to={'/problems'} className="relative z-10">Start Coding Now</Link>
+                  <Link to={isAuthenticated ? '/problems' : '/signup'} className="relative z-10">
+                    {isAuthenticated ? 'Start Coding Now' : 'Get Started with AI'}
+                  </Link>
                   <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-green-600 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </Button>
                 <Button variant="outline" className="border-green-500 text-green-500 hover:text-white hover:bg-green-950 px-8 py-6 text-lg">
-                  Join Community
+                  <Link to={isAuthenticated ? '/problems' : '/login'} className="w-full h-full flex items-center justify-center">
+                    {isAuthenticated ? 'Join Community' : 'Sign In'}
+                  </Link>
                 </Button>
               </div>
             </div>

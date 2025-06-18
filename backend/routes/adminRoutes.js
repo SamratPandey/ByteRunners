@@ -6,12 +6,14 @@ const {
   updateUser,
   deleteUser,
   getUserStats,
+  getUserGrowthStats,
   createProblem,
   getAllProblems,
   getProblem,
   updateProblem,
   deleteProblem,
   getProblemStats,
+  getProblemGrowthStats,
   getTopPerformers,
   getRecentActivity  
 } = require('../controllers/adminController');
@@ -40,6 +42,14 @@ const {
   exportOrders
 } = require('../controllers/orderController');
 
+// Import email testing controllers
+const {
+  previewEmailTemplate,
+  sendTestEmailController,
+  getEmailTemplates,
+  getEmailTemplateContent
+} = require('../controllers/emailTestController');
+
 const { adminProtect } = require('../middleware/adminAuth');
 
 // Import the logoutAdmin function
@@ -64,6 +74,7 @@ router.get('/users/:id', getUser);
 router.put('/users/:id', updateUser);
 router.delete('/users/:id', deleteUser);
 router.get('/user-stats', getUserStats);
+router.get('/user-growth-stats', getUserGrowthStats);
 
 // Problem management routes
 router.post('/problems', createProblem);
@@ -72,6 +83,7 @@ router.get('/problems/:id', getProblem);
 router.put('/problems/:id', updateProblem);
 router.delete('/problems/:id', deleteProblem);
 router.get('/problem-stats', getProblemStats);
+router.get('/problem-growth-stats', getProblemGrowthStats);
 
 // Course management routes
 router.get('/courses', getAllCourses);
@@ -96,5 +108,11 @@ router.get('/orders/export/csv', exportOrders);
 // Routes for top performers and recent activity
 router.get('/top-performers', getTopPerformers); 
 router.get('/recent-activity', getRecentActivity); 
+
+// Email testing and management routes
+router.get('/email-templates', getEmailTemplates);
+router.get('/email-templates/:templateName/content', getEmailTemplateContent);
+router.post('/email-templates/preview', previewEmailTemplate);
+router.post('/email-templates/test', sendTestEmailController);
 
 module.exports = router;

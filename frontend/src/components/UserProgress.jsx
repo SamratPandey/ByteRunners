@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -188,9 +188,8 @@ const UserProgress = ({ userProfile }) => {
                       {rec.difficulty}
                     </Badge>
                   </div>
-                  <p className="text-sm text-gray-300 mb-3">{rec.description}</p>
-                  <Link to={rec.link}>
-                    <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white">
+                  <p className="text-sm text-gray-300 mb-3">{rec.description}</p>                  <Link to={rec.link}>
+                    <Button size="sm" variant="success" className="font-medium">
                       Start {rec.type === 'course' ? 'Course' : 'Problem'}
                     </Button>
                   </Link>
@@ -201,40 +200,39 @@ const UserProgress = ({ userProfile }) => {
         </div>
       </Card>      {/* Quick Actions */}
       <Card className="bg-gray-900/50 border-green-900 p-6">
-        <h3 className="text-xl font-semibold text-white mb-4">Quick Actions</h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <h3 className="text-xl font-semibold text-white mb-4">Quick Actions</h3>        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           <Link to="/problems">
-            <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+            <Button className="w-full" variant="info">
               <FontAwesomeIcon icon={faCode} className="mr-2" />
               Solve Problems
             </Button>
           </Link>
           <Link to="/ai-test">
-            <Button className="w-full bg-green-600 hover:bg-green-700 text-white">
+            <Button className="w-full" variant="success">
               <FontAwesomeIcon icon={faBrain} className="mr-2" />
               AI Test
             </Button>
           </Link>
           <Link to="/test-analytics">
-            <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white">
+            <Button className="w-full" variant="info">
               <FontAwesomeIcon icon={faChartLine} className="mr-2" />
               Analytics
             </Button>
           </Link>
           <Link to="/courses">
-            <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white">
+            <Button className="w-full" variant="premium">
               <FontAwesomeIcon icon={faRocket} className="mr-2" />
               Browse Courses
             </Button>
           </Link>
           <Link to="/leaderboard">
-            <Button className="w-full bg-yellow-600 hover:bg-yellow-700 text-white">
+            <Button className="w-full" variant="warning">
               <FontAwesomeIcon icon={faTrophy} className="mr-2" />
               Leaderboard
             </Button>
           </Link>
           <Link to="/profile">
-            <Button className="w-full bg-gray-600 hover:bg-gray-700 text-white">
+            <Button className="w-full" variant="secondary">
               <FontAwesomeIcon icon={faStar} className="mr-2" />
               View Profile
             </Button>

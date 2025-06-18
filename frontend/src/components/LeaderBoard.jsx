@@ -191,7 +191,9 @@ const LeaderBoard = () => {
     return 'text-red-500';
   };  return (
     <div className="min-h-screen bg-black relative">
-      <Nav />
+      <div className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-sm border-b border-green-900">
+        <Nav />
+      </div>
       {/* Simple static background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute inset-0 bg-gradient-to-br from-green-900/20 via-black to-blue-900/20" />
@@ -199,7 +201,7 @@ const LeaderBoard = () => {
       </div>
       
       {/* Header Section */}
-      <section className="relative py-20 bg-gradient-to-b from-black to-gray-900">
+      <section className="relative pt-24 pb-8 bg-gradient-to-b from-black to-gray-900">
         <div className="container mx-auto px-6">
           <div className="text-center mb-12 relative">
             <Badge className="bg-yellow-500/10 text-yellow-500 mb-4">Competition</Badge>
@@ -313,9 +315,7 @@ const LeaderBoard = () => {
                     </div>
                   </CardContent>
                 </Card>
-              )}
-
-              {/* Category Filters */}
+              )}              {/* Category Filters */}
               <div className="flex flex-wrap gap-3 mb-8 justify-center">
                 {categories.map((category) => (
                   <Button
@@ -324,11 +324,8 @@ const LeaderBoard = () => {
                       setActiveCategory(category.id);
                       setCurrentPage(1);
                     }}
-                    variant={activeCategory === category.id ? "default" : "outline"}                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                      activeCategory === category.id
-                        ? 'bg-green-600 hover:bg-green-700 text-white border-green-600'
-                        : 'bg-transparent border-gray-700 text-gray-300 hover:bg-green-500/10 hover:text-green-400 hover:border-green-500/50'
-                    }`}
+                    variant={activeCategory === category.id ? "success" : "outline"}
+                    className="flex items-center gap-2 font-medium"
                   >
                     {React.createElement(category.icon, { className: `w-4 h-4 ${category.color}` })}
                     {category.name}
@@ -346,14 +343,9 @@ const LeaderBoard = () => {
                       onClick={() => {
                         setTimeframe(tf.id);
                         setCurrentPage(1);
-                      }}
-                      variant="ghost"
+                      }}                      variant={timeframe === tf.id ? "info" : "ghost"}
                       size="sm"
-                      className={`px-3 py-1 rounded-lg text-sm font-medium transition-all duration-200 ${
-                        timeframe === tf.id
-                          ? 'bg-blue-600 text-white hover:bg-blue-700'
-                          : 'text-gray-300 hover:bg-blue-500/10 hover:text-blue-400'
-                      }`}
+                      className="font-medium"
                     >
                       {tf.name}
                     </Button>
@@ -501,9 +493,9 @@ const LeaderBoard = () => {
                         <div className="flex items-center gap-2">                          <Button
                             onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                             disabled={currentPage === 1}
-                            variant="outline"
+                            variant="secondary"
                             size="sm"
-                            className="px-3 py-1 border-gray-600 text-gray-300 hover:bg-gray-700 disabled:opacity-50"
+                            className="disabled:opacity-50"
                           >
                             <ChevronLeft className="w-4 h-4" />
                           </Button>
@@ -516,9 +508,9 @@ const LeaderBoard = () => {
                             <Button
                             onClick={() => setCurrentPage(Math.min(pagination.pages, currentPage + 1))}
                             disabled={currentPage === pagination.pages}
-                            variant="outline"
+                            variant="secondary"
                             size="sm"
-                            className="px-3 py-1 border-gray-600 text-gray-300 hover:bg-gray-700 disabled:opacity-50"
+                            className="disabled:opacity-50"
                           >
                             <ChevronRight className="w-4 h-4" />
                           </Button>

@@ -372,9 +372,40 @@ const createFallbackRecommendations = (onboardingData) => {
   return recommendations;
 };
 
+// Generate AI-powered onboarding questions
+const generateOnboardingQuestions = async (req, res) => {
+  try {
+    const { userProfile = {} } = req.body;
+    
+    // Generate personalized questions using AI
+    const questions = await aiService.generateOnboardingQuestions(userProfile);
+    
+    res.status(200).json({
+      success: true,
+      message: 'Personalized onboarding questions generated successfully!',
+      data: {
+        questions,
+        metadata: {
+          generatedAt: new Date(),
+          userProfile: userProfile.name || 'Anonymous',
+          questionCount: questions.length
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error generating onboarding questions:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Unable to generate personalized questions right now. Please try again.',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   saveOnboardingData,
   getOnboardingStatus,
   getSkillAssessmentQuestions,
-  validateSkillAssessment
+  validateSkillAssessment,
+  generateOnboardingQuestions
 };

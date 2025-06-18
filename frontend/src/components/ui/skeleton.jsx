@@ -1,4 +1,4 @@
-import React from 'react';
+// React import removed - not used
 
 // Base Skeleton Component
 export const Skeleton = ({ className = "", ...props }) => (

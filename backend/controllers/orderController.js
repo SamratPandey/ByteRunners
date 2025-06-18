@@ -2,6 +2,7 @@ const Order = require('../models/Order');
 const User = require('../models/User');
 const Course = require('../models/Course');
 const Activity = require('../models/Activity');
+const { sendCoursePurchaseEmail } = require('./sendMail');
 
 // Get all orders for admin
 exports.getAllOrders = async (req, res) => {
@@ -448,6 +449,11 @@ const handleOrderCompletion = async (order) => {
     const user = await User.findById(order.user);
     if (!user) return;
 
+    // Populate order with course details for email
+    await order.populate('courses.course', 'title description thumbnail');
+    
+    const purchasedCourses = [];
+
     // Add courses to user's purchased and enrolled courses
     for (const courseItem of order.courses) {
       const courseId = courseItem.course;
@@ -473,6 +479,18 @@ const handleOrderCompletion = async (order) => {
           progress: 0
         });
 
+        // Add course details for email
+        purchasedCourses.push({
+          title: courseItem.course.title,
+          description: courseItem.course.description,
+          price: courseItem.price,
+          purchaseDate: (order.paidAt || new Date()).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          })
+        });
+
         // Update course enrollment
         const course = await Course.findById(courseId);
         if (course) {
@@ -491,6 +509,30 @@ const handleOrderCompletion = async (order) => {
     }
 
     await user.save();
+
+    // Send course purchase email if there are newly purchased courses
+    if (purchasedCourses.length > 0) {
+      try {
+        await sendCoursePurchaseEmail(user.email, {
+          name: user.name,
+          courses: purchasedCourses,
+          orderId: order._id.toString(),
+          invoiceNumber: order.invoiceNumber,
+          totalAmount: order.totalAmount.toFixed(2),
+          paymentMethod: order.paymentMethod || 'Online Payment',
+          purchaseDate: (order.paidAt || new Date()).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          })
+        });
+        console.log('Course purchase email sent successfully to:', user.email);
+      } catch (emailError) {
+        console.error('Failed to send course purchase email:', emailError);
+        // Don't fail the order completion if email fails
+      }
+    }
+
   } catch (error) {
     console.error('Error handling order completion:', error);
   }

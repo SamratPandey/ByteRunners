@@ -12,6 +12,7 @@ const { protect } = require("../middleware/auth");
 const { getProblemById } = require("../controllers/problemController");
 const LANGUAGE_MAP = require("../utils/languageMap");
 const { logoutUser } = require("../controllers/tempLogoutUser");
+const sendEmail = require("../controllers/sendMail"); // Add this import
 const router = express.Router();
 const User = require("../models/User");
 const Problem = require("../models/Problem");
@@ -322,5 +323,34 @@ router.put("/update-profile", protect, updateProfile);
 router.post("/update-avatar", protect, upload.single("avatar"), updateAvatar);
 
 router.get("/check-auth", protect, checkAuth);
+
+// Test email endpoint for debugging
+router.post("/test-email", async (req, res) => {
+  const { email } = req.body;
+  
+  if (!email) {
+    return res.status(400).json({ error: "Email is required." });
+  }
+  
+  try {
+    console.log("Testing email functionality...");
+    console.log("EMAIL_USER:", process.env.EMAIL_USER);
+    console.log("EMAIL_PASS exists:", !!process.env.EMAIL_PASS);
+    
+    await sendEmail(
+      email,
+      "Test Email from ByteRunners",
+      "This is a test email to verify the mailing system is working correctly. If you received this, the email system is functioning properly!"
+    );
+    
+    res.status(200).json({ message: "Test email sent successfully!" });
+  } catch (error) {
+    console.error("Test email failed:", error);
+    res.status(500).json({ 
+      error: "Failed to send test email", 
+      details: error.message 
+    });
+  }
+});
 
 module.exports = router;

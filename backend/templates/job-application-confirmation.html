@@ -1,0 +1,40 @@
+<div class="greeting">
+    Hi {{userName}},
+</div>
+
+<div class="main-content">
+    <div class="alert alert-success">
+        <strong>Application Submitted Successfully!</strong> Your job application has been received.
+    </div>
+    
+    <p>Thank you for applying for the <strong>{{jobTitle}}</strong> position at <strong>{{companyName}}</strong> through ByteRunners!</p>
+    
+    <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+        <h3 style="color: #333; margin-bottom: 15px;">Application Details:</h3>
+        <ul style="list-style: none; padding: 0; margin: 0;">
+            <li style="margin: 8px 0;"><strong>Position:</strong> {{jobTitle}}</li>
+            <li style="margin: 8px 0;"><strong>Company:</strong> {{companyName}}</li>
+            <li style="margin: 8px 0;"><strong>Location:</strong> {{jobLocation}}</li>
+            <li style="margin: 8px 0;"><strong>Application Date:</strong> {{applicationDate}}</li>
+            <li style="margin: 8px 0;"><strong>Application ID:</strong> {{applicationId}}</li>
+        </ul>
+    </div>
+    
+    <p>Here's what happens next:</p>
+    <ul style="margin-left: 20px; margin-bottom: 15px;">
+        <li>📋 Your application will be reviewed by the hiring team</li>
+        <li>📧 You'll receive updates on your application status</li>
+        <li>📅 If selected, you'll be contacted for the next steps</li>
+        <li>💼 You can track your application progress in your dashboard</li>
+    </ul>
+    
+    <div class="btn-center">
+        <a href="{{myApplicationsUrl}}" class="btn">View My Applications</a>
+    </div>
+    
+    <div class="alert alert-info">
+        <strong>Pro Tip:</strong> While you wait, continue improving your skills with our courses and coding challenges to stand out from other candidates!
+    </div>
+    
+    <p>Good luck with your application! We're rooting for you! 🚀</p>
+</div>

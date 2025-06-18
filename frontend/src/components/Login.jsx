@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { useDispatch, useSelector } from 'react-redux';
-import { login } from '../redux/actions/authActions';
+import { login, checkAuthStatus } from '../redux/actions/authActions';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { ClipLoader } from 'react-spinners';
 import { toast } from 'react-hot-toast';
@@ -85,9 +85,10 @@ const Login = () => {
     setIsSubmitting(true);
     
     try {
-      const success = await dispatch(login(email, password));
-  
-      if (success) {
+      const success = await dispatch(login(email, password));      if (success) {
+        // Get user data after successful login
+        await dispatch(checkAuthStatus());
+        
         toast.success('Welcome back! You have been logged in successfully.', {
           duration: 3000,
           style: {
@@ -223,13 +224,14 @@ const Login = () => {
             </div>
           </div>          <div className="grid grid-cols-2 gap-4 mt-4">
             {[
-              { icon: faGoogle, bg: 'bg-blue-600 hover:bg-blue-700', name: 'Google' },
-              { icon: faGithub, bg: 'bg-gray-800 hover:bg-gray-900', name: 'GitHub' },
+              { icon: faGoogle, variant: 'info', name: 'Google' },
+              { icon: faGithub, variant: 'secondary', name: 'GitHub' },
             ].map((social, index) => (
               <Button 
                 key={index} 
                 type="button"
-                className={`${social.bg} text-white`}
+                variant={social.variant}
+                className="font-medium"
                 onClick={() => toast.info(`${social.name} login coming soon!`)}
               >
                 <FontAwesomeIcon icon={social.icon} />

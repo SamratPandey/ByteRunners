@@ -2,6 +2,102 @@
 @tailwind components;
 @tailwind utilities;
 
-body{
+@layer base {
+  :root {
+    /* Updated color scheme for ByteRunners */
+    --background: 0 0% 0%; /* Black background */
+    --foreground: 0 0% 98%; /* White text */
+    
+    --card: 0 0% 3.9%; /* Dark card background */
+    --card-foreground: 0 0% 98%;
+    
+    --popover: 0 0% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    
+    /* Green primary theme matching ByteRunners brand */
+    --primary: 142 76% 36%; /* Green-500 equivalent */
+    --primary-foreground: 0 0% 0%; /* Black text on green background */
+    
+    --secondary: 142 20% 12%; /* Dark green secondary */
+    --secondary-foreground: 142 20% 85%;
+    
+    --muted: 0 0% 14.9%; /* Dark muted background */
+    --muted-foreground: 0 0% 63.9%;
+    
+    --accent: 142 76% 36%; /* Green accent matching primary */
+    --accent-foreground: 0 0% 0%;
+    
+    --destructive: 0 84.2% 60.2%; /* Red for destructive actions */
+    --destructive-foreground: 0 0% 98%;
+    
+    --border: 142 20% 20%; /* Dark green border */
+    --input: 142 20% 20%; /* Input border color */
+    --ring: 142 76% 36%; /* Focus ring color */
+    
+    /* Custom ByteRunners colors */
+    --success: 142 76% 36%; /* Green for success states */
+    --warning: 45 93% 58%; /* Yellow for warnings */
+    --info: 221 83% 53%; /* Blue for info */
+    
+    /* Button variant colors */
+    --btn-primary: 142 76% 36%;
+    --btn-primary-hover: 142 76% 30%;
+    --btn-secondary: 142 20% 12%;
+    --btn-secondary-hover: 142 20% 15%;
+    --btn-outline: transparent;
+    --btn-outline-hover: 142 76% 36%;
+  }
+
+  .dark {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 98%;
+    
+    --card: 0 0% 3.9%;
+    --card-foreground: 0 0% 98%;
+    
+    --popover: 0 0% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    
+    --primary: 142 76% 36%;
+    --primary-foreground: 0 0% 0%;
+    
+    --secondary: 142 20% 12%;
+    --secondary-foreground: 142 20% 85%;
+    
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 63.9%;
+    
+    --accent: 142 76% 36%;
+    --accent-foreground: 0 0% 0%;
+    
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    
+    --border: 142 20% 20%;
+    --input: 142 20% 20%;
+    --ring: 142 76% 36%;
+    
+    --success: 142 76% 36%;
+    --warning: 45 93% 58%;
+    --info: 221 83% 53%;
+    
+    --btn-primary: 142 76% 36%;
+    --btn-primary-hover: 142 76% 30%;
+    --btn-secondary: 142 20% 12%;
+    --btn-secondary-hover: 142 20% 15%;
+    --btn-outline: transparent;
+    --btn-outline-hover: 142 76% 36%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
     background-color: black;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -270,12 +270,11 @@ const UserManagement = () => {
       </DialogContent>
     );
   };
-  
-  if (loading) {
+    if (loading) {
     return (
-      <Card className="w-full">
+      <Card className="w-full bg-gray-950 border-gray-800">
         <CardHeader>
-          <CardTitle>User Management</CardTitle>
+          <CardTitle className="text-white">User Management</CardTitle>
         </CardHeader>
         <CardContent>
           <TableSkeleton rows={10} />
@@ -286,7 +285,7 @@ const UserManagement = () => {
 
   if (error) {
     return (
-      <Card className="w-full">
+      <Card className="w-full bg-gray-950 border-gray-800">
         <CardContent className="p-6">
           <Alert variant="destructive">
             <AlertTitle>Error</AlertTitle>
@@ -298,13 +297,13 @@ const UserManagement = () => {
   }
 
   return (
-    <Card className="w-full">
+    <Card className="w-full bg-gray-950 border-gray-800">
       <CardHeader>
         <div className="flex justify-between items-center">
-          <CardTitle>User Management</CardTitle>
+          <CardTitle className="text-white">User Management</CardTitle>
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button variant="success">
                 <UserPlus className="mr-2 h-4 w-4" />
                 Add New User
               </Button>
@@ -316,21 +315,21 @@ const UserManagement = () => {
       <CardContent>
         <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0 md:space-x-4 mb-6">
           <div className="flex items-center space-x-2 w-full md:w-auto">
-            <Search className="h-4 w-4 text-gray-500" />
+            <Search className="h-4 w-4 text-gray-400" />
             <Input
               placeholder="Search users..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="max-w-sm"
+              className="max-w-sm bg-gray-900 border-gray-700 text-white placeholder-gray-400"
             />
           </div>
           <div className="flex items-center space-x-2 w-full md:w-auto">
-            <Filter className="h-4 w-4 text-gray-500" />
+            <Filter className="h-4 w-4 text-gray-400" />
             <Select value={filterConfig.rank} onValueChange={handleFilter}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-[180px] bg-gray-900 border-gray-700 text-white">
                 <SelectValue placeholder="Filter by rank" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-gray-900 border-gray-700">
                 <SelectItem value="all">All Ranks</SelectItem>
                 <SelectItem value="1">Rank 1</SelectItem>
                 <SelectItem value="2">Rank 2</SelectItem>
@@ -340,11 +339,11 @@ const UserManagement = () => {
           </div>
         </div>
         
-        <div className="rounded-md border">
+        <div className="rounded-md border border-gray-800">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead onClick={() => handleSort('name')} className="cursor-pointer">
+              <TableRow className="border-gray-800">
+                <TableHead onClick={() => handleSort('name')} className="cursor-pointer text-gray-400">
                   <div className="flex items-center">
                     Name
                     <ArrowUpDown className="ml-2 h-4 w-4" />

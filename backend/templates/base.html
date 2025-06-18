@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{title}}</title>
+    <style>
+        /* Reset styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            background-color: #f4f4f4;
+        }
+        
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+          /* Header */
+        .header {
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+            padding: 30px 40px;
+            text-align: center;
+        }
+        
+        .logo {
+            color: #ffffff;
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-decoration: none;
+        }
+        
+        .header-subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 16px;
+            margin: 0;
+        }
+        
+        /* Content */
+        .content {
+            padding: 40px;
+        }
+        
+        .greeting {
+            font-size: 18px;
+            color: #333333;
+            margin-bottom: 20px;
+        }
+        
+        .main-content {
+            font-size: 16px;
+            line-height: 1.8;
+            color: #555555;
+            margin-bottom: 30px;
+        }
+        
+        .main-content p {
+            margin-bottom: 15px;
+        }
+          /* Buttons */
+        .btn {
+            display: inline-block;
+            padding: 14px 28px;
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 16px;
+            text-align: center;
+            transition: all 0.3s ease;
+            margin: 20px 0;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(22, 163, 74, 0.3);
+        }
+          .btn-center {
+            text-align: center;
+        }
+        
+        /* Button Variants - matching user components */
+        .btn-success {
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+            box-shadow: 0 6px 12px rgba(22, 163, 74, 0.3);
+        }
+        
+        .btn-info {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            box-shadow: 0 6px 12px rgba(37, 99, 235, 0.3);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #ca8a04 0%, #a16207 100%);
+            box-shadow: 0 6px 12px rgba(202, 138, 4, 0.3);
+        }
+        
+        .btn-destructive {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            box-shadow: 0 6px 12px rgba(220, 38, 38, 0.3);
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 2px solid #16a34a;
+            color: #16a34a;
+        }
+        
+        .btn-outline:hover {
+            background: #16a34a;
+            color: white;
+        }
+        
+        /* Alert boxes */
+        .alert {
+            padding: 20px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+          .alert-info {
+            background-color: #dbeafe;
+            border-left: 4px solid #2563eb;
+            color: #1e40af;
+        }
+        
+        .alert-warning {
+            background-color: #fef3c7;
+            border-left: 4px solid #ca8a04;
+            color: #92400e;
+        }
+        
+        .alert-success {
+            background-color: #dcfce7;
+            border-left: 4px solid #16a34a;
+            color: #166534;
+        }
+        
+        /* Footer */
+        .footer {
+            background-color: #f8f9fa;
+            padding: 30px 40px;
+            text-align: center;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        .footer-content {
+            font-size: 14px;
+            color: #6c757d;
+            line-height: 1.6;
+        }
+        
+        .footer-links {
+            margin: 15px 0;
+        }
+          .footer-links a {
+            color: #16a34a;
+            text-decoration: none;
+            margin: 0 15px;
+            font-weight: 500;
+        }
+        
+        .footer-links a:hover {
+            text-decoration: underline;
+        }
+        
+        .social-links {
+            margin: 20px 0;
+        }
+        
+        .social-links a {
+            display: inline-block;
+            margin: 0 10px;
+            color: #6c757d;
+            font-size: 18px;
+        }
+        
+        /* Responsive design */
+        @media (max-width: 600px) {
+            .email-container {
+                margin: 0;
+                border-radius: 0;
+            }
+            
+            .header, .content, .footer {
+                padding: 20px;
+            }
+            
+            .logo {
+                font-size: 24px;
+            }
+            
+            .btn {
+                display: block;
+                width: 100%;
+            }
+        }
+        
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            .email-container {
+                background-color: #1a1a1a;
+            }
+            
+            .content {
+                color: #e0e0e0;
+            }
+            
+            .greeting, .main-content {
+                color: #e0e0e0;
+            }
+            
+            .footer {
+                background-color: #2d2d2d;
+                color: #b0b0b0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <!-- Header -->
+        <div class="header">
+            <a href="{{websiteUrl}}" class="logo">ByteRunners</a>
+            <p class="header-subtitle">Accelerating Your Coding Journey</p>
+        </div>
+          <!-- Content -->
+        <div class="content">
+            {{{content}}}
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <div class="footer-content">
+                <p><strong>ByteRunners</strong> - Your Premier Coding Platform</p>
+                <div class="footer-links">
+                    <a href="{{websiteUrl}}">Home</a>
+                    <a href="{{websiteUrl}}/courses">Courses</a>
+                    <a href="{{websiteUrl}}/jobs">Jobs</a>
+                    <a href="{{websiteUrl}}/leaderboard">Leaderboard</a>
+                </div>
+                <p style="margin-top: 20px;">
+                    This email was sent to you because you have an account with ByteRunners.<br>                    If you no longer wish to receive these emails, you can 
+                    <a href="{{unsubscribeUrl}}" style="color: #16a34a;">unsubscribe here</a>.
+                </p>
+                <p style="margin-top: 15px; font-size: 12px; color: #999;">
+                    © {{year}} ByteRunners. All rights reserved.<br>
+                    Made with ❤️ for developers worldwide.
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

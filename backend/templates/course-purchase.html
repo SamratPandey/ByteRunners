@@ -1,0 +1,59 @@
+<div class="greeting"></div>
+    Congratulations, {{userName}}! 🎉
+</div>
+
+<div class="main-content">
+    <p>Thank you for your purchase! Your course{{#if multipleCourses}}s have{{else}} has{{/if}} been successfully added to your account.</p>
+    
+    <div class="alert alert-success">
+        <strong>Payment Confirmed!</strong> You now have full access to your purchased course{{#if multipleCourses}}s{{/if}}.
+    </div>
+    
+    {{#if coursePurchases}}
+    <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #e5e7eb;">
+        <h3 style="color: #16a34a; margin-top: 0; margin-bottom: 15px;">📚 Your Purchased Course{{#if multipleCourses}}s{{/if}}:</h3>
+        {{#each coursePurchases}}
+        <div style="background: white; padding: 15px; border-radius: 6px; margin-bottom: 15px; border: 1px solid #d1d5db;">
+            <h4 style="color: #333; margin: 0 0 5px 0;">{{this.title}}</h4>
+            <p style="color: #666; margin: 0 0 10px 0; font-size: 14px;">{{this.description}}</p>
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                <span style="color: #16a34a; font-weight: 600;">${{this.price}}</span>
+                <span style="color: #888; font-size: 14px;">Purchased: {{this.purchaseDate}}</span>
+            </div>
+        </div>
+        {{/each}}
+    </div>
+    {{/if}}
+    
+    <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #7dd3fc;">
+        <h3 style="color: #0369a1; margin-top: 0; margin-bottom: 15px;">🚀 What's Next?</h3>
+        <ul style="margin-left: 20px; margin-bottom: 15px; color: #374151;">
+            <li>📖 Start learning immediately with lifetime access</li>
+            <li>📱 Access your courses on any device</li>
+            <li>💬 Join our community for support and discussions</li>
+            <li>🏆 Track your progress and earn certificates</li>
+            <li>📧 Get updates on new content and features</li>
+        </ul>
+    </div>
+    
+    <div class="btn-center">
+        <a href="{{dashboardUrl}}" class="btn">Start Learning Now</a>
+    </div>
+    
+    <div style="background: #fef3cd; padding: 15px; border-radius: 6px; margin: 20px 0; border: 1px solid #fbbf24;">
+        <h4 style="color: #92400e; margin: 0 0 10px 0;">📋 Order Details:</h4>
+        <div style="color: #713f12; font-size: 14px;">
+            <p style="margin: 5px 0;"><strong>Order ID:</strong> {{orderId}}</p>
+            <p style="margin: 5px 0;"><strong>Invoice:</strong> {{invoiceNumber}}</p>
+            <p style="margin: 5px 0;"><strong>Total Amount:</strong> ${{totalAmount}}</p>
+            <p style="margin: 5px 0;"><strong>Payment Method:</strong> {{paymentMethod}}</p>
+            <p style="margin: 5px 0;"><strong>Purchase Date:</strong> {{purchaseDate}}</p>
+        </div>
+    </div>
+    
+    <p>Your courses are now available in your dashboard. Start your learning journey today and join thousands of developers advancing their careers with ByteRunners!</p>
+    
+    <div class="alert alert-info">
+        <strong>Need Help?</strong> Our support team is ready to assist you. If you have any questions about your purchase or need help getting started, feel free to reach out!
+    </div>
+</div>

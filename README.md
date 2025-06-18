@@ -6,7 +6,8 @@ AI-powered coding platform for learning and practicing programming through chall
 
 - **User Authentication**: Secure login/registration with JWT
 - **Coding Challenges**: Daily problems with multi-language support
-- **AI Skills Assessment**: Personalized learning paths
+- **AI-Powered Features**: Personalized question generation, test analysis, and learning recommendations using OpenAI
+- **Smart Onboarding**: AI-generated personalized onboarding questions
 - **Code Execution**: Real-time code testing via Judge0 API
 - **Progress Tracking**: Analytics and performance insights
 - **Admin Panel**: User and content management
@@ -65,6 +66,9 @@ EMAIL_PASS="your-app-password"
 FRONTEND_URL="http://localhost:5174"
 BACKEND_URL="http://localhost:3001"
 
+# AI Features (OpenAI Integration)
+OPENAI_API_KEY="your-openai-api-key"
+
 # Code Execution (Optional)
 JUDGE0_API_URL="https://judge0-ce.p.rapidapi.com"
 JUDGE0_API_KEY="your-rapidapi-key"
@@ -121,6 +125,11 @@ IMAGEKIT_PRIVATE_KEY="your-private-key"
 **Email Service Issues:**
 - Enable 2FA on Gmail and use App Password
 - Verify EMAIL_USER and EMAIL_PASS in .env
+
+**AI Features Issues:**
+- Ensure OPENAI_API_KEY is set in .env for AI-powered features
+- AI features will gracefully fallback to basic functionality if OpenAI is unavailable
+- Check API quota and billing on OpenAI dashboard if AI features aren't working
 
 ## License
 

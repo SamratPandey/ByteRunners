@@ -9,8 +9,10 @@ const {
     getWishlist,
     addReview,
     getFeaturedCourses,
-    getCourseStats
-} = require('../controllers/couresController');
+    getCourseStats,
+    getUserEnrolledCourses,
+    getUserCourseProgress
+} = require('../controllers/courseController');
 const { protect } = require('../middleware/auth');
  
 // Public routes
@@ -24,6 +26,8 @@ router.post('/purchase', protect, purchaseCourse);
 router.post('/wishlist', protect, addToWishlist);
 router.delete('/wishlist/:courseId', protect, removeFromWishlist);
 router.get('/user/wishlist', protect, getWishlist);
+router.get('/user/enrolled', protect, getUserEnrolledCourses);
+router.get('/user/progress/:courseId', protect, getUserCourseProgress);
 router.post('/:courseId/review', protect, addReview);
 
 module.exports = router;

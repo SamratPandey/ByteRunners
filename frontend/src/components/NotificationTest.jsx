@@ -1,4 +1,4 @@
-import React from 'react';
+// React import removed - not used
 import { useNotifications } from '../contexts/NotificationContext';
 
 const NotificationTestComponent = () => {
@@ -42,14 +42,16 @@ const NotificationTestComponent = () => {
         
         <button
           onClick={handleAddProblemSolved}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors"
+          variant="info"
+          className="w-full"
         >
           Add Problem Solved
         </button>
         
         <button
           onClick={handleAddCourseEnrollment}
-          className="w-full bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md transition-colors"
+          variant="secondary"
+          className="w-full"
         >
           Add Course Enrollment
         </button>

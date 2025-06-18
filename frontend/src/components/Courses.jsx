@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-hot-toast';
@@ -227,12 +227,12 @@ const Courses = () => {
               </Badge>
             )}
             {course.bestseller && (
-              <Badge className="bg-yellow-500 text-white font-medium px-3 py-1 rounded-full shadow-md">
+              <Badge variant="warning" className="font-medium px-3 py-1 rounded-full shadow-md">
                 Bestseller
               </Badge>
             )}
             {course.featured && (
-              <Badge className="bg-purple-600 text-white font-medium px-3 py-1 rounded-full shadow-md">
+              <Badge variant="premium" className="font-medium px-3 py-1 rounded-full shadow-md">
                 Featured
               </Badge>
             )}
@@ -405,36 +405,11 @@ const Courses = () => {
             <p className="text-xl text-gray-400 max-w-3xl mx-auto mb-8">
               From beginner to advanced, discover courses crafted by industry experts to elevate your coding journey.
             </p>
-            
-            {/* Search Bar */}
-            <div className="relative max-w-2xl mx-auto mb-8">
-              <div className="relative">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  type="text"
-                  placeholder="Search courses by title, description, or tags..."
-                  className="w-full bg-black/40 backdrop-blur-lg border border-green-900/50 rounded-full py-4 pl-12 pr-4 text-white placeholder-gray-400 focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none transition-all duration-300"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-            </div>
+
           </div>
 
-          {/* Search and Filter Section */}
+          {/* Filter Section */}
           <div className="mb-8 space-y-4">
-            {/* Search Bar */}
-            <div className="relative max-w-2xl mx-auto">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <input
-                type="text"
-                placeholder="Search for courses, topics, or skills..."
-                className="w-full bg-black/40 border border-green-900/50 rounded-lg py-4 pl-12 pr-4 text-white placeholder-gray-400 focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-
             {/* Quick Filter Tags */}
             <div className="flex flex-wrap justify-center gap-2">
               {['Free', 'Beginner', 'JavaScript', 'Python', 'React', 'Node.js'].map((tag) => (
@@ -456,8 +431,7 @@ const Courses = () => {
               ))}
             </div>
           </div>
-
-          <FilterSection />{loading ? (
+          {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[...Array(6)].map((_, index) => (
                 <CourseCardSkeleton key={index} />

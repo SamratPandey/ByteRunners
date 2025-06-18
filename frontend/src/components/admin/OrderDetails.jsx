@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'react-hot-toast';
 import {
   User,
@@ -33,21 +33,20 @@ const OrderDetails = ({ order, onUpdateStatus, onClose }) => {
   const [updating, setUpdating] = useState(false);
 
   if (!order) return null;
-
   const getStatusBadge = (status) => {
     const statusConfig = {
-      completed: { color: 'bg-green-500 text-white', icon: CheckCircle },
-      pending: { color: 'bg-yellow-500 text-white', icon: Clock },
-      failed: { color: 'bg-red-500 text-white', icon: XCircle },
-      cancelled: { color: 'bg-gray-500 text-white', icon: XCircle },
-      refunded: { color: 'bg-purple-500 text-white', icon: RefreshCcw }
+      completed: { variant: 'success', icon: CheckCircle },
+      pending: { variant: 'warning', icon: Clock },
+      failed: { variant: 'destructive', icon: XCircle },
+      cancelled: { variant: 'secondary', icon: XCircle },
+      refunded: { variant: 'info', icon: RefreshCcw }
     };
 
     const config = statusConfig[status] || statusConfig.pending;
     const Icon = config.icon;
 
     return (
-      <Badge className={config.color}>
+      <Badge variant={config.variant}>
         <Icon className="w-3 h-3 mr-1" />
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </Badge>
@@ -235,9 +234,8 @@ const OrderDetails = ({ order, onUpdateStatus, onClose }) => {
           <CardTitle>Order Timeline</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+          <div className="space-y-4">            <div className="flex items-center space-x-3">
+              <div className="w-3 h-3 bg-primary rounded-full"></div>
               <div>
                 <p className="font-medium">Order Created</p>
                 <p className="text-sm text-gray-600">{formatDate(order.createdAt)}</p>
@@ -246,7 +244,7 @@ const OrderDetails = ({ order, onUpdateStatus, onClose }) => {
 
             {order.paidAt && (
               <div className="flex items-center space-x-3">
-                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                <div className="w-3 h-3 bg-success rounded-full"></div>
                 <div>
                   <p className="font-medium">Payment Completed</p>
                   <p className="text-sm text-gray-600">{formatDate(order.paidAt)}</p>
@@ -256,7 +254,7 @@ const OrderDetails = ({ order, onUpdateStatus, onClose }) => {
 
             {order.failedAt && (
               <div className="flex items-center space-x-3">
-                <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                <div className="w-3 h-3 bg-destructive rounded-full"></div>
                 <div>
                   <p className="font-medium">Payment Failed</p>
                   <p className="text-sm text-gray-600">{formatDate(order.failedAt)}</p>
@@ -266,7 +264,7 @@ const OrderDetails = ({ order, onUpdateStatus, onClose }) => {
 
             {order.refundedAt && (
               <div className="flex items-center space-x-3">
-                <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
+                <div className="w-3 h-3 bg-info rounded-full"></div>
                 <div>
                   <p className="font-medium">Order Refunded</p>
                   <p className="text-sm text-gray-600">{formatDate(order.refundedAt)}</p>
@@ -293,9 +291,8 @@ const OrderDetails = ({ order, onUpdateStatus, onClose }) => {
                 {order.status === 'pending' && (
                   <>
                     <Button
-                      onClick={() => handleStatusUpdate('completed')}
-                      disabled={updating}
-                      className="bg-green-600 hover:bg-green-700"
+                      onClick={() => handleStatusUpdate('completed')}                      disabled={updating}
+                      variant="success"
                     >
                       <CheckCircle className="w-4 h-4 mr-2" />
                       Mark Completed

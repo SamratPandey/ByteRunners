@@ -6,15 +6,18 @@ dotenv.config();
 
 export default defineConfig({
   plugins: [react()],
+  server: {
+    historyApiFallback: true
+  },
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      "@": path.resolve(__dirname, "./src"), // eslint-disable-line no-undef
     },
   },
   define: {
     'process.env': {},
-    'process.platform': JSON.stringify(process.platform),
-    'process.version': JSON.stringify(process.version),
+    'process.platform': JSON.stringify(process.platform), // eslint-disable-line no-undef
+    'process.version': JSON.stringify(process.version), // eslint-disable-line no-undef
   },
   build: {
     rollupOptions: {

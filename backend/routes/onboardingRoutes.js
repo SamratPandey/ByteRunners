@@ -4,12 +4,16 @@ const {
   saveOnboardingData,
   getOnboardingStatus,
   getSkillAssessmentQuestions,
-  validateSkillAssessment
+  validateSkillAssessment,
+  generateOnboardingQuestions
 } = require('../controllers/onboardingController');
 const { protect } = require('../middleware/auth');
 
 // All onboarding routes require authentication
 router.use(protect);
+
+// Generate AI-powered onboarding questions
+router.post('/generate-questions', generateOnboardingQuestions);
 
 // Save onboarding data
 router.post('/save', saveOnboardingData);

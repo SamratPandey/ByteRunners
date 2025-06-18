@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { testApi } from '../utils/testApi';
+import Nav from './Nav';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faClock, 
@@ -577,13 +578,17 @@ const AITestInterface = () => {
       </Card>
     </div>
   );
-
   return (
     <div className="min-h-screen bg-black">
-      {testState === 'setup' && renderSetupPage()}
-      {testState === 'loading' && renderLoadingPage()}
-      {testState === 'taking' && renderTestInterface()}
-      {testState === 'completed' && renderResultsPage()}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-sm border-b border-green-900">
+        <Nav />
+      </div>
+      <div className="pt-20">
+        {testState === 'setup' && renderSetupPage()}
+        {testState === 'loading' && renderLoadingPage()}
+        {testState === 'taking' && renderTestInterface()}
+        {testState === 'completed' && renderResultsPage()}
+      </div>
     </div>
   );
 };

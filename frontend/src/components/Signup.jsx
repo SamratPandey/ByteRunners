@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -244,13 +244,14 @@ const Signup = () => {
               </div>
             </div>            <div className="grid grid-cols-2 gap-4">
               {[
-                { icon: faGoogle, bg: 'bg-red-600 hover:bg-red-700', name: 'Google' },
-                { icon: faGithub, bg: 'bg-gray-800 hover:bg-gray-900', name: 'GitHub' }
+                { icon: faGoogle, variant: 'info', name: 'Google' },
+                { icon: faGithub, variant: 'secondary', name: 'GitHub' }
               ].map((social, index) => (
                 <Button 
                   key={index} 
                   type="button"
-                  className={`${social.bg} text-white transition-all duration-200`}
+                  variant={social.variant}
+                  className="font-medium"
                   onClick={() => toast.info(`${social.name} signup coming soon!`)}
                 >
                   <FontAwesomeIcon icon={social.icon} />

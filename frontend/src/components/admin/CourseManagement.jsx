@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
 import {
   Plus,
@@ -28,14 +28,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -73,11 +65,7 @@ const CourseManagement = () => {
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [formMode, setFormMode] = useState('create'); // 'create' or 'edit'
 
-  useEffect(() => {
-    fetchCourses();
-  }, [currentPage, searchTerm, statusFilter, categoryFilter, levelFilter, sortBy]);
-
-  const fetchCourses = async () => {
+  const fetchCourses = useCallback(async () => {
     try {
       setLoading(true);
       const params = {
@@ -98,8 +86,11 @@ const CourseManagement = () => {
       toast.error('Failed to fetch courses');
     } finally {
       setLoading(false);
-    }
-  };
+    }  }, [currentPage, searchTerm, statusFilter, categoryFilter, levelFilter, sortBy]);
+
+  useEffect(() => {
+    fetchCourses();
+  }, [fetchCourses]);
 
   const handleCreateCourse = () => {
     setSelectedCourse(null);
@@ -141,19 +132,49 @@ const CourseManagement = () => {
     // navigate(`/admin/courses/${course._id}/analytics`);
   };
 
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        if (showCourseForm) {
+          handleFormCancel();
+        } else if (showCurriculumEditor) {
+          handleCurriculumCancel();
+        } else if (showCouponManagement) {
+          setShowCouponManagement(false);
+          setSelectedCourse(null);
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [showCourseForm, showCurriculumEditor, showCouponManagement]);
+
   const handleFormSuccess = () => {
     setShowCourseForm(false);
+    setSelectedCourse(null);
     fetchCourses();
+  };  const handleFormCancel = () => {
+    console.log('Cancel button clicked'); // Debug log
+    setShowCourseForm(false);
+    setSelectedCourse(null);
   };
 
   const handleCurriculumSuccess = () => {
     setShowCurriculumEditor(false);
+    setSelectedCourse(null);
     fetchCourses();
   };
 
+  const handleCurriculumCancel = () => {
+    setShowCurriculumEditor(false);
+    setTimeout(() => {
+      setSelectedCourse(null);
+    }, 100);
+  };
   const getStatusBadge = (course) => {
     if (course.isPublished) {
-      return <Badge className="bg-green-500 text-white">Published</Badge>;
+      return <Badge variant="success">Published</Badge>;
     }
     return <Badge variant="secondary">Draft</Badge>;
   };
@@ -178,87 +199,81 @@ const CourseManagement = () => {
 
   const formatDate = (date) => {
     return new Date(date).toLocaleDateString();
-  };
-
-  return (
-    <div className="space-y-6">
+  };  return (
+    <div className="space-y-6 pt-20 bg-black text-white min-h-screen">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Course Management</h1>
-          <p className="text-gray-600">Manage courses, curriculum, and pricing</p>
+          <h1 className="text-3xl font-bold text-green-400">Course Management</h1>
+          <p className="text-gray-400">Manage courses, curriculum, and pricing</p>
         </div>
-        <Button onClick={handleCreateCourse} className="bg-green-600 hover:bg-green-700">
+        <Button onClick={handleCreateCourse} variant="success">
           <Plus className="w-4 h-4 mr-2" />
           Add Course
         </Button>
-      </div>
-
-      {/* Stats Cards */}
+      </div>      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        <Card>
+        <Card className="bg-gray-950 border-gray-800">
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
-              <BookOpen className="w-8 h-8 text-blue-600" />
+              <BookOpen className="w-8 h-8 text-green-500" />
               <div>
-                <p className="text-2xl font-bold">{stats.total || 0}</p>
-                <p className="text-sm text-gray-600">Total Courses</p>
+                <p className="text-2xl font-bold text-white">{stats.total || 0}</p>
+                <p className="text-sm text-gray-400">Total Courses</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="bg-gray-950 border-gray-800">
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
-              <Eye className="w-8 h-8 text-green-600" />
+              <Eye className="w-8 h-8 text-green-500" />
               <div>
-                <p className="text-2xl font-bold">{stats.published || 0}</p>
-                <p className="text-sm text-gray-600">Published</p>
+                <p className="text-2xl font-bold text-white">{stats.published || 0}</p>
+                <p className="text-sm text-gray-400">Published</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="bg-gray-950 border-gray-800">
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
-              <Edit className="w-8 h-8 text-yellow-600" />
+              <Edit className="w-8 h-8 text-yellow-500" />
               <div>
-                <p className="text-2xl font-bold">{stats.draft || 0}</p>
-                <p className="text-sm text-gray-600">Drafts</p>
+                <p className="text-2xl font-bold text-white">{stats.draft || 0}</p>
+                <p className="text-sm text-gray-400">Drafts</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="bg-gray-950 border-gray-800">
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
-              <DollarSign className="w-8 h-8 text-purple-600" />
+              <DollarSign className="w-8 h-8 text-blue-500" />
               <div>
-                <p className="text-2xl font-bold">{stats.paid || 0}</p>
-                <p className="text-sm text-gray-600">Paid</p>
+                <p className="text-2xl font-bold text-white">{stats.paid || 0}</p>
+                <p className="text-sm text-gray-400">Paid</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="bg-gray-950 border-gray-800">
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
-              <Star className="w-8 h-8 text-orange-600" />
+              <Star className="w-8 h-8 text-yellow-500" />
               <div>
-                <p className="text-2xl font-bold">{stats.free || 0}</p>
-                <p className="text-sm text-gray-600">Free</p>
+                <p className="text-2xl font-bold text-white">{stats.free || 0}</p>
+                <p className="text-sm text-gray-400">Free</p>
               </div>
             </div>
           </CardContent>
         </Card>
-      </div>
-
-      {/* Filters */}
-      <Card>
+      </div>      {/* Filters */}
+      <Card className="bg-gray-950 border-gray-800">
         <CardContent className="p-4">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1">
@@ -268,7 +283,7 @@ const CourseManagement = () => {
                   placeholder="Search courses..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 bg-gray-900 border-gray-700 text-white placeholder-gray-400"
                 />
               </div>
             </div>
@@ -323,12 +338,10 @@ const CourseManagement = () => {
             </Select>
           </div>
         </CardContent>
-      </Card>
-
-      {/* Courses Table */}
-      <Card>
+      </Card>      {/* Courses Table */}
+      <Card className="bg-gray-950 border-gray-800">
         <CardHeader>
-          <CardTitle>Courses</CardTitle>
+          <CardTitle className="text-white">Courses</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -457,61 +470,87 @@ const CourseManagement = () => {
             </div>
           )}
         </CardContent>
-      </Card>
-
-      {/* Modals */}
-      <Dialog open={showCourseForm} onOpenChange={setShowCourseForm}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {formMode === 'create' ? 'Create New Course' : 'Edit Course'}
-            </DialogTitle>
-            <DialogDescription>
-              {formMode === 'create' 
-                ? 'Fill in the details to create a new course'
-                : 'Update the course information'
-              }
-            </DialogDescription>
-          </DialogHeader>
-          <CourseForm
-            course={selectedCourse}
-            mode={formMode}
-            onSuccess={handleFormSuccess}
-            onCancel={() => setShowCourseForm(false)}
-          />
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={showCurriculumEditor} onOpenChange={setShowCurriculumEditor}>
-        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Edit Curriculum - {selectedCourse?.title}</DialogTitle>
-            <DialogDescription>
-              Manage course sections and lessons
-            </DialogDescription>
-          </DialogHeader>
-          <CurriculumEditor
-            course={selectedCourse}
-            onSuccess={handleCurriculumSuccess}
-            onCancel={() => setShowCurriculumEditor(false)}
-          />
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={showCouponManagement} onOpenChange={setShowCouponManagement}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Manage Coupons - {selectedCourse?.title}</DialogTitle>
-            <DialogDescription>
-              Create and manage discount coupons for this course
-            </DialogDescription>
-          </DialogHeader>
-          <CouponManagement
-            course={selectedCourse}
-            onClose={() => setShowCouponManagement(false)}
-          />
-        </DialogContent>
-      </Dialog>
+      </Card>      {/* Modals */}      {showCourseForm && (
+        <div 
+          className="fixed inset-0 z-50 bg-gray-900/50 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              handleFormCancel();
+            }
+          }}
+        >
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b">
+              <h2 className="text-xl font-semibold">
+                {formMode === 'create' ? 'Create New Course' : 'Edit Course'}
+              </h2>
+              <p className="text-gray-600 mt-1">
+                {formMode === 'create' 
+                  ? 'Fill in the details to create a new course'
+                  : 'Update the course information'
+                }
+              </p>
+            </div>
+            <div className="p-6">
+              <CourseForm
+                key={`course-form-${selectedCourse?._id || 'new'}-${showCourseForm}`}
+                course={selectedCourse}
+                mode={formMode}
+                onSuccess={handleFormSuccess}
+                onCancel={handleFormCancel}
+              />
+            </div>
+          </div>
+        </div>      )}      {showCurriculumEditor && (
+        <div 
+          className="fixed inset-0 z-50 bg-gray-900/50 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              handleCurriculumCancel();
+            }
+          }}
+        >
+          <div className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b">
+              <h2 className="text-xl font-semibold">Edit Curriculum - {selectedCourse?.title}</h2>
+              <p className="text-gray-600 mt-1">Manage course sections and lessons</p>
+            </div>
+            <div className="p-6">
+              <CurriculumEditor
+                course={selectedCourse}
+                onSuccess={handleCurriculumSuccess}
+                onCancel={handleCurriculumCancel}
+              />
+            </div>
+          </div>
+        </div>
+      )}      {showCouponManagement && (
+        <div 
+          className="fixed inset-0 z-50 bg-gray-900/50 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowCouponManagement(false);
+              setSelectedCourse(null);
+            }
+          }}
+        >
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b">
+              <h2 className="text-xl font-semibold">Manage Coupons - {selectedCourse?.title}</h2>
+              <p className="text-gray-600 mt-1">Create and manage discount coupons for this course</p>
+            </div>
+            <div className="p-6">
+              <CouponManagement
+                course={selectedCourse}
+                onClose={() => {
+                  setShowCouponManagement(false);
+                  setSelectedCourse(null);
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
