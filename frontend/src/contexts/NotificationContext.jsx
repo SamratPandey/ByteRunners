@@ -18,19 +18,22 @@ export const NotificationProvider = ({ children }) => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-
   // Fetch notifications from API when user is authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      fetchNotifications();
-      fetchUnreadCount();
+      // Add a small delay to ensure authentication is fully established
+      const timer = setTimeout(() => {
+        fetchNotifications();
+        fetchUnreadCount();
+      }, 500);
+      
+      return () => clearTimeout(timer);
     } else {
       // Clear notifications when user logs out
       setNotifications([]);
       setUnreadCount(0);
     }
   }, [isAuthenticated]);
-
   const fetchNotifications = async () => {
     if (!isAuthenticated) return;
     
@@ -46,7 +49,10 @@ export const NotificationProvider = ({ children }) => {
         setNotifications(response.data.notifications);
         setUnreadCount(response.data.unreadCount);
       }    } catch (err) {
-      setError('Failed to load notifications');
+      // Don't show error for authentication issues - they're handled by authApi
+      if (err.response?.status !== 401) {
+        setError('Failed to load notifications');
+      }
       // Fallback to dummy data for demo
       setDummyNotifications();
     } finally {
@@ -60,7 +66,10 @@ export const NotificationProvider = ({ children }) => {
     try {
       const count = await notificationService.getUnreadCount();
       setUnreadCount(count);    } catch (err) {
-      // Silent error handling
+      // Silent error handling - don't log 401 errors as they're expected during login
+      if (err.response?.status !== 401) {
+        console.error('Error fetching unread count:', err);
+      }
     }
   };
 

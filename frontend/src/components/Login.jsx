@@ -101,14 +101,10 @@ const Login = () => {
     if (!validateForm()) return;
   
     setIsSubmitting(true);
-    
-    try {
+      try {
       const success = await dispatch(login(email, password));
       
       if (success) {
-        // Get user data after successful login
-        await dispatch(checkAuthStatus());
-        
         toast.success('Welcome back! You have been logged in successfully.', {
           duration: 3000,
           style: {

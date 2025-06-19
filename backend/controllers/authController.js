@@ -65,9 +65,7 @@ const loginUser = async (req, res) => {
     const isMatch = await user.matchPassword(password);
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid credentials" });
-    }
-
-    const activity = new Activity({
+    }    const activity = new Activity({
       type: 'User Logged In',
       description: `User ${user.name} (${user.email}) logged in.`,
     });
@@ -77,11 +75,21 @@ const loginUser = async (req, res) => {
     res.cookie('userToken', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // Allow cross-site cookies in production
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     });
     
-    res.json({ success: true });
+    // Return user data along with success
+    res.json({ 
+      success: true,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        isPremium: user.isPremium,
+        accountType: user.accountType
+      }
+    });
   } catch (error) {
     res.status(500).json({ message: "Server Error" });
   }

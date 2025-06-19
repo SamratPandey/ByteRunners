@@ -8,7 +8,11 @@ export const login = (email, password) => async (dispatch) => {
     );
 
     if (response.data.success) {
-      dispatch({ type: 'LOGIN_SUCCESS' });
+      // Store user data from successful login
+      dispatch({ 
+        type: 'LOGIN_SUCCESS', 
+        payload: response.data.user 
+      });
       return true;
     } else {
       dispatch({ type: 'LOGIN_FAILURE', payload: response.data.message || 'Login failed' });

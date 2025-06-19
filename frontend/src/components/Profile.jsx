@@ -217,8 +217,7 @@ const Profile = () => {
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { isAuthenticated } = useSelector(state => state.auth);
-  useEffect(() => {
+  const { isAuthenticated } = useSelector(state => state.auth);  useEffect(() => {
     const checkAuthAndFetchProfile = async () => {
       if (!isAuthenticated) {
         navigate('/login', { replace: true });
@@ -226,13 +225,7 @@ const Profile = () => {
       }
       
       try {
-        // First verify the auth status
-        const authResponse = await authApi.get('/api/auth/check-auth');
-        if (!authResponse.data.success) {
-          throw new Error('Authentication check failed');
-        }
-        
-        // Then fetch the profile
+        // Just fetch the profile directly since user is already authenticated
         await fetchUserProfile();
       } catch (error) {
         if (error?.response?.status === 401) {
