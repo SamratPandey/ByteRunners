@@ -137,12 +137,11 @@ const oauthLogout = (req, res) => {
       console.error('OAuth logout error:', err);
       return res.status(500).json({ success: false, message: 'Logout failed' });
     }
-    
-    // Clear the user token cookie with the same options used when setting it
+      // Clear the user token cookie with the same options used when setting it
     res.clearCookie('userToken', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict'
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax' // Match the setting used when creating the cookie
     });
     res.json({ success: true, message: 'Logged out successfully' });
   });

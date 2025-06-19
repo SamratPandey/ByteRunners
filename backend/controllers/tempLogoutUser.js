@@ -1,11 +1,10 @@
 
 exports.logoutUser = async (req, res) => {
-  try {
-    // Clear the user token cookie with the same options used when setting it
+  try {    // Clear the user token cookie with the same options used when setting it
     res.clearCookie('userToken', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict'
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax' // Match the setting used when creating the cookie
     });
     res.json({ success: true, message: 'Logged out successfully' });
   } catch (error) {

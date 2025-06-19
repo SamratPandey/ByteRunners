@@ -81,13 +81,11 @@ exports.loginAdmin = async (req, res) => {
       },
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
-    );
-
-    // Set cookie with the token
+    );    // Set cookie with the token
     res.cookie('adminToken', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
-      sameSite: 'strict',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // Allow cross-site cookies in production
       maxAge: 24 * 60 * 60 * 1000 // 24 hours
     });
 
