@@ -13,6 +13,22 @@ const saveOnboardingData = async (req, res) => {
       });
     }
 
+    // Validate skillAssessment is an array
+    if (!Array.isArray(skillAssessment)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid skill assessment data format.'
+      });
+    }
+
+    // Ensure skillAssessment has at least one question
+    if (skillAssessment.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Skill assessment must contain at least one question.'
+      });
+    }
+
     // Calculate initial level based on skill assessment
     const correctAnswers = skillAssessment.filter(answer => answer.isCorrect).length;
     const assessmentScore = (correctAnswers / skillAssessment.length) * 100;
@@ -32,14 +48,16 @@ const saveOnboardingData = async (req, res) => {
       initialExperience = assessmentScore >= 80 ? 550 : 450;
     }
 
-    // Prepare onboarding data
+    // Prepare onboarding data with correct field names for the User model
     const onboardingData = {
-      experienceLevel,
+      experience: experienceLevel, // Map experienceLevel to experience
       interests,
-      languages,
+      preferredLanguages: languages, // Map languages to preferredLanguages
       skillAssessment: {
-        questions: skillAssessment,
+        answers: skillAssessment, // Map to answers array
         score: assessmentScore,
+        totalQuestions: skillAssessment.length,
+        correctAnswers: correctAnswers,
         completedAt: new Date()
       },
       completedAt: new Date(),
@@ -84,13 +102,12 @@ const saveOnboardingData = async (req, res) => {
         }
       });
     } catch (aiError) {
-      console.warn('AI recommendations failed during onboarding, continuing without them:', aiError);
-        res.status(200).json({
+      console.warn('AI recommendations failed during onboarding, continuing without them:', aiError);        res.status(200).json({
         success: true,
         message: 'Welcome to ByteRunners! Your profile has been created successfully.',
         data: {
           user: updatedUser,
-          initialRecommendations: this.createFallbackRecommendations(onboardingData),
+          initialRecommendations: createFallbackRecommendations(onboardingData),
           levelInfo: {
             level: initialLevel,
             experience: initialExperience,
@@ -100,10 +117,12 @@ const saveOnboardingData = async (req, res) => {
       });
     }  } catch (error) {
     console.error('Error saving onboarding data:', error);
+    console.error('Request body:', req.body);
+    console.error('User ID:', req.user?.id);
     res.status(500).json({
       success: false,
       message: 'We encountered an issue setting up your profile. Please try again, and contact support if the problem persists.',
-      error: error.message
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };
@@ -280,33 +299,123 @@ const validateSkillAssessment = async (req, res) => {
       });
     }
 
-    // This is a simplified validation - in practice, you'd store correct answers securely
+    // Get the complete question pool with correct answers
     const questionPool = {
-      js1: 'object',
-      js2: 'push()',
-      js3: '=== checks type and value, == performs type coercion',
-      py1: '<class \'list\'>',
-      py2: 'def',
-      py3: 'Number of characters',
-      java1: 'class',
-      java2: 'int x = 5;',
-      java3: 'main()'
+      javascript: [
+        {
+          id: 'js1',
+          question: 'What will be the output of: console.log(typeof null)?',
+          options: ['null', 'undefined', 'object', 'boolean'],
+          correctAnswer: 'object',
+          explanation: 'In JavaScript, typeof null returns "object" due to a historical bug that has been preserved for compatibility.'
+        },
+        {
+          id: 'js2',
+          question: 'Which method is used to add an element to the end of an array?',
+          options: ['push()', 'pop()', 'shift()', 'unshift()'],
+          correctAnswer: 'push()',
+          explanation: 'push() adds one or more elements to the end of an array and returns the new length.'
+        },
+        {
+          id: 'js3',
+          question: 'What is the difference between == and === in JavaScript?',
+          options: [
+            'No difference',
+            '== checks type and value, === checks only value',
+            '=== checks type and value, == checks only value',
+            '=== checks type and value, == performs type coercion'
+          ],
+          correctAnswer: '=== checks type and value, == performs type coercion',
+          explanation: '=== is strict equality (checks both type and value), while == performs type coercion before comparison.'
+        }
+      ],
+      python: [
+        {
+          id: 'py1',
+          question: 'What is the output of: print(type([]))?',
+          options: ['<class \'array\'>', '<class \'list\'>', '<class \'tuple\'>', '<class \'dict\'>'],
+          correctAnswer: '<class \'list\'>',
+          explanation: 'In Python, [] creates a list object, so type([]) returns <class \'list\'>.'
+        },
+        {
+          id: 'py2',
+          question: 'Which keyword is used to define a function in Python?',
+          options: ['function', 'def', 'func', 'define'],
+          correctAnswer: 'def',
+          explanation: 'The "def" keyword is used to define functions in Python.'
+        },
+        {
+          id: 'py3',
+          question: 'What does the len() function return for a string?',
+          options: ['Number of words', 'Number of characters', 'Number of lines', 'Size in bytes'],
+          correctAnswer: 'Number of characters',
+          explanation: 'len() returns the number of characters in a string, including spaces and special characters.'
+        }
+      ],
+      java: [
+        {
+          id: 'java1',
+          question: 'Which keyword is used to create a class in Java?',
+          options: ['class', 'Class', 'new', 'create'],
+          correctAnswer: 'class',
+          explanation: 'The "class" keyword is used to define a class in Java.'
+        },
+        {
+          id: 'java2',
+          question: 'What is the correct way to declare a variable in Java?',
+          options: ['var x = 5;', 'int x = 5;', 'x = 5;', 'declare int x = 5;'],
+          correctAnswer: 'int x = 5;',
+          explanation: 'In Java, you must specify the data type when declaring a variable: dataType variableName = value;'
+        },
+        {
+          id: 'java3',
+          question: 'Which method is the entry point of a Java application?',
+          options: ['start()', 'main()', 'begin()', 'run()'],
+          correctAnswer: 'main()',
+          explanation: 'The main() method is the entry point of any Java application.'
+        }
+      ]
     };
 
+    // Create a lookup map for all questions
+    const questionLookup = {};
+    Object.values(questionPool).flat().forEach(q => {
+      questionLookup[q.id] = q;
+    });
+
     const validatedAnswers = answers.map(answer => {
-      const correctAnswer = questionPool[answer.questionId];
-      const isCorrect = correctAnswer === answer.selectedAnswer;
+      const question = questionLookup[answer.questionId];
+      if (!question) {
+        console.warn(`Question not found for ID: ${answer.questionId}`);
+        return {
+          questionId: answer.questionId,
+          selectedAnswer: answer.selectedAnswer,
+          correctAnswer: null,
+          isCorrect: false,
+          question: 'Unknown question'
+        };
+      }
+
+      // Handle both string answers and option index answers
+      let selectedAnswerText = answer.selectedAnswer;
+      if (typeof answer.selectedAnswer === 'number') {
+        selectedAnswerText = question.options[answer.selectedAnswer];
+      }
+
+      const isCorrect = question.correctAnswer === selectedAnswerText;
       
       return {
         questionId: answer.questionId,
-        selectedAnswer: answer.selectedAnswer,
-        correctAnswer,
-        isCorrect
+        selectedAnswer: selectedAnswerText,
+        correctAnswer: question.correctAnswer,
+        isCorrect,
+        question: question.question,
+        explanation: question.explanation
       };
     });
 
     const correctCount = validatedAnswers.filter(a => a.isCorrect).length;
-    const score = (correctCount / answers.length) * 100;
+    const score = answers.length > 0 ? (correctCount / answers.length) * 100 : 0;
 
     res.status(200).json({
       success: true,
@@ -317,13 +426,13 @@ const validateSkillAssessment = async (req, res) => {
         correctAnswers: correctCount,
         totalQuestions: answers.length
       }
-    });
-  } catch (error) {
+    });  } catch (error) {
     console.error('Error validating skill assessment:', error);
+    console.error('Request body:', req.body);
     res.status(500).json({
       success: false,
       message: 'Failed to validate skill assessment',
-      error: error.message
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };

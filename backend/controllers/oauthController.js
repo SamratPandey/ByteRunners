@@ -60,8 +60,8 @@ const googleCallback = async (req, res) => {
       // Check if user was just created (within last minute) or doesn't have onboarding completed
       const isNewUser = user.createdAt && (Date.now() - user.createdAt.getTime()) < 60000;
       const needsOnboarding = !user.onboardingData?.isCompleted;      const redirectUrl = (isNewUser || needsOnboarding)
-        ? `${process.env.FRONTEND_URL}/onboarding?oauth=success`
-        : `${process.env.FRONTEND_URL}/?oauth=success`;
+        ? `${process.env.FRONTEND_URL}/onboarding`
+        : `${process.env.FRONTEND_URL}/`;
       
       res.redirect(redirectUrl);
     } catch (error) {
