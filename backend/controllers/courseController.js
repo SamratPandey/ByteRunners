@@ -5,8 +5,6 @@ const Wishlist = require('../models/Wishlist');
 
 const getCourses = async (req, res) => {
     try {
-        console.log('getCourses called with query:', req.query);
-        
         const {
             page = 1,
             limit = 12,
@@ -18,11 +16,8 @@ const getCourses = async (req, res) => {
             search,
             featured,
             bestseller
-        } = req.query;
-
-        // Build filter object
+        } = req.query;        // Build filter object
         let filter = { isPublished: true };
-        console.log('Initial filter:', filter);
         
         if (category && category !== 'all') {
             filter.category = { $regex: category, $options: 'i' };
@@ -56,11 +51,7 @@ const getCourses = async (req, res) => {
         
         if (bestseller === 'true') {
             filter.bestseller = true;
-        }
-
-        console.log('Final filter:', filter);
-
-        // Build sort object
+        }        // Build sort object
         let sortBy = {};
         switch (sort) {
             case 'newest':
@@ -83,28 +74,18 @@ const getCourses = async (req, res) => {
                 break;
             default:
                 sortBy = { createdAt: -1 };
-        }
+        }        const skip = (parseInt(page) - 1) * parseInt(limit);
 
-        const skip = (parseInt(page) - 1) * parseInt(limit);
-
-        console.log('Executing query...');
         const courses = await Course.find(filter)
             .populate('instructor', 'name avatar bio')
             .sort(sortBy)
-            .skip(skip)
-            .limit(parseInt(limit))
+            .skip(skip)            .limit(parseInt(limit))
             .select('-reviews -enrollments'); // Exclude heavy arrays for listing
 
-        console.log('Found courses:', courses.length);
-
         const totalCourses = await Course.countDocuments(filter);
-        console.log('Total courses matching filter:', totalCourses);
         
-        const totalPages = Math.ceil(totalCourses / parseInt(limit));
-
-        // Get categories for filter options
+        const totalPages = Math.ceil(totalCourses / parseInt(limit));        // Get categories for filter options
         const categories = await Course.distinct('category', { isPublished: true });
-        console.log('Categories:', categories);
 
         res.status(200).json({
             success: true,
@@ -155,32 +136,38 @@ const getCourseById = async (req, res) => {
         let isEnrolled = false;
         let isPurchased = false;
         let userProgress = null;
-        let isInWishlist = false;
-
-        if (userId) {
+        let isInWishlist = false;        if (userId) {
             const user = await User.findById(userId);
             
-            // Check if purchased
-            isPurchased = user.purchasedCourses.some(pc => 
-                pc.course.toString() === course._id.toString()
-            );
-            
-            // Check if enrolled
-            const enrollment = user.enrolledCourses.find(ec => 
-                ec.course.toString() === course._id.toString()
-            );
-            
-            if (enrollment) {
-                isEnrolled = true;
-                userProgress = enrollment;
-            }
-
-            // Check wishlist
-            const wishlist = await Wishlist.findOne({ user: userId });
-            if (wishlist) {
-                isInWishlist = wishlist.courses.some(wc => 
-                    wc.course.toString() === course._id.toString()
+            if (user) {
+                // Initialize arrays if they don't exist
+                if (!user.purchasedCourses) {
+                    user.purchasedCourses = [];
+                }
+                if (!user.enrolledCourses) {
+                    user.enrolledCourses = [];
+                }
+                
+                // Check if purchased
+                isPurchased = user.purchasedCourses.some(pc => 
+                    pc.course.toString() === course._id.toString()
                 );
+                
+                // Check if enrolled
+                const enrollment = user.enrolledCourses.find(ec => 
+                    ec.course.toString() === course._id.toString()
+                );
+                
+                if (enrollment) {
+                    isEnrolled = true;
+                    userProgress = enrollment;
+                }                // Check wishlist
+                const wishlist = await Wishlist.findOne({ user: userId });
+                if (wishlist && wishlist.courses) {
+                    isInWishlist = wishlist.courses.some(wc => 
+                        wc.course && wc.course.toString() === course._id.toString()
+                    );
+                }
             }
         }
 
@@ -205,8 +192,9 @@ const getCourseById = async (req, res) => {
                 isInWishlist
             },
             relatedCourses
-        });
-    } catch (error) {
+        });    } catch (error) {
+        console.error('Error in getCourseById:', error);
+        console.error('Error stack:', error.stack);
         res.status(500).json({ 
             success: false,
             message: error.message 
@@ -218,9 +206,7 @@ const getCourseById = async (req, res) => {
 const purchaseCourse = async (req, res) => {
     try {
         const { courseId, paymentDetails, couponCode } = req.body;
-        const userId = req.user.id;
-
-        const course = await Course.findById(courseId);
+        const userId = req.user.id;        const course = await Course.findById(courseId);
         if (!course) {
             return res.status(404).json({
                 success: false,
@@ -286,11 +272,7 @@ const purchaseCourse = async (req, res) => {
             status: 'completed',
             paidAt: new Date(),
             coupon: couponUsed
-        });
-
-        await order.save();
-
-        // Add to user's purchased courses
+        });        await order.save();        // Add to user's purchased courses
         user.purchasedCourses.push({
             course: courseId,
             purchasedAt: new Date(),
@@ -318,9 +300,7 @@ const purchaseCourse = async (req, res) => {
                 couponUsed: couponCode,
                 discountAmount
             }
-        });
-
-        await course.save();
+        });        await course.save();
 
         res.status(200).json({
             success: true,
@@ -333,6 +313,7 @@ const purchaseCourse = async (req, res) => {
             }
         });
     } catch (error) {
+        console.error('Purchase course error:', error);
         res.status(500).json({
             success: false,
             message: error.message
@@ -587,8 +568,18 @@ const getUserEnrolledCourses = async (req, res) => {
             });
         }
 
+        // Initialize arrays if they don't exist
+        if (!user.enrolledCourses) {
+            user.enrolledCourses = [];
+            await user.save();
+        }
+        if (!user.purchasedCourses) {
+            user.purchasedCourses = [];
+            await user.save();
+        }
+
         // Filter out null courses (in case some courses were deleted)
-        const enrolledCourses = user.enrolledCourses.filter(ec => ec.course).map(ec => ({
+        const enrolledCourses = (user.enrolledCourses || []).filter(ec => ec && ec.course).map(ec => ({
             ...ec.course.toObject(),
             enrollmentDetails: {
                 enrolledAt: ec.enrolledAt,
@@ -599,7 +590,7 @@ const getUserEnrolledCourses = async (req, res) => {
             }
         }));
 
-        const purchasedCourses = user.purchasedCourses.filter(pc => pc.course).map(pc => ({
+        const purchasedCourses = (user.purchasedCourses || []).filter(pc => pc && pc.course).map(pc => ({
             ...pc.course.toObject(),
             purchaseDetails: {
                 purchasedAt: pc.purchasedAt,

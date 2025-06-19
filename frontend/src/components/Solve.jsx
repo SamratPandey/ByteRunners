@@ -149,8 +149,7 @@ const CodeEditorPanel = ({
     };
     
     const copyCode = () => {
-      navigator.clipboard.writeText(code);
-      toast.success('📋 Code copied to clipboard! Ready to share or save.', {
+      navigator.clipboard.writeText(code);      toast.success('Code copied to clipboard! Ready to share or save.', {
         style: {
           background: '#22c55e',
           color: 'white',
@@ -163,8 +162,7 @@ const CodeEditorPanel = ({
     const manualSave = () => {
       if (problemId && code) {
         const saveKey = `problem_${problemId}_${selectedLanguage}`;
-        localStorage.setItem(saveKey, code);
-        toast.success('💾 Code saved successfully!', {
+        localStorage.setItem(saveKey, code);        toast.success('Code saved successfully!', {
           style: {
             background: '#22c55e',
             color: 'white',
@@ -190,8 +188,7 @@ const CodeEditorPanel = ({
           const saveKey = `problem_${problemId}_${selectedLanguage}`;
           localStorage.removeItem(saveKey);
         }
-        
-        toast.success('🔄 Code reset to default template', {
+          toast.success('Code reset to default template', {
           style: {
             background: '#22c55e',
             color: 'white',
@@ -236,8 +233,7 @@ const CodeEditorPanel = ({
           if (response.data.testResults && Array.isArray(response.data.testResults)) {
             const passedTests = response.data.testResults.filter(test => test.status === 'passed').length;
             const totalTests = response.data.testResults.length;
-            
-            toast.success(`✅ ${passedTests}/${totalTests} visible test cases passed!`, { 
+              toast.success(`${passedTests}/${totalTests} visible test cases passed!`, { 
               id: 'runCode',
               style: {
                 background: '#22c55e',
@@ -253,10 +249,9 @@ const CodeEditorPanel = ({
               testResults: response.data.testResults,
               passedTests,
               totalTests
-            });
-          } else {
+            });          } else {
             // Regular execution without test cases
-            toast.success('✅ Code executed successfully! Check the output below.', { 
+            toast.success('Code executed successfully! Check the output below.', { 
               id: 'runCode',
               style: {
                 background: '#22c55e',
@@ -280,10 +275,8 @@ const CodeEditorPanel = ({
             stderr: response.data.stderr || response.data.compile_output || 'Unknown error',
             error: response.data.message || 'Execution failed'
           });
-        }
-      } catch (error) {
+        }      } catch (error) {
         setIsRunning(false);
-        console.error('Run code error:', error);
         setOutput({
           status: 'error',
           type: 'execution',
@@ -320,7 +313,7 @@ const CodeEditorPanel = ({
         setIsSubmitting(false);
         
         if (response.data.status === 'solved' || response.data.status === 'accepted') {
-          toast.success('🎉 ' + response.data.message, { id: 'submitCode', duration: 4000 });
+          toast.success(response.data.message, { id: 'submitCode', duration: 4000 });
           setOutput({
             status: 'success',
             type: 'submission',
@@ -876,14 +869,8 @@ const Solve = () => {
     const timerRef = useRef(0);
     const timerRunningRef = useRef(false);
     const timerDisplayRef = useRef(null);
-    const timerIntervalRef = useRef(null);
-    const autoSaveTimeoutRef = useRef(null);
+    const timerIntervalRef = useRef(null);    const autoSaveTimeoutRef = useRef(null);
 
-    // Debug: Add logging for component mount
-    useEffect(() => {
-      console.log('Solve component mounted with problemId:', problemId);
-    }, []);
-  
     const formatTime = (seconds) => {
       const hrs = Math.floor(seconds / 3600);
       const mins = Math.floor((seconds % 3600) / 60);
@@ -892,11 +879,9 @@ const Solve = () => {
     };
 
     // Auto-save functionality
-    const autoSaveCode = useCallback(() => {
-      if (autoSaveEnabled && problemId && code && code !== '// Start coding here') {
+    const autoSaveCode = useCallback(() => {      if (autoSaveEnabled && problemId && code && code !== '// Start coding here') {
         const saveKey = `problem_${problemId}_${selectedLanguage}`;
         localStorage.setItem(saveKey, code);
-        console.log('Code auto-saved for', saveKey);
       }
     }, [problemId, selectedLanguage, code, autoSaveEnabled]);
 
@@ -924,17 +909,14 @@ const Solve = () => {
         if (!problemId) {
           setLoading(false);
           return;
-        }
-        
+        }        
         try {
           setLoading(true);
-          console.log('Fetching problem with ID:', problemId);
           
           // Check if user is authenticated first
           try {
             await authApi.get('/api/auth/check-auth');
           } catch (authError) {
-            console.log('Auth check failed:', authError);
             toast.error("Please log in to access problems.", {
               style: {
                 background: '#ef4444',
@@ -947,11 +929,8 @@ const Solve = () => {
             // Redirect to login page
             window.location.href = '/login';
             return;
-          }
-          
+          }          
           const response = await authApi.get(`/api/auth/problem/${problemId}`);
-  
-          console.log('Problem response:', response.data);
 
           if (!response.data) {
             toast.error("Problem not found. It may have been removed or you don't have access.", {
@@ -987,11 +966,7 @@ const Solve = () => {
             }
           }
           
-          setLoading(false);
-        } catch (error) {
-          console.error('Error fetching problem:', error);
-          console.error('Error response:', error.response?.data);
-          
+          setLoading(false);        } catch (error) {
           let errorMessage = "Unable to load the problem. Please refresh the page or try again later.";
           
           if (error.response?.status === 401) {
@@ -1141,9 +1116,8 @@ const Solve = () => {
               </ResizablePanel>
             </ResizablePanelGroup>
           )}
-        </div>
-        <Toaster 
-          position="top-right"
+        </div>        <Toaster 
+          position="bottom-right"
           toastOptions={{
             className: 'bg-black/80 border border-green-800/50 text-green-400',
             duration: 2000,

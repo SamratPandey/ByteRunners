@@ -13,13 +13,13 @@ const {
     getUserEnrolledCourses,
     getUserCourseProgress
 } = require('../controllers/courseController');
-const { protect } = require('../middleware/auth');
+const { protect, optionalAuth } = require('../middleware/auth');
  
 // Public routes
 router.get('/all', getCourses);
 router.get('/featured', getFeaturedCourses);
 router.get('/stats', getCourseStats);
-router.get('/:id', getCourseById);
+router.get('/:id', optionalAuth, getCourseById);
 
 // Protected routes - requires authentication
 router.post('/purchase', protect, purchaseCourse);

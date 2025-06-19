@@ -81,6 +81,10 @@ export const logout = () => async (dispatch) => {
     console.error('Logout error:', error);
   }
   
+  // Clear any stored auth data
+  localStorage.removeItem('auth');
+  sessionStorage.removeItem('auth');
+  
   // Always dispatch the logout action
   dispatch({ type: 'LOGOUT' });
 };

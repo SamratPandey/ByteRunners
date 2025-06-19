@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { toast } from 'react-hot-toast';
+import { toast, Toaster } from 'react-hot-toast';
 import { Search, Filter, Star, ChevronDown, Clock, Book, BarChart, Users, Heart } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,7 @@ import { Card } from '@/components/ui/card';
 import { Alert } from '@/components/ui/alert';
 import { CourseCardSkeleton } from '@/components/ui/skeleton';
 import Nav from './Nav';
+import authApi from '../utils/authApi';
 import axios from 'axios';
 
 const Courses = () => {
@@ -36,11 +37,8 @@ const Courses = () => {
         setError('Failed to load courses');
         setLoading(false);
       }
-    };
-
-    fetchCourses();
+    };    fetchCourses();
   }, []);
-  console.log(courses);
 
   useEffect(() => {
     let results = courses;
@@ -179,15 +177,8 @@ const Courses = () => {
         toast.error('Please log in to add to wishlist');
         return;
       }
-      
-      try {
-        await axios.post(
-          `${import.meta.env.VITE_BACKEND_URL}/api/course/wishlist`,
-          { courseId: course._id },
-          {
-            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-          }
-        );
+        try {
+        await authApi.post('/api/course/wishlist', { courseId: course._id });
         toast.success('Added to wishlist!');
       } catch (error) {
         toast.error(error.response?.data?.message || 'Failed to add to wishlist');
@@ -402,10 +393,6 @@ const Courses = () => {
                 Explore Our Courses
               </span>
             </h1>
-            <p className="text-xl text-gray-400 max-w-3xl mx-auto mb-8">
-              From beginner to advanced, discover courses crafted by industry experts to elevate your coding journey.
-            </p>
-
           </div>
 
           {/* Filter Section */}
@@ -466,10 +453,9 @@ const Courses = () => {
           <p className="text-center text-gray-400">
             © {new Date().getFullYear()} ByteRunners. All rights reserved.
           </p>
-        </div>
-      </footer>
+        </div>      </footer>
 
-      <style jsx>{`
+      <style>{`
         @keyframes pulse-glow {
           0% { opacity: 0.3; transform: scale(1); }
           50% { opacity: 0.6; transform: scale(1.05); }
@@ -477,9 +463,9 @@ const Courses = () => {
         }
         
         .animate-pulse-glow {
-          animation: pulse-glow 4s ease-in-out infinite;
-        }
+          animation: pulse-glow 4s ease-in-out infinite;        }
       `}</style>
+      <Toaster position="bottom-right" />
     </div>
   );
 };

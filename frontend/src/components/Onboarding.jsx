@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-hot-toast';
+import { toast, Toaster } from 'react-hot-toast';
 import { onboardingApi } from '../utils/testApi';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
@@ -55,7 +55,6 @@ const Onboarding = () => {
       setLoading(true);
       const response = await onboardingApi.getSkillAssessmentQuestions(userProfile.languages);
       setQuizQuestions(response.data.questions);    } catch (error) {
-      console.error('Error loading skill assessment questions:', error);
       toast.error('Unable to load assessment questions. Don\'t worry, we\'ve prepared some backup questions for you!', {
         style: {
           background: '#ef4444',
@@ -152,7 +151,6 @@ const Onboarding = () => {
       setSkillAssessmentResults(validationResponse.data);
       
       return validationResponse.data;    } catch (error) {
-      console.error('Error validating assessment:', error);
       toast.error('We couldn\'t validate your assessment right now, but we\'ve calculated a preliminary score for you!', {
         style: {
           background: '#f59e0b',
@@ -268,18 +266,14 @@ const Onboarding = () => {
       const response = await onboardingApi.saveOnboardingData(onboardingData);
         // Set the onboarding completion flag that Home component checks for
       localStorage.setItem('onboardingCompleted', 'true');
-      
-      toast.success('🎉 Welcome to ByteRunners! Your personalized coding journey starts now!', {
+        toast.success('Welcome to ByteRunners! Your personalized coding journey starts now!', {
         style: {
           background: '#22c55e',
           color: 'white',
-          fontWeight: '500'
-        },
+          fontWeight: '500'        },
         duration: 3000
       });
-      navigate('/home');
-    } catch (error) {
-      console.error('Error completing onboarding:', error);
+      navigate('/');    } catch (error) {
       toast.error('We encountered an issue saving your profile. Please try again, or contact support if the problem persists.', {
         style: {
           background: '#ef4444',
@@ -537,9 +531,9 @@ const Onboarding = () => {
                 )}
               </Button>
             )}
-          </div>
-        </Card>
+          </div>        </Card>
       </div>
+      <Toaster position="bottom-right" />
     </div>
   );
 };

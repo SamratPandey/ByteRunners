@@ -45,9 +45,7 @@ export const NotificationProvider = ({ children }) => {
       if (response.success) {
         setNotifications(response.data.notifications);
         setUnreadCount(response.data.unreadCount);
-      }
-    } catch (err) {
-      console.error('Error fetching notifications:', err);
+      }    } catch (err) {
       setError('Failed to load notifications');
       // Fallback to dummy data for demo
       setDummyNotifications();
@@ -61,9 +59,8 @@ export const NotificationProvider = ({ children }) => {
     
     try {
       const count = await notificationService.getUnreadCount();
-      setUnreadCount(count);
-    } catch (err) {
-      console.error('Error fetching unread count:', err);
+      setUnreadCount(count);    } catch (err) {
+      // Silent error handling
     }
   };
 
@@ -124,12 +121,7 @@ export const NotificationProvider = ({ children }) => {
     setNotifications(prev => [newNotification, ...prev]);
     setUnreadCount(prev => prev + 1);
 
-    // In production, you would also send to API:
-    // try {
-    //   await notificationService.createNotification(newNotification);
-    // } catch (error) {
-    //   console.error('Failed to create notification:', error);
-    // }
+    // In production, you would also send to API:    // Note: API integration for creating notifications can be added here
   };
 
   const markAsRead = async (notificationId) => {
@@ -152,9 +144,7 @@ export const NotificationProvider = ({ children }) => {
       const notification = notifications.find(n => n.id === notificationId);
       if (notification && !notification.read) {
         setUnreadCount(prev => Math.max(0, prev - 1));
-      }
-    } catch (error) {
-      console.error('Error marking notification as read:', error);
+      }    } catch (error) {
       // Still update locally even if API fails
       setNotifications(prev =>
         prev.map(notification =>
@@ -177,9 +167,7 @@ export const NotificationProvider = ({ children }) => {
       setNotifications(prev =>
         prev.map(notification => ({ ...notification, read: true }))
       );
-      setUnreadCount(0);
-    } catch (error) {
-      console.error('Error marking all notifications as read:', error);
+      setUnreadCount(0);    } catch (error) {
       // Still update locally even if API fails
       setNotifications(prev =>
         prev.map(notification => ({ ...notification, read: true }))
@@ -204,9 +192,7 @@ export const NotificationProvider = ({ children }) => {
       // Update unread count if deleted notification was unread
       if (notification && !notification.read) {
         setUnreadCount(prev => Math.max(0, prev - 1));
-      }
-    } catch (error) {
-      console.error('Error deleting notification:', error);
+      }    } catch (error) {
       // Still update locally even if API fails
       setNotifications(prev =>
         prev.filter(notification => notification.id !== notificationId)

@@ -124,12 +124,9 @@ const CourseManagement = () => {
     setSelectedCourse(course);
     setShowCouponManagement(true);
   };
-
   const handleViewAnalytics = (course) => {
     // For now, we'll show an alert. In a real app, this would navigate to analytics page
     toast.success(`Analytics for ${course.title} - Feature coming soon!`);
-    // TODO: Navigate to analytics page
-    // navigate(`/admin/courses/${course._id}/analytics`);
   };
 
   useEffect(() => {
@@ -153,9 +150,7 @@ const CourseManagement = () => {
   const handleFormSuccess = () => {
     setShowCourseForm(false);
     setSelectedCourse(null);
-    fetchCourses();
-  };  const handleFormCancel = () => {
-    console.log('Cancel button clicked'); // Debug log
+    fetchCourses();  };  const handleFormCancel = () => {
     setShowCourseForm(false);
     setSelectedCourse(null);
   };

@@ -44,9 +44,7 @@ exports.getUserNotifications = async (req, res) => {
           hasMore: notifications.length === parseInt(limit)
         }
       }
-    });
-  } catch (error) {
-    console.error('Error fetching notifications:', error);
+    });  } catch (error) {
     res.status(500).json({
       success: false,
       message: 'Error fetching notifications'
@@ -73,9 +71,7 @@ exports.markNotificationAsRead = async (req, res) => {
       success: true,
       message: 'Notification marked as read',
       data: notification
-    });
-  } catch (error) {
-    console.error('Error marking notification as read:', error);
+    });  } catch (error) {
     res.status(500).json({
       success: false,
       message: 'Error updating notification'
@@ -93,9 +89,7 @@ exports.markAllNotificationsAsRead = async (req, res) => {
     res.status(200).json({
       success: true,
       message: 'All notifications marked as read'
-    });
-  } catch (error) {
-    console.error('Error marking all notifications as read:', error);
+    });  } catch (error) {
     res.status(500).json({
       success: false,
       message: 'Error updating notifications'
@@ -112,9 +106,7 @@ exports.getUnreadCount = async (req, res) => {
     res.status(200).json({
       success: true,
       data: { unreadCount: count }
-    });
-  } catch (error) {
-    console.error('Error getting unread count:', error);
+    });  } catch (error) {
     res.status(500).json({
       success: false,
       message: 'Error fetching unread count'
@@ -143,9 +135,7 @@ exports.deleteNotification = async (req, res) => {
     res.status(200).json({
       success: true,
       message: 'Notification deleted successfully'
-    });
-  } catch (error) {
-    console.error('Error deleting notification:', error);
+    });  } catch (error) {
     res.status(500).json({
       success: false,
       message: 'Error deleting notification'
@@ -172,9 +162,7 @@ exports.createNotification = async (req, res) => {
       success: true,
       message: 'Notification created successfully',
       data: notification
-    });
-  } catch (error) {
-    console.error('Error creating notification:', error);
+    });  } catch (error) {
     res.status(500).json({
       success: false,
       message: 'Error creating notification'
@@ -198,9 +186,7 @@ exports.createAchievementNotification = async (userId, problemTitle, points = 0)
         achievementType: 'problem_solved',
         points
       }
-    });
-  } catch (error) {
-    console.error('Error creating achievement notification:', error);
+    });  } catch (error) {
     throw error;
   }
 };
@@ -209,7 +195,7 @@ exports.createAchievementNotification = async (userId, problemTitle, points = 0)
 exports.createCourseNotification = async (userId, courseTitle, courseId) => {
   try {
     return await Notification.createForUser(userId, {
-      title: "Course Enrolled ✅",
+      title: "Course Enrolled",
       message: `You have successfully enrolled in ${courseTitle}`,
       type: 'course',
       priority: 'medium',
@@ -218,9 +204,7 @@ exports.createCourseNotification = async (userId, courseTitle, courseId) => {
       metadata: {
         courseId
       }
-    });
-  } catch (error) {
-    console.error('Error creating course notification:', error);
+    });  } catch (error) {
     throw error;
   }
 };
@@ -229,7 +213,7 @@ exports.createCourseNotification = async (userId, courseTitle, courseId) => {
 exports.createJobNotification = async (userId, jobTitle, company, jobId) => {
   try {
     return await Notification.createForUser(userId, {
-      title: "Job Application Submitted 📝",
+      title: "Job Application Submitted",
       message: `Your application for ${jobTitle} at ${company} has been submitted`,
       type: 'job',
       priority: 'medium',
@@ -238,9 +222,7 @@ exports.createJobNotification = async (userId, jobTitle, company, jobId) => {
       metadata: {
         jobId
       }
-    });
-  } catch (error) {
-    console.error('Error creating job notification:', error);
+    });  } catch (error) {
     throw error;
   }
 };
@@ -258,9 +240,7 @@ exports.createContestNotification = async (userId, contestTitle, startTime) => {
       metadata: {
         contestId: contestTitle
       }
-    });
-  } catch (error) {
-    console.error('Error creating contest notification:', error);
+    });  } catch (error) {
     throw error;
   }
 };
@@ -273,9 +253,7 @@ exports.createSystemNotification = async (userId, title, message, priority = 'me
       message,
       type: 'system',
       priority
-    });
-  } catch (error) {
-    console.error('Error creating system notification:', error);
+    });  } catch (error) {
     throw error;
   }
 };

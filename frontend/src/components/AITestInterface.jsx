@@ -22,11 +22,12 @@ import {
 const AITestInterface = () => {
   const navigate = useNavigate();
   const { subject, topic, difficulty } = useParams();
-  
-  const [testState, setTestState] = useState('setup'); // setup, loading, taking, completed
+    const [testState, setTestState] = useState('setup'); // setup, loading, taking, completed
   const [questions, setQuestions] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState({});
+  const [questionTimings, setQuestionTimings] = useState({});
+  const [questionStartTime, setQuestionStartTime] = useState(null);
   const [timeRemaining, setTimeRemaining] = useState(1800); // 30 minutes default
   const [testStartTime, setTestStartTime] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -58,6 +59,33 @@ const AITestInterface = () => {
     }
   }, [testState, timeRemaining]);
 
+  // Track question start time when question changes
+  useEffect(() => {
+    if (testState === 'taking' && questions.length > 0) {
+      setQuestionStartTime(Date.now());
+    }
+  }, [currentQuestionIndex, testState]);
+
+  // Track question timing when moving between questions
+  useEffect(() => {
+    if (testState === 'taking' && questions.length > 0) {
+      // Record time for previous question if we're switching questions
+      if (questionStartTime && currentQuestionIndex > 0) {
+        const prevQuestionId = questions[currentQuestionIndex - 1]?._id;
+        if (prevQuestionId) {
+          const timeSpent = Math.floor((Date.now() - questionStartTime) / 1000);
+          setQuestionTimings(prev => ({
+            ...prev,
+            [prevQuestionId]: (prev[prevQuestionId] || 0) + timeSpent
+          }));
+        }
+      }
+      
+      // Start timing for current question
+      setQuestionStartTime(Date.now());
+    }
+  }, [currentQuestionIndex, testState, questions]);
+
   const formatTime = (seconds) => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
@@ -68,7 +96,6 @@ const AITestInterface = () => {
     }
     return `${minutes}:${secs.toString().padStart(2, '0')}`;
   };
-
   const generateTest = async () => {
     try {
       setLoading(true);
@@ -79,12 +106,34 @@ const AITestInterface = () => {
         testConfig.topic,
         testConfig.difficulty,
         testConfig.questionCount
-      );      setQuestions(response.data.questions);
+      );
+      
+      // Validate the response
+      if (!response || !response.data || !response.data.questions) {
+        throw new Error('Invalid response from server');
+      }
+      
+      if (!Array.isArray(response.data.questions) || response.data.questions.length === 0) {
+        throw new Error('No questions received from server');
+      }
+      
+      // Validate each question has required properties
+      const validQuestions = response.data.questions.filter(q => 
+        q && q.question && q.options && Array.isArray(q.options) && q._id
+      );
+      
+      if (validQuestions.length === 0) {
+        throw new Error('No valid questions received');
+      }
+      
+      setQuestions(validQuestions);
+      setCurrentQuestionIndex(0); // Reset to first question
+      setAnswers({}); // Reset answers
       setTestState('taking');
       setTestStartTime(Date.now());
       setTimeRemaining(testConfig.timeLimit * 60);
       
-      toast.success(`🤖 Your personalized ${testConfig.subject} test is ready! Good luck!`, {
+      toast.success(`Your personalized ${testConfig.subject} test is ready! Good luck!`, {
         style: {
           background: '#22c55e',
           color: 'white',
@@ -94,7 +143,24 @@ const AITestInterface = () => {
       });
     } catch (error) {
       console.error('Error generating test:', error);
-      toast.error('We\'re having trouble generating your test right now. Please check your connection and try again in a moment.', {
+      
+      let errorMessage = 'We\'re having trouble generating your test right now. Please try again in a moment.';
+      
+      if (error.response?.status === 401) {
+        errorMessage = 'You need to be logged in to take a test. Please log in and try again.';
+        // Optionally redirect to login
+        setTimeout(() => {
+          navigate('/login');
+        }, 2000);
+      } else if (error.response?.status === 403) {
+        errorMessage = 'You don\'t have permission to access this feature.';
+      } else if (error.response?.status === 500) {
+        errorMessage = 'Server error. Please try again later.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      toast.error(errorMessage, {
         style: {
           background: '#ef4444',
           color: 'white',
@@ -108,7 +174,26 @@ const AITestInterface = () => {
     }
   };
 
+  // Safe navigation function to prevent out-of-bounds access
+  const safeSetCurrentQuestionIndex = (newIndex) => {
+    if (!questions || questions.length === 0) {
+      console.warn('Cannot set question index: no questions loaded');
+      return;
+    }
+    
+    const safeIndex = Math.max(0, Math.min(questions.length - 1, newIndex));
+    setCurrentQuestionIndex(safeIndex);
+  };
   const handleAnswerSelect = (questionId, selectedAnswer) => {
+    // Record time spent on current question
+    if (questionStartTime && questionId) {
+      const timeSpent = Math.floor((Date.now() - questionStartTime) / 1000);
+      setQuestionTimings(prev => ({
+        ...prev,
+        [questionId]: (prev[questionId] || 0) + timeSpent
+      }));
+    }
+
     setAnswers(prev => ({
       ...prev,
       [questionId]: selectedAnswer
@@ -126,23 +211,33 @@ const AITestInterface = () => {
       return newSet;
     });
   };
-
   const handleSubmitTest = async () => {
     try {
       setLoading(true);
+      
+      // Record final question timing
+      const currentQuestion = questions[currentQuestionIndex];
+      if (questionStartTime && currentQuestion?._id) {
+        const finalTimeSpent = Math.floor((Date.now() - questionStartTime) / 1000);
+        setQuestionTimings(prev => ({
+          ...prev,
+          [currentQuestion._id]: (prev[currentQuestion._id] || 0) + finalTimeSpent
+        }));
+      }
       
       const timeSpent = Math.floor((Date.now() - testStartTime) / 1000);
       
       const submissionData = {
         answers: Object.entries(answers).map(([questionId, selectedAnswer]) => ({
           questionId,
-          selectedAnswer
+          selectedAnswer,
+          timeSpent: questionTimings[questionId] || Math.floor(timeSpent / Object.keys(answers).length)
         })),
         timeSpent,
         subject: testConfig.subject,
         topic: testConfig.topic,
         difficulty: testConfig.difficulty
-      };      const response = await testApi.submitAnswers(submissionData);
+      };const response = await testApi.submitAnswers(submissionData);
       setTestResults(response.data);
       setTestState('completed');
       
@@ -290,9 +385,47 @@ const AITestInterface = () => {
       </div>
     </div>
   );
-
   const renderTestInterface = () => {
+    // Check if questions are loaded and currentQuestionIndex is valid
+    if (!questions || questions.length === 0) {
+      return (
+        <div className="min-h-screen bg-black text-white flex items-center justify-center">
+          <div className="text-center">
+            <FontAwesomeIcon icon={faSpinner} spin className="text-4xl text-green-500 mb-4" />
+            <p className="text-lg">Loading questions...</p>
+            <p className="text-gray-400 mt-2">If this takes too long, please refresh the page</p>
+          </div>
+        </div>
+      );
+    }
+
+    if (currentQuestionIndex >= questions.length || currentQuestionIndex < 0) {
+      console.error('Invalid currentQuestionIndex:', currentQuestionIndex, 'questions.length:', questions.length);
+      setCurrentQuestionIndex(0);
+      return (
+        <div className="min-h-screen bg-black text-white flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-lg">Loading question...</p>
+          </div>
+        </div>
+      );
+    }
+
     const currentQuestion = questions[currentQuestionIndex];
+    if (!currentQuestion) {
+      console.error('Current question is undefined:', currentQuestionIndex, questions);
+      return (
+        <div className="min-h-screen bg-black text-white flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-lg text-red-500">Error loading question</p>
+            <Button onClick={() => setTestState('setup')} className="mt-4">
+              Return to Setup
+            </Button>
+          </div>
+        </div>
+      );
+    }
+
     const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
 
     return (
@@ -325,15 +458,13 @@ const AITestInterface = () => {
           <div className="lg:col-span-1">
             <Card className="bg-gray-900 border-gray-800 p-4">
               <h3 className="font-semibold text-white mb-4">Question Navigation</h3>
-              <div className="grid grid-cols-5 lg:grid-cols-4 gap-2">
-                {questions.map((_, index) => (
+              <div className="grid grid-cols-5 lg:grid-cols-4 gap-2">                {questions.map((question, index) => (
                   <button
                     key={index}
-                    onClick={() => setCurrentQuestionIndex(index)}
-                    className={`w-10 h-10 rounded text-sm font-semibold relative ${
+                    onClick={() => safeSetCurrentQuestionIndex(index)}                    className={`w-10 h-10 rounded text-sm font-semibold relative ${
                       index === currentQuestionIndex
                         ? 'bg-green-600 text-white'
-                        : answers[questions[index]._id]
+                        : question._id && (answers[question._id] !== undefined)
                         ? 'bg-blue-600 text-white'
                         : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                     }`}
@@ -399,31 +530,28 @@ const AITestInterface = () => {
                     {flaggedQuestions.has(currentQuestionIndex) ? 'Unflag' : 'Flag'}
                   </Button>
                 </div>
-                
-                <p className="text-gray-300 text-lg leading-relaxed">
-                  {currentQuestion.question}
+                  <p className="text-gray-300 text-lg leading-relaxed">
+                  {currentQuestion.question || 'Question content loading...'}
                 </p>
               </div>
 
               {/* Answer Options */}
-              <div className="space-y-3 mb-6">
-                {currentQuestion.options.map((option, index) => (
+              <div className="space-y-3 mb-6">                {(currentQuestion.options || []).map((option, index) => (
                   <div
                     key={index}
-                    onClick={() => handleAnswerSelect(currentQuestion._id, option)}
+                    onClick={() => currentQuestion._id && handleAnswerSelect(currentQuestion._id, index)}
                     className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                      answers[currentQuestion._id] === option
+                      currentQuestion._id && answers[currentQuestion._id] === index
                         ? 'border-green-500 bg-green-500/10'
                         : 'border-gray-700 hover:border-green-400'
                     }`}
                   >
-                    <div className="flex items-center">
-                      <div className={`w-4 h-4 rounded-full border-2 mr-3 ${
-                        answers[currentQuestion._id] === option
+                    <div className="flex items-center">                      <div className={`w-4 h-4 rounded-full border-2 mr-3 ${
+                        currentQuestion._id && answers[currentQuestion._id] === index
                           ? 'border-green-500 bg-green-500'
                           : 'border-gray-500'
                       }`}>
-                        {answers[currentQuestion._id] === option && (
+                        {currentQuestion._id && answers[currentQuestion._id] === index && (
                           <FontAwesomeIcon icon={faCheckCircle} className="text-white text-xs" />
                         )}
                       </div>
@@ -431,12 +559,10 @@ const AITestInterface = () => {
                     </div>
                   </div>
                 ))}
-              </div>
-
-              {/* Navigation Buttons */}
+              </div>              {/* Navigation Buttons */}
               <div className="flex justify-between">
                 <Button
-                  onClick={() => setCurrentQuestionIndex(Math.max(0, currentQuestionIndex - 1))}
+                  onClick={() => safeSetCurrentQuestionIndex(currentQuestionIndex - 1)}
                   disabled={currentQuestionIndex === 0}
                   variant="outline"
                   className="border-gray-600 text-gray-300"
@@ -462,7 +588,7 @@ const AITestInterface = () => {
                   </Button>
                 ) : (
                   <Button
-                    onClick={() => setCurrentQuestionIndex(Math.min(questions.length - 1, currentQuestionIndex + 1))}
+                    onClick={() => safeSetCurrentQuestionIndex(currentQuestionIndex + 1)}
                     className="bg-green-600 hover:bg-green-700 text-white"
                   >
                     Next
@@ -566,18 +692,42 @@ const AITestInterface = () => {
           >
             Take Another Test
           </Button>
-          
-          <Button
-            onClick={() => navigate('/home')}
+            <Button
+            onClick={() => navigate('/')}
             variant="outline"
             className="border-gray-600 text-gray-300"
           >
-            Back to Dashboard
+            Back to Profile
           </Button>
         </div>
       </Card>
     </div>
   );
+  
+  // Validate state consistency
+  useEffect(() => {
+    if (testState === 'taking') {
+      // If we're in taking state but have no questions, reset to setup
+      if (!questions || questions.length === 0) {
+        console.warn('Test state is "taking" but no questions available, resetting to setup');
+        setTestState('setup');
+        return;
+      }
+      
+      // If current question index is out of bounds, reset to 0
+      if (currentQuestionIndex >= questions.length || currentQuestionIndex < 0) {
+        console.warn('Current question index is out of bounds, resetting to 0');
+        setCurrentQuestionIndex(0);
+      }
+    }
+  }, [testState, questions, currentQuestionIndex]);
+
+  useEffect(() => {
+    // Log the current state and config for debugging
+    console.log('Current Test State:', testState);
+    console.log('Test Configuration:', testConfig);
+  }, [testState, testConfig]);
+
   return (
     <div className="min-h-screen bg-black">
       <div className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-sm border-b border-green-900">
@@ -586,8 +736,7 @@ const AITestInterface = () => {
       <div className="pt-20">
         {testState === 'setup' && renderSetupPage()}
         {testState === 'loading' && renderLoadingPage()}
-        {testState === 'taking' && renderTestInterface()}
-        {testState === 'completed' && renderResultsPage()}
+        {testState === 'taking' && renderTestInterface()}        {testState === 'completed' && renderResultsPage()}
       </div>
     </div>
   );

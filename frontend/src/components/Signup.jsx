@@ -7,7 +7,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { signup, checkAuthStatus } from '../redux/actions/authActions';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { ClipLoader } from 'react-spinners';
-import { toast } from 'react-hot-toast';
+import { toast, Toaster } from 'react-hot-toast';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGoogle, faGithub } from '@fortawesome/free-brands-svg-icons';
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
@@ -29,11 +29,9 @@ const Signup = () => {
   const dispatch = useDispatch();
   // Get redirect path from location state or default to onboarding
   const from = location.state?.from?.pathname || '/onboarding';
-
   // Use useCallback to prevent infinite loop
   const redirectIfAuthenticated = useCallback(() => {
     if (isAuthenticated) {
-      console.log('User is authenticated, redirecting to:', from);
       navigate(from, { replace: true });
     }
   }, [isAuthenticated, from]); // Removed navigate from dependencies
@@ -41,37 +39,23 @@ const Signup = () => {
   useEffect(() => {
     redirectIfAuthenticated();
   }, [redirectIfAuthenticated]);
-
   // Handle Redux auth errors
   useEffect(() => {
     if (error) {
       toast.error(error);
     }
-  }, [error]);  // Handle OAuth signup
+  }, [error]);
+
+  // Handle OAuth signup
   const handleOAuthSignup = async (provider) => {
     try {
-      // TODO: Implement OAuth endpoints in backend
-      const response = await authApi.get(`/api/auth/${provider}`);
-      
-      if (response.data.success) {
-        toast.success(`🎉 Successfully signed up with ${provider}!`, {
-          duration: 3000,
-          style: {
-            background: '#10b981',
-            color: 'white',
-            fontWeight: '500'
-          }
-        });
-        // OAuth users go directly to onboarding
-        navigate('/onboarding', { replace: true });
-      }
-    } catch (error) {
-      console.error(`${provider} signup error:`, error);
-      // For now, show coming soon message
-      toast.info(`${provider} signup coming soon!`, {
+      // Redirect to backend OAuth endpoint
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+      window.location.href = `${backendUrl}/api/auth/${provider}`;    } catch (error) {
+      toast.error(`Failed to initiate ${provider} signup`, {
         duration: 3000,
         style: {
-          background: '#3b82f6',
+          background: '#ef4444',
           color: 'white',
           fontWeight: '500'
         }
@@ -119,22 +103,22 @@ const Signup = () => {
           fontWeight: '500'
         }
       });
-    }
-
-    setErrors(newErrors);
+    }    setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };  const handleSignup = async (e) => {
+  };
+
+  const handleSignup = async (e) => {
     if (e) e.preventDefault();
     if (!validateForm()) return;
   
     setIsSubmitting(true);
-    
-    try {
-      const success = await dispatch(signup(name, email, password));      if (success) {
+      try {
+      const success = await dispatch(signup(name, email, password));
+      
+      if (success) {
         // Get user data after successful signup
         await dispatch(checkAuthStatus());
-        
-        toast.success('🎉 Welcome to ByteRunners! Please verify your email to continue.', {
+          toast.success('Welcome to ByteRunners! Please verify your email to continue.', {
           duration: 3000,
           style: {
             background: '#10b981',
@@ -149,9 +133,7 @@ const Signup = () => {
             state: { email: email }
           });
         }, 2000);
-      }
-    } catch (err) {
-      console.error('Signup error:', err);
+      }    } catch (err) {
       toast.error('Unable to create your account. Please check your details and try again.', {
         duration: 4000,
         style: {
@@ -341,11 +323,10 @@ const Signup = () => {
                 Log in
               </Link>
             </p>
-          </div>
-        </Card>
+          </div>        </Card>
       </div>
-    </div>
-  );
+      <Toaster position="bottom-right" />
+    </div>  );
 };
 
 export default Signup;

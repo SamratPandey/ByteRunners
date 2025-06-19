@@ -94,7 +94,7 @@ const EmailVerification = () => {
       });
       
       if (response.data.success) {
-        toast.success('🎉 Email verified successfully! Welcome to ByteRunners!', {
+        toast.success('Email verified successfully! Welcome to ByteRunners!', {
           duration: 4000,
           style: {
             background: '#10b981',

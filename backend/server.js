@@ -3,6 +3,8 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const cookieParser = require('cookie-parser');
+const session = require('express-session');
+const passport = require('./config/passport');
 const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
@@ -34,11 +36,9 @@ const corsOptions = {
       'http://127.0.0.1:5173',
       'http://127.0.0.1:5174'
     ];
-    
-    if (allowedOrigins.indexOf(origin) !== -1) {
+      if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
-      console.log('CORS blocked origin:', origin);
       callback(new Error('Not allowed by CORS'));
     }
   },
@@ -53,6 +53,21 @@ app.use(cors(corsOptions));
 // Middleware
 app.use(express.json());
 app.use(cookieParser());
+
+// Session configuration for OAuth
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'byterunners-oauth-secret-key',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}));
+
+// Passport middleware
+app.use(passport.initialize());
+app.use(passport.session());
 
 // Serve static files from the uploads directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -93,9 +108,7 @@ app.use((err, req, res, next) => {
 
 const createDefaultAdmin = async () => {
   try {
-    const admin = await Admin.findOne({ email: 'admin@gmail.com' }); 
-    if (!admin) {
-      console.log('Default admin not found, creating...');
+    const admin = await Admin.findOne({ email: 'admin@gmail.com' });    if (!admin) {
       const req = {
         body: {
           username: 'admin',
@@ -110,16 +123,13 @@ const createDefaultAdmin = async () => {
           },
         },
       };
-      
-      const res = {
+        const res = {
         status: (statusCode) => ({
-          json: (response) => console.log(response),
+          json: (response) => {},
         }),
       };
 
       await registerAdmin(req, res);
-    } else {
-      console.log('Default admin already exists');
     }
   } catch (error) {
     console.error('Error creating default admin:', error.message);

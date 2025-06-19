@@ -182,17 +182,21 @@ const courseSchema = new mongoose.Schema({
 // Virtual for total duration from lessons
 courseSchema.virtual('calculatedDuration').get(function() {
   let total = 0;
-  this.curriculum.forEach(section => {
-    section.lessons.forEach(lesson => {
-      if (lesson.duration) total += lesson.duration;
+  if (this.curriculum && Array.isArray(this.curriculum)) {
+    this.curriculum.forEach(section => {
+      if (section.lessons && Array.isArray(section.lessons)) {
+        section.lessons.forEach(lesson => {
+          if (lesson.duration) total += lesson.duration;
+        });
+      }
     });
-  });
+  }
   return total;
 });
 
 // Virtual for completion rate
 courseSchema.virtual('completionRate').get(function() {
-  if (this.totalEnrollments === 0) return 0;
+  if (this.totalEnrollments === 0 || !this.enrollments) return 0;
   const completedEnrollments = this.enrollments.filter(e => e.progress === 100).length;
   return Math.round((completedEnrollments / this.totalEnrollments) * 100);
 });
@@ -208,20 +212,18 @@ courseSchema.index({ featured: -1, bestseller: -1 });
 // Pre-save middleware to update calculated fields
 courseSchema.pre('save', function(next) {
   // Update total lessons and sections
-  this.totalSections = this.curriculum.length;
-  this.totalLessons = this.curriculum.reduce((total, section) => total + section.lessons.length, 0);
+  this.totalSections = this.curriculum ? this.curriculum.length : 0;
+  this.totalLessons = this.curriculum ? this.curriculum.reduce((total, section) => total + (section.lessons ? section.lessons.length : 0), 0) : 0;
   
   // Update total duration
   this.totalDuration = this.calculatedDuration;
-  
-  // Update total enrollments
-  this.totalEnrollments = this.enrollments.length;
-  
-  // Update total reviews
-  this.totalReviews = this.reviews.length;
+    // Update total enrollments
+  this.totalEnrollments = this.enrollments ? this.enrollments.length : 0;
+    // Update total reviews
+  this.totalReviews = this.reviews ? this.reviews.length : 0;
   
   // Calculate average rating
-  if (this.reviews.length > 0) {
+  if (this.reviews && this.reviews.length > 0) {
     const totalRating = this.reviews.reduce((sum, review) => sum + review.rating, 0);
     this.averageRating = Math.round((totalRating / this.reviews.length) * 10) / 10;
     
@@ -230,6 +232,9 @@ courseSchema.pre('save', function(next) {
     this.reviews.forEach(review => {
       this.ratingBreakdown[review.rating]++;
     });
+  } else {
+    this.averageRating = 0;
+    this.ratingBreakdown = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
   }
   
   next();

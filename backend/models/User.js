@@ -25,9 +25,9 @@ const userSchema = new mongoose.Schema({
   resetPasswordToken: String,
   resetPasswordExpire: Date,
   problemsSolved: { type: Number, default: 0 },
-  totalSubmissions: { type: Number, default: 0 },
-  accuracy: { type: Number, default: 0 },
+  totalSubmissions: { type: Number, default: 0 },  accuracy: { type: Number, default: 0 },
   streak: { type: Number, default: 0 },
+  maxStreak: { type: Number, default: 0 },
   lastActive: { type: Date, default: Date.now },
   recentActivity: [{
     problemId: { type: mongoose.Schema.Types.ObjectId, ref: 'Problem' },
@@ -47,9 +47,11 @@ const userSchema = new mongoose.Schema({
     name: String,
     description: String,
     earnedAt: { type: Date, default: Date.now }
-  }],
-  avatar: { type: String, default: 'default-avatar-url' },
+  }],  avatar: { type: String, default: '/images/user.png' },
+  avatarFileId: { type: String }, // ImageKit file ID for avatar deletion
   bio: { type: String, maxlength: 500 },
+  location: { type: String, maxlength: 100 },
+  phone: { type: String, maxlength: 15 },
   socialLinks: {
     github: String,
     linkedin: String,
@@ -57,7 +59,7 @@ const userSchema = new mongoose.Schema({
     twitter: String,
     instagram: String,
     facebook: String
-  },  solvedProblems: [{ 
+  },solvedProblems: [{ 
     problemId: { type: mongoose.Schema.Types.ObjectId, ref: 'Problem' },
     solvedAt: { type: Date, default: Date.now },
     attempts: { type: Number, default: 1 }

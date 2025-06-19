@@ -61,15 +61,13 @@ const ForgotPassword = () => {
         navigate('/login');
       }, 2000);
     } catch (error) {
-      toast.error('Unable to send reset email right now. Please verify your email address and try again later.', {
-        style: {
+      toast.error('Unable to send reset email right now. Please verify your email address and try again later.', {        style: {
           background: '#ef4444',
           color: 'white',
           fontWeight: '500'
         },
         duration: 4000
       });
-      console.log(error);
     } finally {
       setIsSubmitting(false);
     }

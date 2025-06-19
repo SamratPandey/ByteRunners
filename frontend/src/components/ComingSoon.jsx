@@ -258,9 +258,7 @@ const ComingSoon = () => {
             © {new Date().getFullYear()} ByteRunners. All rights reserved.
           </p>
         </div>
-      </footer>
-
-      <style jsx>{`
+      </footer>      <style>{`
         @keyframes float {
           0% { transform: translateY(0px); }
           50% { transform: translateY(-20px); }

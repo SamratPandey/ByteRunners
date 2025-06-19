@@ -176,12 +176,11 @@ The ByteRunners Team`;
     }
 
     // Convenient methods for specific email types
-    async getWelcomeEmail(userData) {
-        return await this.generateEmail('welcome', {
+    async getWelcomeEmail(userData) {        return await this.generateEmail('welcome', {
             userName: userData.name,
             userEmail: userData.email,
             activationLink: userData.activationLink,
-            dashboardUrl: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard`
+            dashboardUrl: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/profile`
         });
     }
 
@@ -202,11 +201,10 @@ The ByteRunners Team`;
 
     async getCourseCompletionEmail(userData) {
         return await this.generateEmail('course-completion', {
-            userName: userData.name,
-            courseName: userData.courseName,
+            userName: userData.name,            courseName: userData.courseName,
             completionDate: userData.completionDate,
             certificateUrl: userData.certificateUrl,
-            dashboardUrl: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard`
+            dashboardUrl: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/profile`
         });
     }
 
@@ -226,9 +224,8 @@ The ByteRunners Team`;
             userName: userData.name,
             notificationTitle: userData.title,
             notificationMessage: userData.message,
-            notificationDate: userData.date,
-            actionUrl: userData.actionUrl,
-            dashboardUrl: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard`
+            notificationDate: userData.date,            actionUrl: userData.actionUrl,
+            dashboardUrl: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/profile`
         });
     }
 
@@ -241,8 +238,7 @@ The ByteRunners Team`;
             invoiceNumber: userData.invoiceNumber,
             totalAmount: userData.totalAmount,
             paymentMethod: userData.paymentMethod,
-            purchaseDate: userData.purchaseDate,
-            dashboardUrl: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard`
+            purchaseDate: userData.purchaseDate,            dashboardUrl: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/profile`
         });
     }
 

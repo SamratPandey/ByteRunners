@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { toast } from 'react-hot-toast';
+import { toast, Toaster } from 'react-hot-toast';
 import { ClipLoader } from 'react-spinners';
 import axios from 'axios';
 
@@ -64,7 +64,7 @@ const ResetPassword = () => {
         resetToken,
         password,
       });
-      toast.success(`🎉 ${response.data.message}`, {
+      toast.success(`${response.data.message}`, {
         style: {
           background: '#22c55e',
           color: 'white',
@@ -148,9 +148,9 @@ const ResetPassword = () => {
                   Log In
                 </Link>
               </p>          </div>
-          </div>
-        </Card>
+          </div>        </Card>
       </div>
+      <Toaster position="bottom-right" />
     </div>
   );
 };

@@ -22,7 +22,7 @@ import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Nav from './Nav';
-import axios from 'axios';
+import authApi from '../utils/authApi';
 
 const MyCourses = () => {
   const navigate = useNavigate();
@@ -41,37 +41,29 @@ const MyCourses = () => {
       return;
     }
     fetchUserCourses();
-  }, [isAuthenticated, navigate]);
-  const fetchUserCourses = async () => {
+  }, [isAuthenticated, navigate]);  const fetchUserCourses = async () => {
     try {
       setLoading(true);
-      const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
       
       // Fetch user's enrolled and purchased courses
       try {
-        const coursesResponse = await axios.get(
-          `${import.meta.env.VITE_BACKEND_URL}/api/course/user/enrolled`,
-          { headers }
-        );
+        const coursesResponse = await authApi.get('/api/course/user/enrolled');
         
         const { enrolledCourses, purchasedCourses } = coursesResponse.data.data;
         setEnrolledCourses(enrolledCourses || []);
         setPurchasedCourses(purchasedCourses || []);
       } catch (error) {
-        console.log('Courses fetch failed:', error);
+        console.error('Error fetching enrolled courses:', error);
         setEnrolledCourses([]);
         setPurchasedCourses([]);
       }
       
       // Fetch wishlist
       try {
-        const wishlistResponse = await axios.get(
-          `${import.meta.env.VITE_BACKEND_URL}/api/course/user/wishlist`,
-          { headers }
-        );
+        const wishlistResponse = await authApi.get('/api/course/user/wishlist');
         setWishlist(wishlistResponse.data.courses || []);
       } catch (error) {
-        console.log('Wishlist fetch failed:', error);
+        console.error('Error fetching wishlist:', error);
         setWishlist([]);
       }
     } catch (error) {

@@ -7,7 +7,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { login, checkAuthStatus } from '../redux/actions/authActions';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { ClipLoader } from 'react-spinners';
-import { toast } from 'react-hot-toast';
+import { toast, Toaster } from 'react-hot-toast';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGoogle, faGithub } from '@fortawesome/free-brands-svg-icons';
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
@@ -23,14 +23,11 @@ const Login = () => {
   const { isAuthenticated, error } = useSelector((state) => state.auth);
   const navigate = useNavigate();
   const location = useLocation();
-  const dispatch = useDispatch();
-  // Get redirect path from location state or default to home
-  const from = location.state?.from?.pathname || '/home';
-
+  const dispatch = useDispatch();  // Get redirect path from location state or default to home
+  const from = location.state?.from?.pathname || '/';
   // Use useCallback to prevent infinite loop
   const redirectIfAuthenticated = useCallback(() => {
     if (isAuthenticated) {
-      console.log('User is authenticated, redirecting to:', from);
       navigate(from, { replace: true });
     }
   }, [isAuthenticated, from]); // Removed navigate from dependencies
@@ -43,32 +40,20 @@ const Login = () => {
   useEffect(() => {
     if (error) {
       toast.error(error);
-    }
-  }, [error]);  // Handle OAuth login
+    }  }, [error]);
+
+  // Handle OAuth login
   const handleOAuthLogin = async (provider) => {
     try {
-      // TODO: Implement OAuth endpoints in backend
-      const response = await authApi.get(`/api/auth/${provider}`);
-      
-      if (response.data.success) {
-        toast.success(`🎉 Successfully logged in with ${provider}!`, {
-          duration: 3000,
-          style: {
-            background: '#10b981',
-            color: 'white',
-            fontWeight: '500'
-          }
-        });
-        // OAuth users go directly to home/dashboard
-        navigate(from, { replace: true });
-      }
+      // Redirect to backend OAuth endpoint
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+      window.location.href = `${backendUrl}/api/auth/${provider}`;
     } catch (error) {
       console.error(`${provider} login error:`, error);
-      // For now, show coming soon message
-      toast.info(`${provider} login coming soon!`, {
+      toast.error(`Failed to initiate ${provider} login`, {
         duration: 3000,
         style: {
-          background: '#3b82f6',
+          background: '#ef4444',
           color: 'white',
           fontWeight: '500'
         }
@@ -108,9 +93,9 @@ const Login = () => {
       });
     }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    setErrors(newErrors);    return Object.keys(newErrors).length === 0;
   };
+
   const handleLogin = async (e) => {
     if (e) e.preventDefault();
     if (!validateForm()) return;
@@ -118,7 +103,9 @@ const Login = () => {
     setIsSubmitting(true);
     
     try {
-      const success = await dispatch(login(email, password));      if (success) {
+      const success = await dispatch(login(email, password));
+      
+      if (success) {
         // Get user data after successful login
         await dispatch(checkAuthStatus());
         
@@ -279,9 +266,9 @@ const Login = () => {
                 Create an account
               </Link>
             </p>
-          </div>
-        </Card>
+          </div>        </Card>
       </div>
+      <Toaster position="bottom-right" />
     </div>
   );
 };

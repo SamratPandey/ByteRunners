@@ -4,13 +4,13 @@ const {
   loginUser,
   forgotPassword,
   resetPassword,
-  getDashboardData,
   getUserProfile,
 } = require("../controllers/authController");
 const {
   googleAuth,
   githubAuth,
-  oauthCallback
+  googleCallback,
+  githubCallback
 } = require("../controllers/oauthController");
 const {
   sendEmailVerification,
@@ -31,9 +31,10 @@ const {
   updateAvatar,
 } = require("../controllers/userProfileController");
 const { createAchievementNotification } = require("../controllers/notificationController");
-const multer = require("multer");
+const avatarUpload = require("../middleware/avatarUpload");
 const path = require("path");
 const { checkAuth } = require("../controllers/tempCheckAuth");
+const { testImageKitConnection } = require("../utils/imagekitService");
 
 router.post("/register", registerUser);
 router.post("/login", loginUser);
@@ -44,7 +45,8 @@ router.post("/reset-password", resetPassword);
 // OAuth routes
 router.get("/google", googleAuth);
 router.get("/github", githubAuth);
-router.get("/oauth/callback", oauthCallback);
+router.get("/google/callback", googleCallback);
+router.get("/github/callback", githubCallback);
 
 // Email verification routes
 router.post("/send-verification", sendEmailVerification);
@@ -255,9 +257,7 @@ router.post("/submit", protect, async (req, res) => {
 
       // Create achievement notification
       try {
-        await createAchievementNotification(userId, problem.title, pointsAwarded);
-      } catch (notificationError) {
-        console.error('Error creating achievement notification:', notificationError);
+        await createAchievementNotification(userId, problem.title, pointsAwarded);      } catch (notificationError) {
         // Don't fail the submission if notification creation fails
       }
     } else if (alreadySolved) {
@@ -302,45 +302,16 @@ router.post("/submit", protect, async (req, res) => {
     };
 
     return res.status(200).json(response);
-
   } catch (err) {
-    console.error('Submit error:', err);
-    res.status(500).json({ error: "Server error during submission." });
+    res.status(500).json({error: "Server error during submission." });
   }
 });
 
-router.get("/dashboard", protect, getDashboardData);
 router.get("/profile", protect, getUserProfile);
 router.get("/problem/:id", protect, getProblemById);
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, path.join(__dirname, "../uploads/avatars/"));
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, uniqueSuffix + "-" + file.originalname);
-  },
-});
-
-const fileFilter = (req, file, cb) => {
-  if (file.mimetype.startsWith("image/")) {
-    cb(null, true);
-  } else {
-    cb(new Error("Not an image! Please upload an image."), false);
-  }
-};
-
-const upload = multer({
-  storage: storage,
-  limits: {
-    fileSize: 1024 * 1024 * 2,
-  },
-  fileFilter: fileFilter,
-});
-
 router.put("/update-profile", protect, updateProfile);
-router.post("/update-avatar", protect, upload.single("avatar"), updateAvatar);
+router.post("/update-avatar", protect, avatarUpload.single("avatar"), updateAvatar);
 
 router.get("/check-auth", protect, checkAuth);
 
@@ -351,24 +322,31 @@ router.post("/test-email", async (req, res) => {
   if (!email) {
     return res.status(400).json({ error: "Email is required." });
   }
-  
-  try {
-    console.log("Testing email functionality...");
-    console.log("EMAIL_USER:", process.env.EMAIL_USER);
-    console.log("EMAIL_PASS exists:", !!process.env.EMAIL_PASS);
-    
+    try {
     await sendEmail(
       email,
       "Test Email from ByteRunners",
       "This is a test email to verify the mailing system is working correctly. If you received this, the email system is functioning properly!"
     );
     
-    res.status(200).json({ message: "Test email sent successfully!" });
-  } catch (error) {
-    console.error("Test email failed:", error);
-    res.status(500).json({ 
+    res.status(200).json({ message: "Test email sent successfully!" });  } catch (error) {
+    res.status(500).json({
       error: "Failed to send test email", 
       details: error.message 
+    });
+  }
+});
+
+// Test ImageKit connection endpoint
+router.get("/test-imagekit", protect, async (req, res) => {
+  try {
+    const testResult = await testImageKitConnection();
+    res.json(testResult);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "ImageKit test failed",
+      error: error.message
     });
   }
 });

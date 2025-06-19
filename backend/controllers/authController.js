@@ -36,11 +36,9 @@ const registerUser = async (req, res) => {
     
     // Send welcome email
     try {
-      await sendWelcomeEmail(user.email, {
-        name: user.name,
+      await sendWelcomeEmail(user.email, {        name: user.name,
         email: user.email
       });
-      console.log('Welcome email sent successfully');
     } catch (emailError) {
       console.error('Failed to send welcome email:', emailError);
       // Don't fail registration if email fails
@@ -123,10 +121,8 @@ const forgotPassword = async (req, res) => {
 
     try {
       await sendPasswordResetEmail(user.email, {
-        name: user.name,
-        resetLink: resetLink
+        name: user.name,        resetLink: resetLink
       });
-      console.log('Password reset email sent successfully');
     } catch (emailError) {
       console.error('Failed to send password reset email:', emailError);
       throw new Error('Failed to send password reset email');
@@ -165,9 +161,7 @@ const resetPassword = async (req, res) => {
     // Send password reset success email
     try {
       await sendPasswordResetSuccessEmail(user.email, {
-        name: user.name
-      });
-      console.log('Password reset success email sent successfully');
+        name: user.name      });
     } catch (emailError) {
       console.error('Failed to send password reset success email:', emailError);
       // Don't fail the password reset if email fails
@@ -178,7 +172,6 @@ const resetPassword = async (req, res) => {
       await sendPasswordResetSuccessEmail(user.email, {
         name: user.name
       });
-      console.log('Password reset success email sent successfully');
     } catch (emailError) {
       console.error('Failed to send password reset success email:', emailError);
       // Don't fail the password reset if email fails
@@ -186,147 +179,82 @@ const resetPassword = async (req, res) => {
 
     res.status(200).json({ message: 'Password has been reset successfully' });
   } catch (error) {
-    console.error("Error in resetPassword:", error);
-    res.status(500).json({ message: "Server Error" });
-  }
-};
-
-const getDashboardData = async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id)
-      .select(`
-        name 
-        rank 
-        problemsSolved 
-        totalSubmissions 
-        accuracy 
-        streak 
-        lastActive
-        recentActivity 
-        avatar 
-        isPremium 
-        preferredLanguages 
-        badges 
-        socialLinks 
-        bio 
-        score
-        solvedProblems
-        accountType
-      `)
-      .populate({
-        path: 'recentActivity.problemId',
-        select: 'title difficulty'
-      })
-      .populate({
-        path: 'solvedProblems.problemId',
-        select: 'title difficulty'
-      })
-      .lean(); 
-    if (!user) {
-      return res.status(404).json({ 
-        success: false,
-        message: 'User profile not found' 
-      });
-    }
-
-    const dashboardData = {
-      profile: {
-        name: user.name,
-        avatar: user.avatar,
-        bio: user.bio,
-        socialLinks: user.socialLinks,
-        rank: user.rank,
-        score: user.score,
-        isPremium: user.isPremium,
-        accountType: user.accountType,
-        preferredLanguages: user.preferredLanguages,
-        lastActive: user.lastActive
-      },
-      performance: {
-        problemsSolved: user.problemsSolved,
-        totalSubmissions: user.totalSubmissions,
-        accuracy: user.accuracy,
-        streak: user.streak,
-        recentActivity: user.recentActivity.map(activity => ({
-          problemTitle: activity.problemTitle,
-          status: activity.status,
-          language: activity.language,
-          executionTime: activity.executionTime,
-          memoryUsed: activity.memoryUsed,
-          timestamp: activity.timestamp
-        }))
-      },
-      achievements: {
-        badges: user.badges,
-        solvedProblems: user.solvedProblems.map(solve => ({
-          problemTitle: solve.problemId.title,
-          difficulty: solve.problemId.difficulty,
-          solvedAt: solve.solvedAt,
-          attempts: solve.attempts
-        }))
-      }
-    };
-
-    res.status(200).json({
-      success: true,
-      data: dashboardData
-    });
-  } catch (error) {
-    res.status(500).json({ 
-      success: false,
-      message: 'Internal server error',
-      error: process.env.NODE_ENV === 'development' ? error.message : {}
-    });
-  }
-};
-
-// Get Profile Data
-const getProfileData = async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id)
-      .select('name email bio avatar rank problemsSolved totalSubmissions accuracy isPremium accountType preferredLanguages');
-
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    res.status(200).json({
-      name: user.name,
-      email: user.email,
-      bio: user.bio,
-      avatar: user.avatar,
-      rank: user.rank,
-      problemsSolved: user.problemsSolved,
-      totalSubmissions: user.totalSubmissions,
-      accuracy: user.accuracy,
-      isPremium: user.isPremium,
-      accountType: user.accountType,
-      preferredLanguages: user.preferredLanguages,
-    });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    console.error("Error in resetPassword:", error);    res.status(500).json({ message: "Server Error" });
   }
 };
 
 // Get User Profile
 const getUserProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select('-password');
+    const user = await User.findById(req.user.id)
+      .select('-password -resetPasswordToken -resetPasswordExpire -emailVerificationToken -emailVerificationExpire')
+      .populate('solvedProblems.problemId', 'title difficulty')
+      .populate('enrolledCourses.course', 'title description');
+      
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
+
+    // Structure the response to match frontend expectations
     res.json({ 
       success: true, 
       data: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        problemsSolved: user.problemsSolved,
-        solvedProblems: user.solvedProblems,
-        totalSubmissions: user.totalSubmissions,
-        isPremium: user.isPremium,
-        joinedAt: user.createdAt,
-        stats: user.stats || {}
+        profile: {
+          id: user._id,
+          name: user.name || '',
+          email: user.email || '',
+          avatar: user.avatar || '/images/user.png',
+          bio: user.bio || '',
+          location: user.location || '',
+          phone: user.phone || '',
+          preferredLanguages: user.preferredLanguages || [],
+          socialLinks: user.socialLinks || {},
+          accountType: user.accountType || 'free',
+          score: user.score || 0,
+          rank: user.rank || 0,
+          isPremium: user.isPremium || false,
+          joinedAt: user.createdAt,
+          lastActive: user.lastActive || new Date()
+        },
+        performance: {
+          problemsSolved: user.problemsSolved || 0,
+          totalSubmissions: user.totalSubmissions || 0,
+          accuracy: user.accuracy || 0,
+          streak: user.streak || 0,
+          maxStreak: user.maxStreak || 0,
+          recentActivity: user.recentActivity || [],
+          weeklyProgress: [],
+          languageStats: {}
+        },
+        achievements: {
+          badges: user.badges || [],
+          solvedProblems: user.solvedProblems || [],
+          certificates: [],
+          coursesCompleted: user.enrolledCourses?.filter(course => course.progress === 100)?.length || 0,
+          totalLearningHours: user.learningAnalytics?.timeSpentLearning || 0
+        },
+        stats: {
+          globalRank: user.rank || 0,
+          countryRank: 0,
+          contestsParticipated: 0,
+          averageRating: 0,
+          maxRating: 0
+        },
+        courses: {
+          enrolled: user.enrolledCourses || [],
+          purchased: user.purchasedCourses || []
+        },
+        onboarding: user.onboardingData || { isCompleted: false },
+        testHistory: user.testHistory || [],
+        learningAnalytics: user.learningAnalytics || {
+          totalTestsTaken: 0,
+          averageScore: 0,
+          strongTopics: [],
+          weakTopics: [],
+          learningStreak: 0,
+          improvementTrend: 0,
+          timeSpentLearning: 0
+        }
       }
     });
   } catch (error) {
@@ -335,4 +263,4 @@ const getUserProfile = async (req, res) => {
   }
 };
 
-module.exports = { registerUser, loginUser, forgotPassword, resetPassword, getDashboardData, getProfileData, getUserProfile };
+module.exports = { registerUser, loginUser, forgotPassword, resetPassword, getUserProfile };

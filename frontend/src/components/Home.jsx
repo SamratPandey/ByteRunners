@@ -421,14 +421,9 @@ const Home = () => {
               <Terminal className="relative w-full h-96 text-green-500 opacity-80" />
             </div>
           </div>
-        </div>      </section>      {/* Conditional UserProgress Section for Authenticated Users */}
-      {isAuthenticated && userHasCompletedOnboarding && (
-        <section className="py-12 bg-gray-900/50">
-          <div className="container mx-auto px-6">
-            <UserProgress />
-          </div>
-        </section>
-      )}
+        </div>      
+        </section>      
+
       {/* Features Grid with Animated Cards */}
       <section className="py-20 bg-black relative">
         <div className="container mx-auto px-6">

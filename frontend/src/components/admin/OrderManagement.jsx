@@ -132,12 +132,9 @@ const OrderManagement = () => {
     setShowRefundModal(false);
     fetchOrders();
   };
-
   const handleViewAnalytics = () => {
     // For now, we'll show an alert. In a real app, this would navigate to analytics page
     toast.success('Order Analytics - Feature coming soon!');
-    // TODO: Navigate to analytics page
-    // navigate('/admin/orders/analytics');
   };
 
   const handleExportOrders = async () => {

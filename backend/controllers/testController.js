@@ -26,10 +26,25 @@ const generateTestQuestions = async (req, res) => {
         level: user?.level || 1,
         previousTests: user?.testHistory?.length || 0
       };
-    }
+    }    // Map difficulty from frontend to backend enum values for consistency
+    const difficultyMap = {
+      'beginner': 'easy',
+      'intermediate': 'medium', 
+      'advanced': 'hard'
+    };
+    const mappedDifficulty = difficultyMap[difficulty] || difficulty;
 
     // Generate questions using AI with enhanced context
     const questions = await aiService.generateQuestions(subject, topic, difficulty, count, userContext);
+
+    // Check if questions were generated successfully
+    if (!questions || questions.length === 0) {
+      return res.status(500).json({
+        success: false,
+        message: 'Unable to generate test questions at this time. Please try again later or contact support if the problem persists.',
+        error: 'No questions generated'
+      });
+    }
 
     // Log question generation for analytics
     if (userId) {
@@ -38,7 +53,7 @@ const generateTestQuestions = async (req, res) => {
           'analytics.questionGenerationHistory': {
             subject,
             topic,
-            difficulty,
+            difficulty: mappedDifficulty,
             count: questions.length,
             timestamp: new Date(),
             aiGenerated: true
@@ -77,7 +92,17 @@ const generateTestQuestions = async (req, res) => {
 const submitTestAnswers = async (req, res) => {
   try {
     const { testId, answers, timeSpent, subject, topic, difficulty } = req.body;
-    const userId = req.user.id;    if (!answers || !Array.isArray(answers)) {
+    const userId = req.user.id;
+
+    // Map difficulty from frontend to backend enum values for consistency
+    const difficultyMap = {
+      'beginner': 'easy',
+      'intermediate': 'medium', 
+      'advanced': 'hard'
+    };
+    const mappedDifficulty = difficultyMap[difficulty] || difficulty;
+
+    if (!answers || !Array.isArray(answers)) {
       return res.status(400).json({
         success: false,
         message: 'Please provide your test answers to get your results and personalized feedback.'
@@ -112,19 +137,62 @@ const submitTestAnswers = async (req, res) => {
       userId,
       subject,
       topic,
-      difficulty,
+      difficulty: mappedDifficulty, // Use mapped difficulty
       score,
       correctAnswers,
       totalQuestions: answers.length,
       timeSpent,
       detailedResults,
       testDate: new Date()
-    };
-
-    // Get AI analysis of performance
+    };    // Get AI analysis of performance
     const aiAnalysis = await aiService.analyzeTestPerformance(userId, testData);
 
-    // Save test result to user's history
+    // Create detailed questions array for TestResult
+    const detailedQuestions = answers.map(answer => {
+      const question = questions.find(q => q._id.toString() === answer.questionId);
+      const isCorrect = question && question.correctAnswer === answer.selectedAnswer;
+      
+      return {
+        questionId: answer.questionId,
+        questionText: question?.questionText || '',
+        options: question?.options || [],
+        correctAnswer: question?.correctAnswer || 0,
+        userAnswer: answer.selectedAnswer,
+        isCorrect,
+        timeSpent: answer.timeSpent || Math.floor(timeSpent / answers.length), // Average if not provided
+        explanation: question?.explanation || ''
+      };
+    });
+
+    // Save comprehensive test result to TestResult model
+    const testResult = new TestResult({
+      userId,
+      subject,
+      topic,
+      difficulty: mappedDifficulty,
+      questions: detailedQuestions,
+      score,
+      totalQuestions: answers.length,
+      correctAnswers,
+      totalTimeSpent: timeSpent,
+      analytics: {
+        strongAreas: aiAnalysis.strengths || [],
+        weakAreas: aiAnalysis.weaknesses || [],
+        improvementSuggestions: aiAnalysis.improvements || [],
+        nextRecommendedTopics: aiAnalysis.recommendations || []
+      },
+      aiInsights: {
+        overallAssessment: aiAnalysis.analysis || '',
+        strengths: aiAnalysis.strengths || [],
+        weaknesses: aiAnalysis.weaknesses || [],
+        studyPlan: aiAnalysis.studyPlan || '',
+        estimatedLevel: mappedDifficulty
+      }
+    });
+
+    await testResult.save();
+
+    // Save test result to user's history (for backward compatibility)
     const user = await User.findByIdAndUpdate(
       userId,
       {
@@ -132,23 +200,25 @@ const submitTestAnswers = async (req, res) => {
           testHistory: {
             subject,
             topic,
-            difficulty,
+            difficulty: mappedDifficulty,
             score,
             correctAnswers,
             totalQuestions: answers.length,
             timeSpent,
             aiAnalysis: aiAnalysis.analysis,
             recommendations: aiAnalysis.recommendations,
-            timestamp: new Date()
+            timestamp: new Date(),
+            testResultId: testResult._id // Reference to detailed result
           }
         },
         $inc: {
-          'analytics.totalTests': 1,
-          'analytics.totalQuestionsAnswered': answers.length
+          'learningAnalytics.totalTestsTaken': 1,
+          'learningAnalytics.timeSpentLearning': Math.round(timeSpent / 60), // Convert to minutes
+          experience: Math.floor(score / 10) // 1 XP per 10% score
         },
         $set: {
-          'analytics.lastTestDate': new Date(),
-          'analytics.averageScore': await calculateAverageScore(userId, score)
+          'learningAnalytics.lastTestDate': new Date(),
+          'learningAnalytics.averageScore': await calculateAverageScore(userId, score)
         }
       },
       { new: true }
@@ -164,21 +234,28 @@ const submitTestAnswers = async (req, res) => {
           }
         })
       )
-    );
-
-    res.status(200).json({
+    );    res.status(200).json({
       success: true,
       message: 'Test submitted successfully',
       data: {
+        testResultId: testResult._id,
         score,
         correctAnswers,
         totalQuestions: answers.length,
         percentage: score,
         timeSpent,
-        detailedResults,
-        aiAnalysis,
+        detailedResults: detailedQuestions,
+        aiAnalysis: {
+          analysis: aiAnalysis.analysis,
+          strengths: aiAnalysis.strengths,
+          weaknesses: aiAnalysis.weaknesses,
+          improvements: aiAnalysis.improvements,
+          recommendations: aiAnalysis.recommendations,
+          studyPlan: aiAnalysis.studyPlan
+        },
         userLevel: user.level,
-        experienceGained: Math.floor(score / 10) // 1 XP per 10% score
+        experienceGained: Math.floor(score / 10), // 1 XP per 10% score
+        totalExperience: user.experience
       }
     });
   } catch (error) {
@@ -197,7 +274,7 @@ const getPersonalizedRecommendations = async (req, res) => {
     const userId = req.user.id;
 
     const user = await User.findById(userId).select(
-      'onboardingData testHistory analytics level experience'
+      'onboardingData testHistory learningAnalytics level experience'
     );
 
     if (!user) {
@@ -217,12 +294,11 @@ const getPersonalizedRecommendations = async (req, res) => {
       success: true,
       message: 'Recommendations generated successfully',
       data: {
-        recommendations,
-        userProfile: {
+        recommendations,        userProfile: {
           level: user.level,
           experience: user.experience,
-          totalTests: user.analytics.totalTests,
-          averageScore: user.analytics.averageScore
+          totalTests: user.learningAnalytics?.totalTestsTaken || 0,
+          averageScore: user.learningAnalytics?.averageScore || 0
         }
       }
     });
@@ -242,7 +318,7 @@ const getTestAnalytics = async (req, res) => {
     const userId = req.user.id;
 
     const user = await User.findById(userId).select(
-      'testHistory analytics level experience'
+      'testHistory learningAnalytics level experience'
     );
 
     if (!user) {
@@ -261,13 +337,12 @@ const getTestAnalytics = async (req, res) => {
       success: true,
       message: 'Analytics retrieved successfully',
       data: {
-        overview: {
-          level: user.level,
+        overview: {          level: user.level,
           experience: user.experience,
-          totalTests: user.analytics.totalTests,
-          averageScore: user.analytics.averageScore,
-          totalQuestionsAnswered: user.analytics.totalQuestionsAnswered,
-          lastTestDate: user.analytics.lastTestDate
+          totalTests: user.learningAnalytics?.totalTestsTaken || 0,
+          averageScore: user.learningAnalytics?.averageScore || 0,
+          timeSpentLearning: user.learningAnalytics?.timeSpentLearning || 0,
+          lastTestDate: user.learningAnalytics?.lastTestDate
         },
         testHistory: user.testHistory.slice(-10), // Last 10 tests
         subjectPerformance,
@@ -287,9 +362,23 @@ const getTestAnalytics = async (req, res) => {
 
 // Helper functions
 const calculateAverageScore = async (userId, newScore) => {
-  const user = await User.findById(userId).select('testHistory analytics');
-  const totalTests = user.analytics.totalTests + 1;
-  const currentTotal = (user.analytics.averageScore || 0) * (totalTests - 1);
+  const user = await User.findById(userId).select('testHistory learningAnalytics');
+  
+  // Initialize learningAnalytics if it doesn't exist
+  if (!user.learningAnalytics) {
+    user.learningAnalytics = {
+      totalTestsTaken: 0,
+      averageScore: 0,
+      strongTopics: [],
+      weakTopics: [],
+      learningStreak: 0,
+      improvementTrend: 0,
+      timeSpentLearning: 0
+    };
+  }
+  
+  const totalTests = (user.learningAnalytics.totalTestsTaken || 0) + 1;
+  const currentTotal = (user.learningAnalytics.averageScore || 0) * (totalTests - 1);
   return (currentTotal + newScore) / totalTests;
 };
 
@@ -331,9 +420,9 @@ const calculateSubjectPerformance = (testHistory) => {
 
 const calculateDifficultyProgress = (testHistory) => {
   const difficultyStats = {
-    beginner: { tests: 0, averageScore: 0, totalScore: 0 },
-    intermediate: { tests: 0, averageScore: 0, totalScore: 0 },
-    advanced: { tests: 0, averageScore: 0, totalScore: 0 }
+    easy: { tests: 0, averageScore: 0, totalScore: 0 },
+    medium: { tests: 0, averageScore: 0, totalScore: 0 },
+    hard: { tests: 0, averageScore: 0, totalScore: 0 }
   };
   
   testHistory.forEach(test => {
@@ -373,85 +462,124 @@ const getDetailedAnalytics = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    // Get comprehensive analytics data
-    const [
-      overallStats,
-      subjectPerformance,
-      difficultyProgress,
-      timeBasedAnalytics,
-      testHistory
-    ] = await Promise.all([
-      TestResult.getUserAnalytics(userId),
-      TestResult.getSubjectPerformance(userId),
-      TestResult.getDifficultyProgress(userId),
-      TestResult.getTimeBasedAnalytics(userId),
-      TestResult.find({ userId })
-        .sort({ completedAt: -1 })
-        .limit(20)
-        .select('subject topic difficulty score totalQuestions correctAnswers completedAt totalTimeSpent')
-    ]);
+    // Get comprehensive analytics data from TestResult model
+    const testResults = await TestResult.find({ userId })
+      .sort({ completedAt: -1 })
+      .limit(50);
+
+    // Calculate overall statistics
+    const totalTests = testResults.length;
+    const averageScore = totalTests > 0 ? testResults.reduce((sum, test) => sum + test.score, 0) / totalTests : 0;
+    const totalTimeSpent = testResults.reduce((sum, test) => sum + (test.totalTimeSpent || 0), 0);
+
+    // Calculate subject performance
+    const subjectStats = {};
+    testResults.forEach(test => {
+      if (!subjectStats[test.subject]) {
+        subjectStats[test.subject] = {
+          totalTests: 0,
+          totalScore: 0,
+          bestScore: 0,
+          scores: [],
+          totalTime: 0
+        };
+      }
+      subjectStats[test.subject].totalTests++;
+      subjectStats[test.subject].totalScore += test.score;
+      subjectStats[test.subject].bestScore = Math.max(subjectStats[test.subject].bestScore, test.score);
+      subjectStats[test.subject].scores.push(test.score);
+      subjectStats[test.subject].totalTime += test.totalTimeSpent || 0;
+    });
+
+    const subjectPerformance = Object.entries(subjectStats).reduce((acc, [subject, stats]) => {
+      acc[subject] = {
+        totalTests: stats.totalTests,
+        averageScore: stats.totalScore / stats.totalTests,
+        bestScore: stats.bestScore,
+        averageTime: stats.totalTime / stats.totalTests,
+        improvement: stats.scores.length > 1 ? 
+          ((stats.scores[0] - stats.scores[stats.scores.length - 1]) / stats.scores[stats.scores.length - 1]) * 100 : 0
+      };
+      return acc;
+    }, {});
+
+    // Calculate difficulty progress
+    const difficultyStats = {};
+    testResults.forEach(test => {
+      if (!difficultyStats[test.difficulty]) {
+        difficultyStats[test.difficulty] = {
+          tests: 0,
+          totalScore: 0,
+          bestScore: 0,
+          scores: []
+        };
+      }
+      difficultyStats[test.difficulty].tests++;
+      difficultyStats[test.difficulty].totalScore += test.score;
+      difficultyStats[test.difficulty].bestScore = Math.max(difficultyStats[test.difficulty].bestScore, test.score);
+      difficultyStats[test.difficulty].scores.push(test.score);
+    });
+
+    const difficultyProgress = Object.entries(difficultyStats).reduce((acc, [difficulty, stats]) => {
+      acc[difficulty] = {
+        tests: stats.tests,
+        averageScore: stats.totalScore / stats.tests,
+        bestScore: stats.bestScore,
+        improvement: stats.scores.length > 1 ? 
+          ((stats.scores[0] - stats.scores[stats.scores.length - 1]) / stats.scores[stats.scores.length - 1]) * 100 : 0
+      };
+      return acc;
+    }, {});
 
     // Get user level and experience from User model
     const user = await User.findById(userId).select('level experience');
 
-    // Transform subject performance to object format
-    const subjectPerformanceObj = {};
-    subjectPerformance.forEach(perf => {
-      subjectPerformanceObj[perf.subject] = {
-        totalTests: perf.totalTests,
-        averageScore: perf.averageScore,
-        bestScore: perf.bestScore,
-        lastTestDate: perf.lastTestDate
-      };
-    });
-
-    // Transform difficulty progress to object format
-    const difficultyProgressObj = {};
-    difficultyProgress.forEach(diff => {
-      difficultyProgressObj[diff.difficulty] = {
-        tests: diff.tests,
-        averageScore: diff.averageScore,
-        bestScore: diff.bestScore
-      };
-    });
-
-    // Format test history
-    const formattedHistory = testHistory.map(test => ({
+    // Format test history with more details
+    const formattedHistory = testResults.slice(0, 20).map(test => ({
+      id: test._id,
       subject: test.subject,
       topic: test.topic,
       difficulty: test.difficulty,
       score: test.score,
-      totalQuestions: test.totalQuestions,
+      questions: test.totalQuestions,
       correctAnswers: test.correctAnswers,
-      timestamp: test.completedAt,
-      timeSpent: test.totalTimeSpent
+      date: test.completedAt.toLocaleDateString(),
+      timeSpent: Math.floor((test.totalTimeSpent || 0) / 60), // Convert to minutes
+      aiInsights: test.aiInsights?.overallAssessment || null
     }));
 
     const analyticsData = {
       overview: {
         level: user?.level || 1,
         experience: user?.experience || 0,
-        totalTests: overallStats.totalTests,
-        averageScore: overallStats.averageScore,
-        bestScore: overallStats.bestScore,
-        overallAccuracy: overallStats.overallAccuracy
+        totalTests,
+        averageScore: Math.round(averageScore),
+        totalTimeSpent: Math.floor(totalTimeSpent / 60), // Convert to minutes
+        recentImprovement: totalTests > 1 ? 
+          testResults[0].score - testResults[Math.min(4, totalTests - 1)].score : 0
       },
-      subjectPerformance: subjectPerformanceObj,
-      difficultyProgress: difficultyProgressObj,
-      timeBasedAnalytics,
-      testHistory: formattedHistory
+      subjectPerformance,
+      difficultyProgress,
+      testHistory: formattedHistory,
+      insights: {
+        strongestSubject: Object.entries(subjectPerformance).reduce((a, b) => 
+          subjectPerformance[a[0]]?.averageScore > subjectPerformance[b[0]]?.averageScore ? a : b, ['', { averageScore: 0 }])[0],
+        weakestSubject: Object.entries(subjectPerformance).reduce((a, b) => 
+          subjectPerformance[a[0]]?.averageScore < subjectPerformance[b[0]]?.averageScore ? a : b, ['', { averageScore: 100 }])[0],
+        preferredDifficulty: Object.entries(difficultyProgress).reduce((a, b) => 
+          difficultyProgress[a[0]]?.tests > difficultyProgress[b[0]]?.tests ? a : b, ['', { tests: 0 }])[0]
+      }
     };
 
     res.status(200).json({
       success: true,
+      message: 'Analytics retrieved successfully',
       data: analyticsData
     });
-
-  } catch (error) {
-    console.error('Error getting detailed analytics:', error);
+  } catch (error) {    console.error('Error getting detailed analytics:', error);
     res.status(500).json({
       success: false,
-      message: 'Unable to load analytics data',
+      message: 'Failed to retrieve analytics',
       error: error.message
     });
   }

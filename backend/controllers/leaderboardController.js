@@ -171,9 +171,7 @@ const getGlobalLeaderboard = async (req, res) => {
         timeframe
       }
     });
-
   } catch (error) {
-    console.error('Error fetching leaderboard:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch leaderboard data',
@@ -281,9 +279,7 @@ const getUserLeaderboardPosition = async (req, res) => {
         totalUsers: allUsersWithStats.length
       }
     });
-
   } catch (error) {
-    console.error('Error fetching user leaderboard position:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch user position',
@@ -413,9 +409,7 @@ const getCategoryLeaderboard = async (req, res) => {
         }
       }
     });
-
   } catch (error) {
-    console.error('Error fetching category leaderboard:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch category leaderboard',
@@ -487,9 +481,7 @@ const getLeaderboardStats = async (req, res) => {  try {    const stats = await 
         lastUpdated: new Date()
       }
     });
-
   } catch (error) {
-    console.error('Error fetching leaderboard stats:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch leaderboard statistics',

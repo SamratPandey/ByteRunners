@@ -105,18 +105,10 @@ const AdminDashboard = () => {
         adminApi.get('/api/admin/users'),
         adminApi.get('/api/admin/top-performers'),
         adminApi.get('/api/admin/recent-activity')
-      ];
-
-      const results = await Promise.allSettled(promises);
+      ];      const results = await Promise.allSettled(promises);
         // Extract data from successful requests
       const [statsResult, problemStatsResult, userGrowthResult, problemGrowthResult, usersResult, topPerformersResult, recentActivityResult] = results;
 
-      // Log the raw API responses for debugging
-      console.log('Stats API Response:', statsResult);
-      console.log('Problem Stats API Response:', problemStatsResult);
-      console.log('User Growth API Response:', userGrowthResult);
-      console.log('Problem Growth API Response:', problemGrowthResult);
-      
       const adminDataUpdate = {
         totalUsers: statsResult.status === 'fulfilled' ? (statsResult.value.data?.data?.totalUsers || statsResult.value.data?.totalUsers || 0) : 0,
         totalProblems: problemStatsResult.status === 'fulfilled' ? (problemStatsResult.value.data?.data?.totalProblems || problemStatsResult.value.data?.totalProblems || 0) : 0,
@@ -124,10 +116,8 @@ const AdminDashboard = () => {
         problemGrowth: problemGrowthResult.status === 'fulfilled' ? (problemGrowthResult.value.data?.data?.problemGrowth || problemGrowthResult.value.data?.problemGrowth || []) : [],
         users: usersResult.status === 'fulfilled' ? (usersResult.value.data?.data || usersResult.value.data?.users || []) : [],
         topPerformers: topPerformersResult.status === 'fulfilled' ? (topPerformersResult.value.data?.data || topPerformersResult.value.data?.topPerformers || []) : [],
-        recentActivity: recentActivityResult.status === 'fulfilled' ? (recentActivityResult.value.data?.data || recentActivityResult.value.data?.activities || []) : [],
-      };
+        recentActivity: recentActivityResult.status === 'fulfilled' ? (recentActivityResult.value.data?.data || recentActivityResult.value.data?.activities || []) : [],      };
 
-      console.log('Processed admin data:', adminDataUpdate);
       setAdminData(adminDataUpdate);
 
       // Log any failed requests for debugging
@@ -137,8 +127,6 @@ const AdminDashboard = () => {
           console.error(`Admin API request ${apiNames[index]} failed:`, result.reason);
           // Show a toast for failed requests
           toast.error(`Failed to load ${apiNames[index].replace('-', ' ')}`);
-        } else {
-          console.log(`✅ ${apiNames[index]} loaded successfully`);
         }
       });
 

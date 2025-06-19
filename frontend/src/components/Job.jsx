@@ -519,8 +519,7 @@ const Job = () => {
                     },
                 }}
             />
-            
-            <style jsx>{`
+              <style>{`
                 @keyframes pulse-glow {
                     0% { opacity: 0.3; transform: scale(1); }
                     50% { opacity: 0.6; transform: scale(1.05); }

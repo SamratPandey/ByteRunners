@@ -3,8 +3,8 @@ import { X, CreditCard, Shield, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { toast } from 'react-hot-toast';
-import axios from 'axios';
+import { toast, Toaster } from 'react-hot-toast';
+import authApi from '../utils/authApi';
 
 const PaymentModal = ({ isOpen, onClose, course, onSuccess }) => {
   const [loading, setLoading] = useState(false);
@@ -40,13 +40,11 @@ const PaymentModal = ({ isOpen, onClose, course, onSuccess }) => {
       finalPrice -= appliedCoupon.discountAmount;
     }
     return Math.max(finalPrice, 0);
-  };
-
-  const handlePayment = async () => {
+  };  const handlePayment = async () => {
     setLoading(true);
     
     try {
-      // Mock payment process - in real app, integrate with Razorpay/Stripe
+      // Prepare payment data
       const paymentData = {
         courseId: course._id,
         paymentDetails: {
@@ -58,25 +56,18 @@ const PaymentModal = ({ isOpen, onClose, course, onSuccess }) => {
         },
         couponCode: appliedCoupon?.code
       };
-
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Mock successful response
-      const response = {
-        data: {
-          success: true,
-          message: 'Course purchased successfully',
-          order: { _id: `order_${Date.now()}` },
-          course: { id: course._id, title: course.title }
-        }
-      };
-
-      toast.success('🎉 Course purchased successfully! Welcome to your learning journey!');
-      onSuccess(response.data);
-      onClose();
-    } catch (error) {
-      toast.error('Payment failed. Please try again.');
+      // Call the actual backend purchase API
+      const response = await authApi.post('/api/course/purchase', paymentData);
+      
+      if (response.data.success) {
+        toast.success('Course purchased successfully! Welcome to your learning journey!');
+        onSuccess(response.data);
+        onClose();
+      } else {
+        toast.error(response.data.message || 'Purchase failed');
+      }    } catch (error) {
+      toast.error(error.response?.data?.message || 'Payment failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -234,9 +225,9 @@ const PaymentModal = ({ isOpen, onClose, course, onSuccess }) => {
             >
               {loading ? 'Processing...' : course.isFree ? 'Enroll Free' : `Pay ₹${calculateFinalPrice().toFixed(2)}`}
             </Button>
-          </div>
-        </div>
+          </div>        </div>
       </Card>
+      <Toaster position="bottom-right" />
     </div>
   );
 };

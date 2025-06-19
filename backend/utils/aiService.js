@@ -1,4 +1,5 @@
 const axios = require('axios');
+const mongoose = require('mongoose');
 const TestQuestion = require('../models/TestQuestion');
 
 class AIService {
@@ -9,16 +10,45 @@ class AIService {
       baseURL: 'https://api.openai.com/v1',
       model: 'gpt-3.5-turbo'
     };  }
-
   // Generate questions using AI with enhanced context
   async generateQuestions(subject, topic, difficulty, count = 5, userContext = {}) {
     try {
       const prompt = this.createQuestionGenerationPrompt(subject, topic, difficulty, count, userContext);
       
-      const response = await this.callAI(prompt, 'question_generation');
+      // Try to generate questions with retry logic
+      let questions = [];
+      let attempts = 0;
+      const maxAttempts = 3;
       
-      const questions = this.parseGeneratedQuestions(response);
-        // Save generated questions to database
+      while (questions.length === 0 && attempts < maxAttempts) {
+        attempts++;
+        console.log(`Attempting to generate questions (attempt ${attempts}/${maxAttempts})`);
+        
+        try {
+          const response = await this.callAI(prompt, 'question_generation');
+          questions = this.parseGeneratedQuestions(response);
+          
+          if (questions.length === 0) {
+            console.warn(`Attempt ${attempts} failed: No valid questions generated`);
+            if (attempts < maxAttempts) {
+              // Wait a bit before retrying
+              await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+          }
+        } catch (error) {
+          console.error(`Attempt ${attempts} failed with error:`, error);
+          if (attempts < maxAttempts) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
+        }
+      }
+      
+      if (questions.length === 0) {
+        console.warn('All attempts failed, using fallback questions');
+        return await this.getFallbackQuestions(subject, topic, difficulty, count);
+      }
+      
+      // Save generated questions to database
       const savedQuestions = await this.saveQuestionsToDatabase(questions, subject, topic, difficulty);
       
       return savedQuestions;
@@ -86,9 +116,8 @@ class AIService {
       console.warn('OpenAI call failed, using fallback');
       return this.getFallbackResponse(type, prompt);
     }
-  }
-
-  async callOpenAI(prompt) {
+  }  async callOpenAI(prompt) {
+    console.log('Making OpenAI API call...');
     const response = await axios.post(
       `${this.provider.baseURL}/chat/completions`,
       {
@@ -96,14 +125,14 @@ class AIService {
         messages: [
           {
             role: 'system',
-            content: 'You are an expert programming instructor and assessment creator. Generate high-quality, accurate programming questions and provide detailed analysis. Always respond in valid JSON format when requested.'
+            content: 'You are an expert programming instructor and assessment creator. Generate high-quality, accurate programming questions and provide detailed analysis. Always respond in valid JSON format when requested. Ensure all JSON is properly closed and valid.'
           },
           {
             role: 'user',
             content: prompt
           }
         ],
-        max_tokens: 1500,
+        max_tokens: 3000, // Increased from 1500 to accommodate multiple questions
         temperature: 0.7
       },
       {
@@ -114,54 +143,61 @@ class AIService {
       }
     );
 
-    return response.data.choices[0].message.content;
-  }  createQuestionGenerationPrompt(subject, topic, difficulty, count, userContext = {}) {
+    const result = response.data.choices[0].message.content;
+    console.log('OpenAI response received successfully');
+    return result;
+  }createQuestionGenerationPrompt(subject, topic, difficulty, count, userContext = {}) {
     const { name = 'User', experience = 0, level = 1, previousTests = 0 } = userContext;
     
     let contextualNote = '';
     if (name !== 'User') {
-      contextualNote = `\n\nUser Context: This is for ${name} (Level ${level}, ${experience} XP, ${previousTests} previous tests). Tailor the questions appropriately for their experience level.`;
+      contextualNote = `\n\nUser Context: This is for ${name} (Level ${level}, ${experience} XP, ${previousTests} previous tests).`;
     }
     
-    return `Generate ${count} multiple-choice questions about ${topic} in ${subject} programming language with ${difficulty} difficulty level.
+    return `Generate exactly ${count} multiple-choice questions about ${topic} in ${subject} programming with ${difficulty} difficulty.
 
-For each question, provide:
-1. A clear, specific question
-2. Four options (A, B, C, D)
-3. The correct answer (0-3 index)
-4. A detailed explanation of why the answer is correct
+Requirements:
+- Each question must have exactly 4 options
+- Include correct answer index (0-3)
+- Add brief explanation
+- Ensure valid JSON format
 
-Format the response as JSON array:
+Return ONLY a JSON array in this exact format:
 [
   {
-    "question": "What does the following JavaScript code output?",
+    "question": "Your question here?",
     "options": ["Option A", "Option B", "Option C", "Option D"],
     "correctAnswer": 1,
-    "explanation": "Detailed explanation here",
+    "explanation": "Brief explanation why this is correct",
     "topic": "${topic}"
   }
 ]
 
-Make sure questions are:
-- Technically accurate
-- Appropriate for ${difficulty} level
-- Focused on practical programming concepts
-- Clear and unambiguous
-- Engaging and educational${contextualNote}`;
-  }
+Make questions:
+- Technically accurate for ${difficulty} level
+- Clear and unambiguous  
+- Practical and relevant${contextualNote}
 
+IMPORTANT: Return only valid JSON, no markdown, no extra text.`;
+  }
   createAnalysisPrompt(testData) {
-    const { questions, score, totalQuestions, timeSpent } = testData;
+    const { detailedResults, score, totalQuestions, timeSpent, subject, topic } = testData;
+    
+    // Use detailedResults if questions array is not available
+    const questionsData = detailedResults || [];
     
     return `Analyze this programming test performance:
 
 Test Results:
+- Subject: ${subject || 'Programming'}
+- Topic: ${topic || 'General'}
 - Score: ${score}/${totalQuestions} (${((score/totalQuestions) * 100).toFixed(1)}%)
 - Time Spent: ${Math.round(timeSpent/60)} minutes
-- Questions: ${JSON.stringify(questions.map(q => ({
-  topic: q.topic,
+- Questions Analysis: ${JSON.stringify(questionsData.map(q => ({
+  topic: q.topic || topic,
   correct: q.isCorrect,
-  timeSpent: q.timeSpent
+  timeSpent: q.timeSpent || 0,
+  question: q.question ? q.question.substring(0, 50) + '...' : 'N/A'
 })))}
 
 Provide analysis in JSON format:
@@ -239,16 +275,80 @@ Format the response as JSON array:
 ]
 
 Make questions personalized, engaging, and relevant to their experience level.`;
-  }
-
-  parseGeneratedQuestions(response) {
+  }  parseGeneratedQuestions(response) {
     try {
       // Clean the response and parse JSON
-      const cleanResponse = response.replace(/```json\n?|\n?```/g, '').trim();
-      return JSON.parse(cleanResponse);
+      let cleanResponse = response.replace(/```json\n?|\n?```/g, '').trim();
+      
+      // Try to fix common JSON issues
+      cleanResponse = this.fixCommonJSONIssues(cleanResponse);
+      
+      const parsed = JSON.parse(cleanResponse);
+      
+      // Validate the parsed response
+      if (!Array.isArray(parsed)) {
+        console.error('AI response is not an array:', parsed);
+        return [];
+      }
+      
+      // Filter out invalid questions
+      const validQuestions = parsed.filter(q => 
+        q && 
+        typeof q.question === 'string' && 
+        Array.isArray(q.options) && 
+        q.options.length === 4 &&
+        typeof q.correctAnswer === 'number' &&
+        q.correctAnswer >= 0 && 
+        q.correctAnswer < 4
+      );
+      
+      console.log(`Successfully parsed ${validQuestions.length} valid questions`);
+      
+      if (validQuestions.length === 0) {
+        console.error('No valid questions found in AI response');
+        return [];
+      }
+      
+      return validQuestions;
     } catch (error) {
       console.error('Error parsing AI response:', error);
       return [];
+    }
+  }
+
+  fixCommonJSONIssues(jsonString) {
+    try {
+      // Remove any trailing commas before closing brackets/braces
+      jsonString = jsonString.replace(/,(\s*[}\]])/g, '$1');
+      
+      // Try to fix unterminated strings by finding unclosed quotes
+      const quoteCount = (jsonString.match(/"/g) || []).length;
+      if (quoteCount % 2 !== 0) {
+        // Add closing quote at the end if odd number of quotes
+        console.warn('Fixing unterminated string in JSON');
+        jsonString = jsonString + '"';
+      }
+      
+      // Try to close unclosed brackets/braces
+      const openBraces = (jsonString.match(/{/g) || []).length;
+      const closeBraces = (jsonString.match(/}/g) || []).length;
+      const openBrackets = (jsonString.match(/\[/g) || []).length;
+      const closeBrackets = (jsonString.match(/\]/g) || []).length;
+      
+      // Add missing closing braces
+      for (let i = 0; i < openBraces - closeBraces; i++) {
+        jsonString += '}';
+      }
+      
+      // Add missing closing brackets
+      for (let i = 0; i < openBrackets - closeBrackets; i++) {
+        jsonString += ']';
+      }
+      
+      return jsonString;
+    } catch (error) {
+      console.error('Error fixing JSON:', error);
+      return jsonString;
     }
   }
 
@@ -280,10 +380,9 @@ Make questions personalized, engaging, and relevant to their experience level.`;
       console.error('Error parsing onboarding questions response:', error);
       return this.getFallbackOnboardingQuestions();
     }
-  }
-
-  async saveQuestionsToDatabase(questions, subject, topic, difficulty) {
+  }  async saveQuestionsToDatabase(questions, subject, topic, difficulty) {
     const savedQuestions = [];
+    const mappedDifficulty = this.mapDifficultyLevel(difficulty);
     
     for (const questionData of questions) {
       try {
@@ -294,32 +393,59 @@ Make questions personalized, engaging, and relevant to their experience level.`;
           explanation: questionData.explanation,
           subject: subject.toLowerCase(),
           topic: questionData.topic || topic,
-          difficulty: difficulty.toLowerCase(),
+          difficulty: mappedDifficulty,
           aiGenerated: true,
           aiModel: this.provider.model,
           tags: [subject, topic, difficulty]
         });
 
         const saved = await question.save();
-        savedQuestions.push(saved);
+        
+        // Transform the saved question back to the format expected by frontend
+        const transformedQuestion = {
+          _id: saved._id,
+          question: saved.questionText,
+          options: saved.options,
+          correctAnswer: saved.correctAnswer,
+          explanation: saved.explanation,
+          topic: saved.topic
+        };
+        
+        savedQuestions.push(transformedQuestion);
       } catch (error) {
         console.error('Error saving question to database:', error);
+        // If saving fails, return the original question data so the test can still proceed
+        savedQuestions.push({
+          _id: new mongoose.Types.ObjectId(),
+          question: questionData.question,
+          options: questionData.options,
+          correctAnswer: questionData.correctAnswer,
+          explanation: questionData.explanation,
+          topic: questionData.topic || topic
+        });
       }
     }
 
     return savedQuestions;
-  }
-
-  async getFallbackQuestions(subject, topic, difficulty, count) {
+  }  async getFallbackQuestions(subject, topic, difficulty, count) {
     // Get existing questions from database as fallback
     try {
+      const mappedDifficulty = this.mapDifficultyLevel(difficulty);
       const questions = await TestQuestion.find({
         subject: subject.toLowerCase(),
-        difficulty: difficulty.toLowerCase(),
+        difficulty: mappedDifficulty,
         isActive: true
       }).limit(count);
 
-      return questions;
+      // Transform database questions to expected format
+      return questions.map(q => ({
+        _id: q._id,
+        question: q.questionText,
+        options: q.options,
+        correctAnswer: q.correctAnswer,
+        explanation: q.explanation,
+        topic: q.topic
+      }));
     } catch (error) {
       console.error('Error getting fallback questions:', error);
       return [];
@@ -425,6 +551,16 @@ Make questions personalized, engaging, and relevant to their experience level.`;
       ],
       learningPath: 'Start with solid fundamentals, practice consistently with real projects, then gradually tackle more complex challenges'
     };
+  }
+
+  // Map frontend difficulty levels to database enum values
+  mapDifficultyLevel(frontendDifficulty) {
+    const mapping = {
+      'beginner': 'easy',
+      'intermediate': 'medium', 
+      'advanced': 'hard'
+    };
+    return mapping[frontendDifficulty] || 'easy';
   }
 }
 

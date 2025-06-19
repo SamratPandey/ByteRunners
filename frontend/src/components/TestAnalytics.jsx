@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AnalyticsCardSkeleton } from '@/components/ui/skeleton';
 import { testApi } from '../utils/testApi';
-import { toast } from 'react-hot-toast';
+import { toast, Toaster } from 'react-hot-toast';
 import Nav from './Nav';
 import { 
   BarChart3, 
@@ -77,9 +77,7 @@ const TestAnalytics = () => {
   const loadAnalytics = async () => {
     try {
       const response = await testApi.getDetailedAnalytics();
-      setAnalytics(response.data);
-    } catch (error) {
-      console.error('Error loading analytics:', error);
+      setAnalytics(response.data);    } catch (error) {
       toast.error('Unable to load your performance analytics right now. Please refresh the page or try again later.', {
         style: {
           background: '#ef4444',
@@ -90,12 +88,10 @@ const TestAnalytics = () => {
       });
     }
   };
-
   const loadRecommendations = async () => {
     try {
       const response = await testApi.getAIRecommendations();
       setRecommendations(response.data);} catch (error) {
-      console.error('Error loading recommendations:', error);
       toast.error('We couldn\'t generate your personalized recommendations right now. Your progress data is safe!', {
         style: {
           background: '#ef4444',
@@ -222,10 +218,84 @@ const TestAnalytics = () => {
                     />
                   </div>
                 </div>
-              </div>
-            ))}
+              </div>            ))}
           </div>
-        </div>      </div>
+        </div>
+
+        {/* Performance Insights */}
+        {analytics.insights && (
+          <div className="bg-black/30 backdrop-blur-lg border border-green-900/30 rounded-2xl p-8">
+            <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+              <Lightbulb className="w-6 h-6 text-yellow-400" />
+              Performance Insights
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {analytics.insights.strongestSubject && (
+                <div className="bg-green-500/10 border border-green-500/20 p-6 rounded-xl">
+                  <div className="flex items-center gap-3 mb-3">
+                    <Trophy className="w-6 h-6 text-green-400" />
+                    <h4 className="text-green-400 font-semibold">Strongest Subject</h4>
+                  </div>
+                  <p className="text-white text-lg font-medium capitalize">{analytics.insights.strongestSubject}</p>
+                  <p className="text-green-300 text-sm mt-2">
+                    {Math.round(subjectPerformance[analytics.insights.strongestSubject]?.averageScore || 0)}% average score
+                  </p>
+                </div>
+              )}
+              
+              {analytics.insights.weakestSubject && (
+                <div className="bg-red-500/10 border border-red-500/20 p-6 rounded-xl">
+                  <div className="flex items-center gap-3 mb-3">
+                    <Target className="w-6 h-6 text-red-400" />
+                    <h4 className="text-red-400 font-semibold">Focus Area</h4>
+                  </div>
+                  <p className="text-white text-lg font-medium capitalize">{analytics.insights.weakestSubject}</p>
+                  <p className="text-red-300 text-sm mt-2">
+                    {Math.round(subjectPerformance[analytics.insights.weakestSubject]?.averageScore || 0)}% average score
+                  </p>
+                </div>
+              )}
+              
+              {analytics.insights.preferredDifficulty && (
+                <div className="bg-blue-500/10 border border-blue-500/20 p-6 rounded-xl">
+                  <div className="flex items-center gap-3 mb-3">
+                    <Brain className="w-6 h-6 text-blue-400" />
+                    <h4 className="text-blue-400 font-semibold">Comfort Zone</h4>
+                  </div>
+                  <p className="text-white text-lg font-medium capitalize">{analytics.insights.preferredDifficulty}</p>
+                  <p className="text-blue-300 text-sm mt-2">
+                    Most practiced difficulty level
+                  </p>
+                </div>
+              )}
+            </div>
+            
+            {analytics.overview.recentImprovement && (
+              <div className="mt-6 p-4 bg-black/50 rounded-lg border border-gray-700">
+                <div className="flex items-center gap-3">
+                  {analytics.overview.recentImprovement > 0 ? (
+                    <TrendingUp className="w-5 h-5 text-green-400" />
+                  ) : analytics.overview.recentImprovement < 0 ? (
+                    <TrendingDown className="w-5 h-5 text-red-400" />
+                  ) : (
+                    <Minus className="w-5 h-5 text-gray-400" />
+                  )}
+                  <span className="text-gray-300">
+                    Recent Performance: 
+                    <span className={`ml-2 font-semibold ${
+                      analytics.overview.recentImprovement > 0 ? 'text-green-400' :
+                      analytics.overview.recentImprovement < 0 ? 'text-red-400' : 'text-gray-400'
+                    }`}>
+                      {analytics.overview.recentImprovement > 0 ? '+' : ''}
+                      {Math.round(analytics.overview.recentImprovement)}% change
+                    </span>
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     );
   };
 
@@ -238,37 +308,66 @@ const TestAnalytics = () => {
           <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
             <Calendar className="w-6 h-6 text-green-400" />
             Test History
-          </h3>
-          <div className="space-y-4">
+          </h3>          <div className="space-y-4">
             {analytics.testHistory.map((test, index) => (
-              <div key={index} className="bg-black/50 p-6 rounded-xl border border-green-900/20">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div key={test.id || index} className="bg-black/50 p-6 rounded-xl border border-green-900/20 hover:border-green-800/30 transition-colors">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                   <div className="flex-1">
-                    <h4 className="text-white font-semibold text-lg mb-2">{test.subject}</h4>
+                    <div className="flex items-center gap-3 mb-2">
+                      <h4 className="text-white font-semibold text-lg capitalize">{test.subject}</h4>
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${
+                        test.difficulty === 'easy' ? 'bg-green-500/20 text-green-400' :
+                        test.difficulty === 'medium' ? 'bg-yellow-500/20 text-yellow-400' : 
+                        'bg-red-500/20 text-red-400'
+                      }`}>
+                        {test.difficulty}
+                      </span>
+                    </div>
+                    <p className="text-gray-300 mb-3 capitalize">{test.topic}</p>
                     <div className="flex flex-wrap gap-4 text-sm text-gray-400">
                       <span className="flex items-center gap-1">
                         <Clock className="w-4 h-4" />
                         {test.date}
                       </span>
                       <span className="flex items-center gap-1">
-                        <Target className="w-4 h-4" />
-                        {test.difficulty}
-                      </span>
-                      <span className="flex items-center gap-1">
                         <BookOpen className="w-4 h-4" />
                         {test.questions} questions
                       </span>
+                      <span className="flex items-center gap-1">
+                        <Target className="w-4 h-4" />
+                        {test.correctAnswers}/{test.questions} correct
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-4 h-4" />
+                        {test.timeSpent}m
+                      </span>
                     </div>
+                    {test.aiInsights && (
+                      <div className="mt-3 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                        <div className="flex items-start gap-2">
+                          <Brain className="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" />
+                          <p className="text-blue-200 text-sm">{test.aiInsights}</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <div className="text-right">
-                    <div className={`text-2xl font-bold mb-1 ${
+                  <div className="text-right lg:text-center">
+                    <div className={`text-3xl font-bold mb-1 ${
                       test.score >= 80 ? 'text-green-400' : 
                       test.score >= 60 ? 'text-yellow-400' : 'text-red-400'
                     }`}>
                       {test.score}%
                     </div>
-                    <div className="text-sm text-gray-400">
-                      {test.timeSpent} minutes
+                    <div className="flex items-center justify-end lg:justify-center gap-1 text-sm">
+                      {test.score >= 80 ? (
+                        <Award className="w-4 h-4 text-green-400" />
+                      ) : test.score >= 60 ? (
+                        <Star className="w-4 h-4 text-yellow-400" />
+                      ) : (
+                        <Target className="w-4 h-4 text-red-400" />
+                      )}
+                      <span className="text-gray-400">                        {test.score >= 80 ? 'Excellent' : test.score >= 60 ? 'Good' : 'Needs Work'}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -467,9 +566,9 @@ const TestAnalytics = () => {
         }
 
         .animate-pulse-glow {
-          animation: pulse-glow 4s ease-in-out infinite;
-        }
+          animation: pulse-glow 4s ease-in-out infinite;        }
       `}</style>
+      <Toaster position="bottom-right" />
     </div>
   );
 };

@@ -761,9 +761,7 @@ const ProblemManagement = () => {
                             onClose={() => {
                               setIsEditDialogOpen(false);
                               setSelectedProblem(null);
-                            }}
-                            onSubmit={(data) => {
-                              console.log("Here the error",selectedProblem)
+                            }}                            onSubmit={(data) => {
                               handleUpdateProblem(selectedProblem.id, data);
                             }}
                             isSubmitting={isSubmitting}
@@ -809,7 +807,7 @@ const ProblemManagement = () => {
         </div>
       </CardContent>
       </Card>
-      <Toaster position="top-right" />
+      <Toaster position="bottom-right" />
     </>
   );
 };

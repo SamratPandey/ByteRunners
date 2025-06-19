@@ -21,12 +21,9 @@ const sendEmail = async (to, subject, text, html = null) => {
     // Validate environment variables
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
       throw new Error('Email configuration missing: EMAIL_USER and EMAIL_PASS environment variables are required');
-    }
-
-    // Test connection first
-    console.log('Testing SMTP connection...');
+    }    // Test connection first
     await transporter.verify();
-    console.log('SMTP connection verified successfully');    const mailOptions = {
+    const mailOptions = {
       from: {
         name: 'ByteRunners',
         address: process.env.EMAIL_USER
@@ -39,16 +36,10 @@ const sendEmail = async (to, subject, text, html = null) => {
     // Add HTML content if provided
     if (html) {
       mailOptions.html = html;
-      // Ensure HTML takes precedence
-      mailOptions.attachDataUrls = true;
+      // Ensure HTML takes precedence      mailOptions.attachDataUrls = true;
     }
     
-    console.log(`Attempting to send email to: ${to}`);
-    console.log(`Email type: ${html ? 'HTML + Text' : 'Text only'}`);
-    console.log(`Using email user: ${process.env.EMAIL_USER}`);
-    
     const result = await transporter.sendMail(mailOptions);
-    console.log('Email sent successfully:', result.messageId);
     return result;
   } catch (error) {
     console.error('Detailed email error:', error);

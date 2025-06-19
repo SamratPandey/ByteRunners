@@ -60,9 +60,7 @@ const sendEmailVerification = async (req, res) => {
       success: true,
       message: 'Verification code sent to your email'
     });
-    
-  } catch (error) {
-    console.error('Send email verification error:', error);
+      } catch (error) {
     res.status(500).json({
       success: false,
       message: 'Failed to send verification email'
@@ -98,9 +96,7 @@ const verifyEmail = async (req, res) => {
       success: true,
       message: 'Email verified successfully!'
     });
-    
-  } catch (error) {
-    console.error('Email verification error:', error);
+      } catch (error) {
     res.status(500).json({
       success: false,
       message: 'Email verification failed'
@@ -169,9 +165,7 @@ const resendVerification = async (req, res) => {
       success: true,
       message: 'New verification code sent to your email'
     });
-    
-  } catch (error) {
-    console.error('Resend verification error:', error);
+      } catch (error) {
     res.status(500).json({
       success: false,
       message: 'Failed to resend verification email'

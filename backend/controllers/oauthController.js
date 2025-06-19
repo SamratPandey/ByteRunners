@@ -1,63 +1,151 @@
 const jwt = require('jsonwebtoken');
+const passport = require('passport');
 const User = require('../models/User');
 const Activity = require('../models/Activity');
 const { sendWelcomeEmail } = require('../controllers/sendMail');
 
-// Google OAuth handler
-const googleAuth = async (req, res) => {
-  try {
-    // TODO: Implement Google OAuth logic
-    // For now, return coming soon response
-    res.status(501).json({
-      success: false,
-      message: 'Google OAuth coming soon! Please use email signup for now.'
-    });
-  } catch (error) {
-    console.error('Google OAuth error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'OAuth authentication failed'
-    });
-  }
+// Google OAuth handler - Redirect to Google
+const googleAuth = passport.authenticate('google', {
+  scope: ['profile', 'email']
+});
+
+// GitHub OAuth handler - Redirect to GitHub
+const githubAuth = passport.authenticate('github', {
+  scope: ['user:email']
+});
+
+// Google OAuth callback handler
+const googleCallback = async (req, res) => {
+  passport.authenticate('google', { failureRedirect: '/login' }, async (err, user) => {
+    
+    if (err) {
+      console.error('Google OAuth callback error:', err);
+      return res.redirect(`${process.env.FRONTEND_URL}/login?error=oauth_error`);
+    }
+    
+    if (!user) {
+      console.error('Google OAuth: No user returned from passport');
+      return res.redirect(`${process.env.FRONTEND_URL}/login?error=oauth_failed`);
+    }    
+    try {
+      // Generate JWT token
+      const token = jwt.sign(
+        { 
+          id: user._id, 
+          accountType: user.accountType, 
+          isPremium: user.isPremium 
+        }, 
+        process.env.JWT_SECRET, 
+        { expiresIn: '7d' }      );
+      
+      // Set cookie with the token
+      res.cookie('userToken', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',        sameSite: 'strict',
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+      });
+      
+      // Send welcome email for new users
+      if (user.createdAt && (Date.now() - user.createdAt.getTime()) < 60000) { // Created in last minute
+        try {
+          await sendWelcomeEmail(user.email, {
+            name: user.name,
+            email: user.email
+          });
+        } catch (emailError) {
+          console.error('Failed to send welcome email:', emailError);
+        }
+      }      
+      // Redirect to onboarding for new users or home for existing users
+      // Check if user was just created (within last minute) or doesn't have onboarding completed
+      const isNewUser = user.createdAt && (Date.now() - user.createdAt.getTime()) < 60000;
+      const needsOnboarding = !user.onboardingData?.isCompleted;        const redirectUrl = (isNewUser || needsOnboarding)
+        ? `${process.env.FRONTEND_URL}/onboarding`
+        : `${process.env.FRONTEND_URL}/`;
+      
+      res.redirect(redirectUrl);
+    } catch (error) {
+      console.error('Google OAuth token generation error:', error);
+      res.redirect(`${process.env.FRONTEND_URL}/login?error=token_error`);
+    }
+  })(req, res);
 };
 
-// GitHub OAuth handler
-const githubAuth = async (req, res) => {
-  try {
-    // TODO: Implement GitHub OAuth logic
-    // For now, return coming soon response
-    res.status(501).json({
-      success: false,
-      message: 'GitHub OAuth coming soon! Please use email signup for now.'
-    });
-  } catch (error) {
-    console.error('GitHub OAuth error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'OAuth authentication failed'
-    });
-  }
+// GitHub OAuth callback handler
+const githubCallback = async (req, res) => {
+  passport.authenticate('github', { failureRedirect: '/login' }, async (err, user) => {
+    if (err) {
+      console.error('GitHub OAuth callback error:', err);
+      return res.redirect(`${process.env.FRONTEND_URL}/login?error=oauth_error`);
+    }
+    
+    if (!user) {
+      return res.redirect(`${process.env.FRONTEND_URL}/login?error=oauth_failed`);
+    }
+    
+    try {
+      // Generate JWT token
+      const token = jwt.sign(
+        { 
+          id: user._id, 
+          accountType: user.accountType, 
+          isPremium: user.isPremium 
+        }, 
+        process.env.JWT_SECRET, 
+        { expiresIn: '7d' }
+      );
+      
+      // Set cookie with the token
+      res.cookie('userToken', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+      });
+      
+      // Send welcome email for new users
+      if (user.createdAt && (Date.now() - user.createdAt.getTime()) < 60000) { // Created in last minute
+        try {
+          await sendWelcomeEmail(user.email, {
+            name: user.name,
+            email: user.email
+          });
+        } catch (emailError) {
+          console.error('Failed to send welcome email:', emailError);
+        }
+      }      // Redirect to onboarding for new users or home for existing users
+      // Check if user was just created (within last minute) or doesn't have onboarding completed
+      const isNewUser = user.createdAt && (Date.now() - user.createdAt.getTime()) < 60000;
+      const needsOnboarding = !user.onboardingData?.isCompleted;
+      
+      const redirectUrl = (isNewUser || needsOnboarding)
+        ? `${process.env.FRONTEND_URL}/onboarding`
+        : `${process.env.FRONTEND_URL}/`;
+        
+      res.redirect(redirectUrl);
+    } catch (error) {
+      console.error('GitHub OAuth token generation error:', error);
+      res.redirect(`${process.env.FRONTEND_URL}/login?error=token_error`);
+    }
+  })(req, res);
 };
 
-// OAuth callback handler
-const oauthCallback = async (req, res) => {
-  try {
-    const { provider, code, state } = req.query;
+// OAuth logout handler
+const oauthLogout = (req, res) => {
+  req.logout((err) => {
+    if (err) {
+      console.error('OAuth logout error:', err);
+      return res.status(500).json({ success: false, message: 'Logout failed' });
+    }
     
-    // TODO: Exchange code for access token and get user info
-    // This is where you would implement the actual OAuth flow
-    
-    res.status(501).json({
-      success: false,
-      message: 'OAuth callback coming soon!'
+    // Clear the user token cookie with the same options used when setting it
+    res.clearCookie('userToken', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict'
     });
-  } catch (error) {
-    console.error('OAuth callback error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'OAuth callback failed'
-    });
-  }
+    res.json({ success: true, message: 'Logged out successfully' });
+  });
 };
 
 // Helper function to create or find user from OAuth data
@@ -118,6 +206,8 @@ const createOrFindOAuthUser = async (oauthData) => {
 module.exports = {
   googleAuth,
   githubAuth,
-  oauthCallback,
+  googleCallback,
+  githubCallback,
+  oauthLogout,
   createOrFindOAuthUser
 };

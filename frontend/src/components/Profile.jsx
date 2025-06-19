@@ -40,7 +40,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { toast } from 'react-hot-toast';
+import { toast, Toaster } from 'react-hot-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -405,7 +405,7 @@ const Profile = () => {
       if (response.data.success) {
         await fetchUserProfile();
         setIsEditing(false);
-        toast.success('✅ Profile updated successfully! Your changes have been saved.', {
+        toast.success('Profile updated successfully! Your changes have been saved.', {
           style: {
             background: '#22c55e',
             color: 'white',
@@ -454,7 +454,7 @@ const Profile = () => {
 
   const handleLogout = () => {
     dispatch(logout());
-    toast("👋 You've been logged out successfully! See you next time!", { 
+    toast("You've been logged out successfully! See you next time!", { 
       icon: '✅',
       style: {
         background: '#22c55e',
@@ -1180,9 +1180,9 @@ const Profile = () => {
         }
         
         .animate-pulse-glow {
-          animation: pulse-glow 4s ease-in-out infinite;
-        }
+          animation: pulse-glow 4s ease-in-out infinite;        }
       `}</style>
+      <Toaster position="bottom-right" />
     </div>
   );
 };

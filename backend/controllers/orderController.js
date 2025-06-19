@@ -246,8 +246,7 @@ exports.processRefund = async (req, res) => {
 
     order.status = 'refunded';
     order.refundAmount = refundAmount || order.totalAmount;
-    order.refundReason = refundReason;
-    order.refundedAt = new Date();
+    order.refundReason = refundReason;    order.refundedAt = new Date();
 
     await order.save();
 
@@ -257,9 +256,6 @@ exports.processRefund = async (req, res) => {
       description: `Order ${order.invoiceNumber} refunded ₹${order.refundAmount} by admin ${req.admin.username}. Reason: ${refundReason}`,
     });
     await activity.save();
-
-    // TODO: Handle actual refund processing with payment gateway
-    // For now, just update the order status
 
     res.status(200).json({
       success: true,
@@ -523,10 +519,8 @@ const handleOrderCompletion = async (order) => {
           purchaseDate: (order.paidAt || new Date()).toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'long',
-            day: 'numeric'
-          })
+            day: 'numeric'          })
         });
-        console.log('Course purchase email sent successfully to:', user.email);
       } catch (emailError) {
         console.error('Failed to send course purchase email:', emailError);
         // Don't fail the order completion if email fails

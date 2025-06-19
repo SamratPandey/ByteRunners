@@ -1,21 +1,20 @@
 import { useEffect } from 'react';
 import { Navigate, BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { checkAuthStatus } from './redux/actions/authActions';
 import { checkAdminAuthStatus } from './redux/actions/adminActions';
 import { Toaster } from 'react-hot-toast';
 import { NotificationProvider } from './contexts/NotificationContext';
+import AppLoader from './components/AppLoader';
 import Home from './components/Home';
 import Login from './components/Login';  
 import ForgotPassword from './components/ForgotPassword'; 
 import ResetPassword from './components/ResetPassword';
 import Signup from './components/Signup';  
-import AIEnhancedSignup from './components/AIEnhancedSignup';  
 import EmailVerification from './components/EmailVerification';
 import Onboarding from './components/Onboarding';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import TermsOfService from './components/TermsOfService';
-import Dashboard from './components/Dashboard';
 import ProtectedRoute from './components/ProtectedRoute'; 
 import PublicRoute from './components/PublicRoute';
 
@@ -37,34 +36,35 @@ import JobDetails from './components/JobDetails';
 import MyApplications from './components/MyApplications';
 import AITestInterface from './components/AITestInterface';
 import TestAnalytics from './components/TestAnalytics';
+import ErrorBoundary from './components/ErrorBoundary';
 
 function App() {
   const dispatch = useDispatch();
+  const { isInitialized } = useSelector((state) => state.auth);
 
   // Check authentication status when the app loads
   useEffect(() => {
     dispatch(checkAuthStatus());
     dispatch(checkAdminAuthStatus());
-  }, [dispatch]);  return (
+  }, [dispatch]);
+
+  // Show loading screen while auth is being checked
+  if (!isInitialized) {
+    return <AppLoader />;
+  }
+
+  return (
     <NotificationProvider>
-      <Router>
-        {/* Global toast container for notifications */}
-        <Toaster position="top-right" />
-          <Routes>
+      <Router>        {/* Global toast container for notifications */}
+        <Toaster position="bottom-right" /><Routes>
           {/* Public routes - accessible by anyone */}
-          <Route path="/" element={<Home />} /> 
-          <Route path="/home" element={<Home />} />
+          <Route path="/" element={<Home />} />
         <Route path="/login"
         element={
           <PublicRoute>
             <Login />
           </PublicRoute>
         } />        <Route path="/signup" 
-        element={
-          <PublicRoute>
-            <AIEnhancedSignup />
-          </PublicRoute>
-        } />        <Route path="/signup-basic" 
         element={
           <PublicRoute>
             <Signup />
@@ -86,15 +86,13 @@ function App() {
         <Route path="/job/:jobId" element={<ProtectedRoute><JobDetails /></ProtectedRoute>} />
         <Route path="/interview" element={<Interview />} />
         <Route path="/courses" element={<Courses />} />
-        
-        {/* Protected routes - require authentication */}
-        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          {/* Protected routes - require authentication */}
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-        <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />        <Route path="/my-courses" element={<ProtectedRoute><MyCourses /></ProtectedRoute>} />
+        <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} /><Route path="/my-courses" element={<ProtectedRoute><MyCourses /></ProtectedRoute>} />
         <Route path="/my-applications" element={<ProtectedRoute><MyApplications /></ProtectedRoute>} />
         <Route path="/solve/:problemId" element={<ProtectedRoute><Solve /></ProtectedRoute>} />
         <Route path="/course-details/:courseId" element={<ProtectedRoute><CourseDetails /></ProtectedRoute>} />
-        <Route path="/ai-test" element={<ProtectedRoute><AITestInterface /></ProtectedRoute>} />
+        <Route path="/ai-test" element={<ProtectedRoute><ErrorBoundary><AITestInterface /></ErrorBoundary></ProtectedRoute>} />
         <Route path="/test-analytics" element={<ProtectedRoute><TestAnalytics /></ProtectedRoute>} />
 
         {/* Admin routes */}

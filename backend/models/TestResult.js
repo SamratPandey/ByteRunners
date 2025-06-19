@@ -18,11 +18,10 @@ const testResultSchema = new mongoose.Schema({  userId: {
   topic: {
     type: String,
     required: true
-  },
-  difficulty: {
+  },  difficulty: {
     type: String,
     required: true,
-    enum: ['beginner', 'intermediate', 'advanced']
+    enum: ['easy', 'medium', 'hard']
   },
   questions: [{
     questionId: {
@@ -74,10 +73,9 @@ const testResultSchema = new mongoose.Schema({  userId: {
     overallAssessment: String,
     strengths: [String],
     weaknesses: [String],
-    studyPlan: String,
-    estimatedLevel: {
+    studyPlan: String,    estimatedLevel: {
       type: String,
-      enum: ['beginner', 'intermediate', 'advanced']
+      enum: ['easy', 'medium', 'hard']
     }
   }
 }, {

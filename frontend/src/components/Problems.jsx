@@ -46,9 +46,7 @@ const Problems = () => {
             count,
           }));
           setCategories(formattedCategories);
-        }
-      } catch (error) {
-        console.error("Failed to fetch problems:", error);
+        }      } catch (error) {
         toast.error("Unable to load coding problems right now. Please check your connection and try again.", {
           style: {
             background: '#ef4444',
@@ -89,8 +87,7 @@ const Problems = () => {
     }
   };
   const handleSolveProblem = (problemId) => {
-    if (!isAuthenticated) {
-      toast("🔐 Please log in to start solving coding problems and track your progress!", { 
+    if (!isAuthenticated) {      toast("Please log in to start solving coding problems and track your progress!", { 
         icon: 'ℹ️',
         style: {
           background: '#3b82f6',
@@ -433,9 +430,9 @@ const Problems = () => {
               </div>
             </div>
           </div>
-        </div>
-      )}
+        </div>      )}
       </main>
+      <Toaster position="bottom-right" />
     </div>
   );
 };

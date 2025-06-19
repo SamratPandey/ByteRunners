@@ -46,7 +46,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Nav from './Nav';
 import PaymentModal from './PaymentModal';
-import axios from 'axios';
+import authApi from '../utils/authApi';
 
 const CourseDetails = () => {
   const { courseId } = useParams();
@@ -67,33 +67,24 @@ const CourseDetails = () => {
   const [showAllReviews, setShowAllReviews] = useState(false);
   const [newReview, setNewReview] = useState({ rating: 5, comment: '' });
   const [submittingReview, setSubmittingReview] = useState(false);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
-  useEffect(() => {
+  const [showPaymentModal, setShowPaymentModal] = useState(false);  useEffect(() => {
     const fetchCourseDetails = async () => {
       try {
-        const headers = {};
-        if (isAuthenticated) {
-          headers.Authorization = `Bearer ${localStorage.getItem('token')}`;
-        }
-        
-        const response = await axios.get(
-          `${import.meta.env.VITE_BACKEND_URL}/api/course/${courseId}`,
-          { headers }
-        );
+        const response = await authApi.get(`/api/course/${courseId}`);
         
         setCourse(response.data.course);
         setUserInfo(response.data.userInfo);
         setRelatedCourses(response.data.relatedCourses);
         setLoading(false);
       } catch (err) {
+        console.error('Error fetching course details:', err);
         setError('Failed to load course details');
         setLoading(false);
       }
     };
 
     fetchCourseDetails();
-  }, [courseId, isAuthenticated]);
-  const handlePurchase = async () => {
+  }, [courseId, isAuthenticated]);  const handlePurchase = async () => {
     if (!isAuthenticated) {
       toast.error('Please log in to purchase this course');
       navigate('/login');
@@ -104,28 +95,29 @@ const CourseDetails = () => {
       // Handle free course enrollment directly
       setPurchasing(true);
       try {
-        const response = await axios.post(
-          `${import.meta.env.VITE_BACKEND_URL}/api/course/purchase`,
-          {
-            courseId: course._id,
-            paymentDetails: {
-              method: 'free',
-              paymentId: 'free_' + Date.now(),
-            }
-          },
-          {
-            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        const requestData = {
+          courseId: course._id,
+          paymentDetails: {
+            method: 'free',
+            paymentId: 'free_' + Date.now(),
           }
-        );
-
-        toast.success('Successfully enrolled in the course!');
-        setUserInfo(prev => ({ ...prev, isPurchased: true, isEnrolled: true }));
+        };        
+        const response = await authApi.post('/api/course/purchase', requestData);
+        
+        if (response.data.success) {
+          toast.success('Successfully enrolled in the course!');
+          setUserInfo(prev => ({ ...prev, isPurchased: true, isEnrolled: true }));
+        } else {
+          toast.error(response.data.message || 'Purchase failed');
+        }
       } catch (error) {
+        console.error('Purchase error:', error);
+        console.error('Error response:', error.response?.data);
         toast.error(error.response?.data?.message || 'Failed to enroll in course');
       } finally {
         setPurchasing(false);
       }
-    } else {
+    }else {
       // Show payment modal for paid courses
       setShowPaymentModal(true);
     }
@@ -141,27 +133,13 @@ const CourseDetails = () => {
       toast.error('Please log in to add to wishlist');
       navigate('/login');
       return;
-    }
-
-    setAddingToWishlist(true);
-    try {
-      if (userInfo?.isInWishlist) {
-        await axios.delete(
-          `${import.meta.env.VITE_BACKEND_URL}/api/course/wishlist/${course._id}`,
-          {
-            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-          }
-        );
+    }    setAddingToWishlist(true);
+    try {      if (userInfo?.isInWishlist) {
+        await authApi.delete(`/api/course/wishlist/${course._id}`);
         toast.success('Removed from wishlist');
         setUserInfo(prev => ({ ...prev, isInWishlist: false }));
       } else {
-        await axios.post(
-          `${import.meta.env.VITE_BACKEND_URL}/api/course/wishlist`,
-          { courseId: course._id },
-          {
-            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-          }
-        );
+        await authApi.post('/api/course/wishlist', { courseId: course._id });
         toast.success('Added to wishlist');
         setUserInfo(prev => ({ ...prev, isInWishlist: true }));
       }
@@ -248,7 +226,6 @@ const CourseDetails = () => {
       </div>
     );
   }
-
   if (error || !course) {
     return (
       <div className="min-h-screen bg-black text-white">
@@ -269,6 +246,24 @@ const CourseDetails = () => {
       </div>
     );
   }
+  // Additional safety check for course data structure
+  if (!course._id || !course.title) {
+    return (
+      <div className="min-h-screen bg-black text-white">
+        <Nav />
+        <div className="flex items-center justify-center py-20">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-green-500 mx-auto mb-4"></div>
+            <p className="text-gray-400">Loading course data...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Ensure instructor data has default fallback
+  const instructorData = course.instructor || null;
+
    return (
     <div className="min-h-screen bg-black text-white">
       <div className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-sm border-b border-green-900">
@@ -316,19 +311,20 @@ const CourseDetails = () => {
                   <span>{course.totalEnrollments} students</span>
                 </div>
               </div>
-              
-              <div className="flex items-center gap-4 mb-6">
-                <div className="flex items-center gap-2">
-                  <Avatar className="w-8 h-8">
-                    <AvatarImage src={course.instructor.avatar} />
-                    <AvatarFallback>
-                      {course.instructor.name.charAt(0)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="text-green-400 hover:text-green-300 cursor-pointer">
-                    {course.instructor.name}
-                  </span>
-                </div>
+                <div className="flex items-center gap-4 mb-6">
+                {course.instructor && (
+                  <div className="flex items-center gap-2">
+                    <Avatar className="w-8 h-8">
+                      <AvatarImage src={course.instructor.avatar} />
+                      <AvatarFallback>
+                        {course.instructor.name?.charAt(0) || 'I'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="text-green-400 hover:text-green-300 cursor-pointer">
+                      {course.instructor.name}
+                    </span>
+                  </div>
+                )}
                 
                 <div className="flex items-center gap-2 text-gray-400">
                   <Calendar className="w-4 h-4" />
@@ -625,45 +621,52 @@ const CourseDetails = () => {
                   ))}
                 </div>
               </TabsContent>
-              
-              <TabsContent value="instructor" className="space-y-6">
-                <Card className="bg-black/30 backdrop-blur-sm border border-green-900/30 p-6">
-                  <div className="flex items-start gap-6">
-                    <Avatar className="w-24 h-24">
-                      <AvatarImage src={course.instructor.avatar} />
-                      <AvatarFallback className="text-2xl">
-                        {course.instructor.name.charAt(0)}
-                      </AvatarFallback>
-                    </Avatar>
-                    
-                    <div className="flex-1">
-                      <h3 className="text-2xl font-bold mb-2">{course.instructor.name}</h3>
-                      {course.instructor.bio && (
-                        <p className="text-gray-300 leading-relaxed">{course.instructor.bio}</p>
-                      )}
+                <TabsContent value="instructor" className="space-y-6">
+                {course.instructor ? (
+                  <Card className="bg-black/30 backdrop-blur-sm border border-green-900/30 p-6">
+                    <div className="flex items-start gap-6">
+                      <Avatar className="w-24 h-24">
+                        <AvatarImage src={course.instructor.avatar} />
+                        <AvatarFallback className="text-2xl">
+                          {course.instructor.name?.charAt(0) || 'I'}
+                        </AvatarFallback>
+                      </Avatar>
                       
-                      {course.instructor.socialLinks && (
-                        <div className="flex items-center gap-4 mt-4">
-                          {course.instructor.socialLinks.website && (
-                            <a href={course.instructor.socialLinks.website} target="_blank" rel="noopener noreferrer">
-                              <Globe className="w-5 h-5 text-gray-400 hover:text-green-400 transition-colors" />
-                            </a>
-                          )}
-                          {course.instructor.socialLinks.linkedin && (
-                            <a href={course.instructor.socialLinks.linkedin} target="_blank" rel="noopener noreferrer">
-                              <LinkedinIcon className="w-5 h-5 text-gray-400 hover:text-green-400 transition-colors" />
-                            </a>
-                          )}
-                          {course.instructor.socialLinks.twitter && (
-                            <a href={course.instructor.socialLinks.twitter} target="_blank" rel="noopener noreferrer">
-                              <Twitter className="w-5 h-5 text-gray-400 hover:text-green-400 transition-colors" />
-                            </a>
-                          )}
-                        </div>
-                      )}
+                      <div className="flex-1">
+                        <h3 className="text-2xl font-bold mb-2">{course.instructor.name}</h3>
+                        {course.instructor.bio && (
+                          <p className="text-gray-300 leading-relaxed">{course.instructor.bio}</p>
+                        )}
+                        
+                        {course.instructor.socialLinks && (
+                          <div className="flex items-center gap-4 mt-4">
+                            {course.instructor.socialLinks.website && (
+                              <a href={course.instructor.socialLinks.website} target="_blank" rel="noopener noreferrer">
+                                <Globe className="w-5 h-5 text-gray-400 hover:text-green-400 transition-colors" />
+                              </a>
+                            )}
+                            {course.instructor.socialLinks.linkedin && (
+                              <a href={course.instructor.socialLinks.linkedin} target="_blank" rel="noopener noreferrer">
+                                <LinkedinIcon className="w-5 h-5 text-gray-400 hover:text-green-400 transition-colors" />
+                              </a>
+                            )}
+                            {course.instructor.socialLinks.twitter && (
+                              <a href={course.instructor.socialLinks.twitter} target="_blank" rel="noopener noreferrer">
+                                <Twitter className="w-5 h-5 text-gray-400 hover:text-green-400 transition-colors" />
+                              </a>
+                            )}
+                          </div>
+                        )}
+                      </div>                    </div>
+                  </Card>
+                ) : (
+                  <Card className="bg-black/30 backdrop-blur-sm border border-green-900/30 p-6">
+                    <div className="text-center py-8">
+                      <User className="w-16 h-16 text-gray-500 mx-auto mb-4" />
+                      <p className="text-gray-400">Instructor information not available</p>
                     </div>
-                  </div>
-                </Card>
+                  </Card>
+                )}
               </TabsContent>
               
               <TabsContent value="reviews" className="space-y-6">
@@ -746,9 +749,8 @@ const CourseDetails = () => {
                       <div className="flex-1">
                         <h4 className="font-semibold text-white text-sm line-clamp-2 mb-1">
                           {relatedCourse.title}
-                        </h4>
-                        <p className="text-xs text-gray-400 mb-1">
-                          by {relatedCourse.instructor.name}
+                        </h4>                        <p className="text-xs text-gray-400 mb-1">
+                          by {relatedCourse.instructor?.name || 'Unknown Instructor'}
                         </p>
                         <div className="flex items-center justify-between">
                           <RatingStars rating={relatedCourse.averageRating} size={3} />
