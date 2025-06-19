@@ -41,11 +41,10 @@ import ErrorBoundary from './components/ErrorBoundary';
 function App() {
   const dispatch = useDispatch();
   const { isInitialized } = useSelector((state) => state.auth);
-
-  // Check authentication status when the app loads
+  // Check user authentication status when the app loads
+  // Admin auth will be checked separately in admin routes
   useEffect(() => {
     dispatch(checkAuthStatus());
-    dispatch(checkAdminAuthStatus());
   }, [dispatch]);
 
   // Show loading screen while auth is being checked

@@ -22,8 +22,9 @@ const Login = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { isAuthenticated, error } = useSelector((state) => state.auth);
   const navigate = useNavigate();
-  const location = useLocation();
-  const dispatch = useDispatch();  // Get redirect path from location state or default to home
+  const location = useLocation();  const dispatch = useDispatch();
+  
+  // Get redirect path from location state or default to home
   const from = location.state?.from?.pathname || '/';
   // Use useCallback to prevent infinite loop
   const redirectIfAuthenticated = useCallback(() => {

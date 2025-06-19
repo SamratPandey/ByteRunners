@@ -1,9 +1,16 @@
-// React import removed - not used
+import { useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { checkAdminAuthStatus } from '../../redux/actions/adminActions';
 
 const AdminPublicRoute = ({ children }) => {
+  const dispatch = useDispatch();
   const { isAuthenticated } = useSelector((state) => state.admin);
+
+  // Check admin auth when accessing admin public routes
+  useEffect(() => {
+    dispatch(checkAdminAuthStatus());
+  }, [dispatch]);
 
   if (isAuthenticated) {
     return <Navigate to="/admin-dashboard" replace />;
