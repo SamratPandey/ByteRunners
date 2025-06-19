@@ -43,10 +43,13 @@ authApi.interceptors.response.use(
         toast('Session expired. Please login again.', { icon: '❌' });
         window.location.href = '/login';
         return Promise.reject(new Error('Session expired'));
-      }
-    } else {
+      }    } else {
       const message = error.response.data?.message || 'An error occurred';
-      if (!error.config.url.includes('/check-auth')) {
+      // Don't show toast for check-auth or verification endpoints (components handle their own errors)
+      const skipToastUrls = ['/check-auth', '/send-verification', '/verify-email', '/resend-verification'];
+      const shouldSkipToast = skipToastUrls.some(url => error.config.url.includes(url));
+      
+      if (!shouldSkipToast) {
         toast(message, { icon: '❌' });
       }
       console.error('API error:', message);

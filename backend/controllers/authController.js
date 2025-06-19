@@ -29,10 +29,7 @@ const registerUser = async (req, res) => {
     const activity = new Activity({
       type: 'User Registered',
       description: `New user ${user.name} (${user.email}) has registered.`,
-    });
-    await activity.save();     
-    
-    const token = jwt.sign({ id: user._id, accountType: user.accountType }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    });    await activity.save();     
     
     // Send welcome email
     try {
@@ -44,18 +41,12 @@ const registerUser = async (req, res) => {
       // Don't fail registration if email fails
     }
     
-    // Set cookie with the token
-    res.cookie('userToken', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 60 * 60 * 1000 // 1 hour
-    });
-    
+    // Don't set authentication cookie until email is verified
     res.status(201).json({ 
       success: true,
       requiresVerification: true,
-      message: 'Account created successfully. Please verify your email to continue.'
+      message: 'Account created successfully. Please verify your email to continue.',
+      email: user.email // Send email for verification flow
     });
   } catch (error) {
     res.status(500).json({ message: "Server Error" });

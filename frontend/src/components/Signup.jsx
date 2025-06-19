@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -26,19 +26,15 @@ const Signup = () => {
   const { isAuthenticated, error } = useSelector((state) => state.auth);
   const navigate = useNavigate();
   const location = useLocation();
-  const dispatch = useDispatch();
-  // Get redirect path from location state or default to onboarding
+  const dispatch = useDispatch();  // Get redirect path from location state or default to onboarding
   const from = location.state?.from?.pathname || '/onboarding';
-  // Use useCallback to prevent infinite loop
-  const redirectIfAuthenticated = useCallback(() => {
-    if (isAuthenticated) {
+  
+  // Only redirect if already authenticated (not during signup process)
+  useEffect(() => {
+    if (isAuthenticated && !isSubmitting) {
       navigate(from, { replace: true });
     }
-  }, [isAuthenticated, from]); // Removed navigate from dependencies
-
-  useEffect(() => {
-    redirectIfAuthenticated();
-  }, [redirectIfAuthenticated]);
+  }, [isAuthenticated, from, navigate, isSubmitting]);
   // Handle Redux auth errors
   useEffect(() => {
     if (error) {
@@ -112,13 +108,10 @@ const Signup = () => {
     if (!validateForm()) return;
   
     setIsSubmitting(true);
-      try {
-      const success = await dispatch(signup(name, email, password));
+      try {      const success = await dispatch(signup(name, email, password));
       
       if (success) {
-        // Get user data after successful signup
-        await dispatch(checkAuthStatus());
-          toast.success('Welcome to ByteRunners! Please verify your email to continue.', {
+        toast.success('Welcome to ByteRunners! Please verify your email to continue.', {
           duration: 3000,
           style: {
             background: '#10b981',
@@ -133,7 +126,7 @@ const Signup = () => {
             state: { email: email }
           });
         }, 2000);
-      }    } catch (err) {
+      }} catch (err) {
       toast.error('Unable to create your account. Please check your details and try again.', {
         duration: 4000,
         style: {

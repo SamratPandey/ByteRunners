@@ -1,6 +1,9 @@
 const User = require('../models/User');
 const crypto = require('crypto');
-const sendEmail = require('./sendMail');
+const { sendEmail } = require('./sendMail');
+const jwt = require('jsonwebtoken');
+
+require('dotenv').config();
 
 // Generate OTP
 const generateOTP = () => {
@@ -54,13 +57,38 @@ const sendEmailVerification = async (req, res) => {
       </div>
     `;
     
-    await sendEmail(email, emailSubject, emailText, emailHtml);
-    
-    res.status(200).json({
-      success: true,
-      message: 'Verification code sent to your email'
-    });
-      } catch (error) {
+    try {
+      await sendEmail(email, emailSubject, emailText, emailHtml);
+      
+      res.status(200).json({
+        success: true,
+        message: 'Verification code sent to your email'
+      });
+    } catch (emailError) {
+      console.error('Failed to send verification email:', emailError);
+      
+      // For development, show the OTP in console and still allow verification
+      if (process.env.NODE_ENV === 'development') {
+        console.log('='.repeat(50));
+        console.log('EMAIL SERVICE FAILED - DEVELOPMENT MODE');
+        console.log(`OTP for ${email}: ${otp}`);
+        console.log('Use this OTP to verify your email');
+        console.log('='.repeat(50));
+        
+        res.status(200).json({
+          success: true,
+          message: 'Verification code generated (check console for OTP)',
+          developmentOTP: otp // Only in development
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          message: 'Failed to send verification email. Please try again.'
+        });
+      }
+    }
+  } catch (error) {
+    console.error('Email verification error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to send verification email'
@@ -85,12 +113,25 @@ const verifyEmail = async (req, res) => {
         message: 'Invalid or expired verification code'
       });
     }
-    
-    // Mark email as verified
+      // Mark email as verified
     user.isEmailVerified = true;
     user.emailVerificationToken = undefined;
     user.emailVerificationExpire = undefined;
     await user.save();
+    
+    // Set authentication cookie after successful email verification
+    const token = jwt.sign({ 
+      id: user._id, 
+      accountType: user.accountType, 
+      isPremium: user.isPremium 
+    }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    
+    res.cookie('userToken', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
     
     res.status(200).json({
       success: true,
@@ -156,19 +197,39 @@ const resendVerification = async (req, res) => {
           Best regards,<br>
           The ByteRunners Team
         </p>
-      </div>
-    `;
+      </div>    `;
     
-    await sendEmail(email, emailSubject, emailText, emailHtml);
-    
-    res.status(200).json({
-      success: true,
-      message: 'New verification code sent to your email'
-    });
-      } catch (error) {
+    try {
+      await sendEmail(email, emailSubject, emailText, emailHtml);
+      
+      res.status(200).json({
+        success: true,
+        message: 'New verification code sent to your email'
+      });
+    } catch (emailError) {
+      console.error('Failed to resend verification email:', emailError);
+      
+      // For development, show the OTP in console and still allow verification
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`🔑 Resent OTP for ${email}: ${otp}`);
+        res.status(200).json({
+          success: true,
+          message: 'New verification code generated (check server console for development)',
+          developmentOtp: otp // Only in development
+        });
+      } else {
+        // In production, fail if email can't be sent
+        res.status(500).json({
+          success: false,
+          message: 'Failed to resend verification email. Please try again later.'
+        });
+      }
+    }      } catch (error) {
+    console.error('Resend verification error:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to resend verification email'
+      message: 'Failed to resend verification email',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };

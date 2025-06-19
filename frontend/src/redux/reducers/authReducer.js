@@ -8,12 +8,20 @@ const initialState = {
 const authReducer = (state = initialState, action) => {
   switch (action.type) {
     case 'LOGIN_SUCCESS':
-    case 'SIGNUP_SUCCESS':
       return { 
         ...state, 
         isAuthenticated: true, 
         error: null,
         user: action.payload || state.user, // Keep existing user if no payload
+        isInitialized: true 
+      };
+
+    case 'SIGNUP_SUCCESS':
+      return { 
+        ...state, 
+        isAuthenticated: false, // Don't authenticate until email verification
+        error: null,
+        user: null, // Don't set user until email verification
         isInitialized: true 
       };
 

@@ -8,15 +8,17 @@ import { ClipLoader } from 'react-spinners';
 import { toast } from 'react-hot-toast';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEnvelope, faCheck, faRefresh } from '@fortawesome/free-solid-svg-icons';
+import { useDispatch } from 'react-redux';
+import { checkAuthStatus } from '../redux/actions/authActions';
 import authApi from '../utils/authApi';
 
 const EmailVerification = () => {
   const [otp, setOtp] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isResending, setIsResending] = useState(false);
-  const [countdown, setCountdown] = useState(0);
+  const [isResending, setIsResending] = useState(false);  const [countdown, setCountdown] = useState(0);
   const navigate = useNavigate();
   const location = useLocation();
+  const dispatch = useDispatch();
   
   // Get email from location state or redirect to signup
   const email = location.state?.email;
@@ -92,8 +94,7 @@ const EmailVerification = () => {
         email,
         otp
       });
-      
-      if (response.data.success) {
+        if (response.data.success) {
         toast.success('Email verified successfully! Welcome to ByteRunners!', {
           duration: 4000,
           style: {
@@ -102,6 +103,9 @@ const EmailVerification = () => {
             fontWeight: '500'
           }
         });
+        
+        // Check authentication status to update Redux state
+        await dispatch(checkAuthStatus());
         
         // Redirect to onboarding after successful verification
         setTimeout(() => {
