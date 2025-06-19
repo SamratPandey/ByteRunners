@@ -24,7 +24,9 @@ passport.deserializeUser(async (id, done) => {
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL: `${process.env.BACKEND_URL || 'http://localhost:3001'}/api/auth/google/callback`
+  callbackURL: process.env.NODE_ENV === 'production' 
+    ? 'https://byterunners.onrender.com/api/auth/google/callback'
+    : 'http://localhost:3001/api/auth/google/callback'
 }, async (accessToken, refreshToken, profile, done) => {
   try {    // Check if user already exists with this Google ID
     let user = await User.findOne({ 'oauthProviders.google': profile.id });
@@ -210,7 +212,9 @@ passport.use(new GoogleStrategy({
 passport.use(new GitHubStrategy({
   clientID: process.env.GITHUB_CLIENT_ID,
   clientSecret: process.env.GITHUB_CLIENT_SECRET,
-  callbackURL: `${process.env.BACKEND_URL || 'http://localhost:3001'}/api/auth/github/callback`,
+  callbackURL: process.env.NODE_ENV === 'production' 
+    ? 'https://byterunners.onrender.com/api/auth/github/callback'
+    : 'http://localhost:3001/api/auth/github/callback',
   scope: ['user:email'] // Request email access
 }, async (accessToken, refreshToken, profile, done) => {
   try {    // Check if user already exists with this GitHub ID
