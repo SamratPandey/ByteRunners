@@ -7,6 +7,16 @@ const {
   getDashboardData,
   getUserProfile,
 } = require("../controllers/authController");
+const {
+  googleAuth,
+  githubAuth,
+  oauthCallback
+} = require("../controllers/oauthController");
+const {
+  sendEmailVerification,
+  verifyEmail,
+  resendVerification
+} = require("../controllers/emailVerificationController");
 const { executeCode } = require("../utils/judge0");
 const { protect } = require("../middleware/auth");
 const { getProblemById } = require("../controllers/problemController");
@@ -30,6 +40,16 @@ router.post("/login", loginUser);
 router.post("/logout", logoutUser);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password", resetPassword);
+
+// OAuth routes
+router.get("/google", googleAuth);
+router.get("/github", githubAuth);
+router.get("/oauth/callback", oauthCallback);
+
+// Email verification routes
+router.post("/send-verification", sendEmailVerification);
+router.post("/verify-email", verifyEmail);
+router.post("/resend-verification", resendVerification);
 
 router.post("/run-code", async (req, res) => {
   const { source_code, language, stdin = "", problemId = null } = req.body;

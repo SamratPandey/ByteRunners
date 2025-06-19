@@ -11,6 +11,7 @@ import { toast } from 'react-hot-toast';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGoogle, faGithub } from '@fortawesome/free-brands-svg-icons';
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
+import authApi from '../utils/authApi';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -43,7 +44,39 @@ const Login = () => {
     if (error) {
       toast.error(error);
     }
-  }, [error]);  const validateForm = () => {
+  }, [error]);  // Handle OAuth login
+  const handleOAuthLogin = async (provider) => {
+    try {
+      // TODO: Implement OAuth endpoints in backend
+      const response = await authApi.get(`/api/auth/${provider}`);
+      
+      if (response.data.success) {
+        toast.success(`🎉 Successfully logged in with ${provider}!`, {
+          duration: 3000,
+          style: {
+            background: '#10b981',
+            color: 'white',
+            fontWeight: '500'
+          }
+        });
+        // OAuth users go directly to home/dashboard
+        navigate(from, { replace: true });
+      }
+    } catch (error) {
+      console.error(`${provider} login error:`, error);
+      // For now, show coming soon message
+      toast.info(`${provider} login coming soon!`, {
+        duration: 3000,
+        style: {
+          background: '#3b82f6',
+          color: 'white',
+          fontWeight: '500'
+        }
+      });
+    }
+  };
+
+  const validateForm = () => {
     const newErrors = {};
     
     if (!email) {
@@ -232,7 +265,7 @@ const Login = () => {
                 type="button"
                 variant={social.variant}
                 className="font-medium"
-                onClick={() => toast.info(`${social.name} login coming soon!`)}
+                onClick={() => handleOAuthLogin(social.name.toLowerCase())}
               >
                 <FontAwesomeIcon icon={social.icon} />
               </Button>

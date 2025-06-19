@@ -18,7 +18,12 @@ const registerUser = async (req, res) => {
     const userExists = await User.findOne({ email });
     if (userExists) {
       return res.status(400).json({ message: "User already exists" });
-    }    const user = new User({ name, email, password });
+    }    const user = new User({ 
+      name, 
+      email, 
+      password,
+      isEmailVerified: false // Set to false for email verification
+    });
     await user.save();
 
     const activity = new Activity({
@@ -49,7 +54,11 @@ const registerUser = async (req, res) => {
       maxAge: 60 * 60 * 1000 // 1 hour
     });
     
-    res.status(201).json({ success: true });
+    res.status(201).json({ 
+      success: true,
+      requiresVerification: true,
+      message: 'Account created successfully. Please verify your email to continue.'
+    });
   } catch (error) {
     res.status(500).json({ message: "Server Error" });
   }

@@ -1,118 +1,140 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
-import { Link, useNavigate } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
-import { signup } from '../redux/actions/authActions';
+import { useDispatch, useSelector } from 'react-redux';
+import { login, checkAuthStatus } from '../redux/actions/authActions';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { ClipLoader } from 'react-spinners';
 import { toast } from 'react-hot-toast';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGoogle, faGithub } from '@fortawesome/free-brands-svg-icons';
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
-
-
+import authApi from '../utils/authApi';
 
 const Signup = () => {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-  });
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [acceptPolicy, setAcceptPolicy] = useState(false);
+  const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { isAuthenticated, error } = useSelector((state) => state.auth);
+  const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useDispatch();
-  const navigate = useNavigate();  const validateForm = () => {
-    let isValid = true;
+  // Get redirect path from location state or default to home
+  const from = location.state?.from?.pathname || '/home';
 
-    if (!formData.name || formData.name.trim().length < 2) {
-      toast.error('Please enter your full name (at least 2 characters)', {
-        duration: 4000,
-        style: { background: '#ef4444', color: 'white', fontWeight: '500' }
-      });
-      isValid = false;
+  // Use useCallback to prevent infinite loop
+  const redirectIfAuthenticated = useCallback(() => {
+    if (isAuthenticated) {
+      console.log('User is authenticated, redirecting to:', from);
+      navigate(from, { replace: true });
     }
+  }, [isAuthenticated, from]); // Removed navigate from dependencies
 
-    if (!formData.email) {
-      toast.error('Please enter your email address', {
-        duration: 4000,
-        style: { background: '#ef4444', color: 'white', fontWeight: '500' }
-      });
-      isValid = false;
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      toast.error('Please enter a valid email address (e.g., user@example.com)', {
-        duration: 4000,
-        style: { background: '#ef4444', color: 'white', fontWeight: '500' }
-      });
-      isValid = false;
+  useEffect(() => {
+    redirectIfAuthenticated();
+  }, [redirectIfAuthenticated]);
+
+  // Handle Redux auth errors
+  useEffect(() => {
+    if (error) {
+      toast.error(error);
     }
-
-    if (!formData.password) {
-      toast.error('Please create a password', {
-        duration: 4000,
-        style: { background: '#ef4444', color: 'white', fontWeight: '500' }
-      });
-      isValid = false;
-    } else if (formData.password.length < 6) {
-      toast.error('Password must be at least 6 characters long for security', {
-        duration: 4000,
-        style: { background: '#ef4444', color: 'white', fontWeight: '500' }
-      });
-      isValid = false;
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      toast.error('Passwords do not match. Please check and try again.', {
-        duration: 4000,
-        style: { background: '#ef4444', color: 'white', fontWeight: '500' }
-      });
-      isValid = false;
-    }
-
-    if (!acceptPolicy) {
-      toast.error('Please accept our Privacy Policy and Terms of Service to create your account', {
-        duration: 4000,
-        style: { background: '#ef4444', color: 'white', fontWeight: '500' }
-      });
-      isValid = false;
-    }
-
-    return isValid;
-  };
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!validateForm()) return;
-
-    setIsSubmitting(true);
+  }, [error]);  // Handle OAuth login
+  const handleOAuthLogin = async (provider) => {
     try {
-      await dispatch(signup(formData.name, formData.email, formData.password));
-      toast.success('🎉 Welcome to ByteRunners! Your account has been created successfully.', {
+      // TODO: Implement OAuth endpoints in backend
+      const response = await authApi.get(`/api/auth/${provider}`);
+      
+      if (response.data.success) {
+        toast.success(`🎉 Successfully logged in with ${provider}!`, {
+          duration: 3000,
+          style: {
+            background: '#10b981',
+            color: 'white',
+            fontWeight: '500'
+          }
+        });
+        // OAuth users go directly to home/dashboard
+        navigate(from, { replace: true });
+      }
+    } catch (error) {
+      console.error(`${provider} login error:`, error);
+      // For now, show coming soon message
+      toast.info(`${provider} login coming soon!`, {
         duration: 3000,
         style: {
-          background: '#10b981',
+          background: '#3b82f6',
           color: 'white',
           fontWeight: '500'
         }
       });
-      setFormData({
-        name: '',
-        email: '',
-        password: '',
-        confirmPassword: '',
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!email) {
+      newErrors.email = 'Please enter your email address';
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      newErrors.email = 'Please enter a valid email address (e.g., user@example.com)';
+    }
+
+    if (!password) {
+      newErrors.password = 'Please enter your password';
+    } else if (password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters long';
+    }
+
+    if (!acceptPolicy) {
+      newErrors.policy = 'Please accept our Privacy Policy and Terms of Service to continue';
+    }
+
+    // Show user-friendly error message
+    if (Object.keys(newErrors).length > 0) {
+      const firstError = Object.values(newErrors)[0];
+      toast.error(firstError, {
+        duration: 4000,
+        style: {
+          background: '#ef4444',
+          color: 'white',
+          fontWeight: '500'
+        }
       });
-      setTimeout(() => {
-        navigate('/onboarding');
-      }, 2000);
-    } catch (error) {
-      toast.error('We couldn\'t create your account at this time. Please check your details and try again.', {
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+  const handleLogin = async (e) => {
+    if (e) e.preventDefault();
+    if (!validateForm()) return;
+  
+    setIsSubmitting(true);
+    
+    try {
+      const success = await dispatch(login(email, password));      if (success) {
+        // Get user data after successful login
+        await dispatch(checkAuthStatus());
+        
+        toast.success('Welcome back! You have been logged in successfully.', {
+          duration: 3000,
+          style: {
+            background: '#10b981',
+            color: 'white',
+            fontWeight: '500'
+          }
+        });
+        // Navigation will be handled by the useEffect above
+      }
+    } catch (err) {
+      console.error('Login error:', err);
+      toast.error('Unable to log you in. Please check your credentials and try again.', {
         duration: 4000,
         style: {
           background: '#ef4444',
@@ -125,54 +147,56 @@ const Signup = () => {
     }
   };
 
+  // Handle Enter key press
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleLogin(e);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-black text-white overflow-hidden">
- 
       <div className="flex-1 flex items-center justify-center relative z-10">
         <Card className="w-full max-w-sm p-8 bg-black/80 backdrop-blur-sm border border-green-900 shadow-xl">
-          <div className="relative">
+          <div className="relative mb-6">
             <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-green-700 blur-xl opacity-20" />
-            <Link to={"/"} className="relative flex flex-col items-center">
+            <Link to="/" className="relative flex flex-col items-center">
               <img src="/images/logo.png" alt="logo" className="w-2/3 mb-4" />
             </Link>
           </div>
-
-          <form onSubmit={handleSubmit} className="space-y-2">
+          
+          <form onSubmit={handleLogin} className="space-y-3">
             <div>
-              <Label htmlFor="name" className="text-gray-300">Full Name</Label>
-              <Input
-                id="name"
-                name="name"
-                type="text"
-                placeholder="Enter your full name"
-                value={formData.name}
-                onChange={handleChange}
-                className="mt-2 bg-black/50 border-green-900 text-white placeholder:text-gray-500"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="email" className="text-gray-300">Email Address</Label>
+              <Label htmlFor="email" className="text-gray-300">
+                Email Address
+              </Label>
               <Input
                 id="email"
-                name="email"
                 type="email"
                 placeholder="Enter your email"
-                value={formData.email}
-                onChange={handleChange}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                onKeyPress={handleKeyPress}
                 className="mt-2 bg-black/50 border-green-900 text-white placeholder:text-gray-500"
+                disabled={isSubmitting}
               />
+              {errors.email && (
+                <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+              )}
             </div>            <div>
-              <Label htmlFor="password" className="text-gray-300">Password</Label>
+              <Label htmlFor="password" className="text-gray-300">
+                Password
+              </Label>
               <div className="relative">
                 <Input
                   id="password"
-                  name="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="Enter your password"
-                  value={formData.password}
-                  onChange={handleChange}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  onKeyPress={handleKeyPress}
                   className="mt-2 bg-black/50 border-green-900 text-white placeholder:text-gray-500 pr-10"
+                  disabled={isSubmitting}
                 />
                 <button
                   type="button"
@@ -182,91 +206,80 @@ const Signup = () => {
                   <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
                 </button>
               </div>
-            </div>
-
-            <div>
-              <Label htmlFor="confirmPassword" className="text-gray-300">Confirm Password</Label>
-              <div className="relative">
-                <Input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type={showConfirmPassword ? "text" : "password"}
-                  placeholder="Re-enter your password"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  className="mt-2 bg-black/50 border-green-900 text-white placeholder:text-gray-500 pr-10"
+              {errors.password && (
+                <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+              )}
+            </div>            <div className="flex justify-between items-center">
+              <div className="flex items-center">
+                <input 
+                  type="checkbox" 
+                  id="acceptPolicy" 
+                  checked={acceptPolicy}
+                  onChange={(e) => setAcceptPolicy(e.target.checked)}
+                  className="mr-2" 
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
-                >
-                  <FontAwesomeIcon icon={showConfirmPassword ? faEyeSlash : faEye} />
-                </button>
+                <Label htmlFor="acceptPolicy" className="text-gray-300 text-sm">
+                  I accept the{' '}
+                  <Link to="/privacy" className="text-green-500 hover:text-green-400">
+                    Privacy Policy
+                  </Link>
+                  {' '}and{' '}
+                  <Link to="/terms" className="text-green-500 hover:text-green-400">
+                    Terms of Service
+                  </Link>
+                </Label>
               </div>
-            </div>            <div className="flex items-center mt-4">
-              <input 
-                type="checkbox" 
-                id="acceptPolicy" 
-                checked={acceptPolicy}
-                onChange={(e) => setAcceptPolicy(e.target.checked)}
-                className="mr-2" 
-              />
-              <Label htmlFor="acceptPolicy" className="text-gray-300 text-sm">
-                I accept the{' '}
-                <Link to="/privacy" className="text-green-500 hover:text-green-400">
-                  Privacy Policy
-                </Link>
-                {' '}and{' '}
-                <Link to="/terms" className="text-green-500 hover:text-green-400">
-                  Terms of Service
-                </Link>
-              </Label>
+              <Link to="/forgot-password" className="text-green-500 hover:text-green-400 text-sm">
+                Forgot Password?
+              </Link>
             </div>
 
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="w-full bg-green-600 hover:bg-green-700 text-white relative group overflow-hidden"
+              className={`w-full ${
+                isSubmitting ? 'bg-green-800' : 'bg-green-600 hover:bg-green-700'
+              } text-white relative group overflow-hidden`}
             >
               <span className="relative z-10">
-                {isSubmitting ? <ClipLoader color="#fff" size={20} /> : 'Sign Up'}
+                {isSubmitting ? <ClipLoader color="#fff" size={20} /> : 'Log In'}
               </span>
               <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-green-600 opacity-0 group-hover:opacity-100 transition-opacity" />
             </Button>
+          </form>
 
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-green-900"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-black text-gray-400">Or continue with</span>
-              </div>
-            </div>            <div className="grid grid-cols-2 gap-4">
-              {[
-                { icon: faGoogle, variant: 'info', name: 'Google' },
-                { icon: faGithub, variant: 'secondary', name: 'GitHub' }
-              ].map((social, index) => (
-                <Button 
-                  key={index} 
-                  type="button"
-                  variant={social.variant}
-                  className="font-medium"
-                  onClick={() => toast.info(`${social.name} signup coming soon!`)}
-                >
-                  <FontAwesomeIcon icon={social.icon} />
-                </Button>
-              ))}
+          <div className="relative mt-4">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-green-900"></div>
             </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-black text-gray-400">Or continue with</span>
+            </div>
+          </div>          <div className="grid grid-cols-2 gap-4 mt-4">
+            {[
+              { icon: faGoogle, variant: 'info', name: 'Google' },
+              { icon: faGithub, variant: 'secondary', name: 'GitHub' },
+            ].map((social, index) => (
+              <Button 
+                key={index} 
+                type="button"
+                variant={social.variant}
+                className="font-medium"
+                onClick={() => handleOAuthLogin(social.name.toLowerCase())}
+              >
+                <FontAwesomeIcon icon={social.icon} />
+              </Button>
+            ))}
+          </div>
 
-            <div className="text-center text-gray-400">
-              <p className="text-sm">
-                Already have an account?{' '}
-                <Link to="/login" className="text-green-500 hover:text-green-400 font-semibold">
-                  Log in
-                </Link>
-              </p>
-            </div>        </form>
+          <div className="text-center text-gray-400 mt-4">
+            <p className="text-sm">
+              New at ByteRunners?{' '}
+              <Link to="/signup" className="text-green-500 hover:text-green-400 font-semibold">
+                Create an account
+              </Link>
+            </p>
+          </div>
         </Card>
       </div>
     </div>

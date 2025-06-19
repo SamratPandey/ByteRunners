@@ -11,6 +11,7 @@ import ForgotPassword from './components/ForgotPassword';
 import ResetPassword from './components/ResetPassword';
 import Signup from './components/Signup';  
 import AIEnhancedSignup from './components/AIEnhancedSignup';  
+import EmailVerification from './components/EmailVerification';
 import Onboarding from './components/Onboarding';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import TermsOfService from './components/TermsOfService';
@@ -63,11 +64,16 @@ function App() {
           <PublicRoute>
             <AIEnhancedSignup />
           </PublicRoute>
-        } />
-        <Route path="/signup-basic" 
+        } />        <Route path="/signup-basic" 
         element={
           <PublicRoute>
             <Signup />
+          </PublicRoute>
+        } />
+        <Route path="/verify-email" 
+        element={
+          <PublicRoute>
+            <EmailVerification />
           </PublicRoute>
         } /><Route path="/forgot-password" element={<ForgotPassword />} /> 
         <Route path="/reset-password/:resetToken" element={<ResetPassword />} /> 

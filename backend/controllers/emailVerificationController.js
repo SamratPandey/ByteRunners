@@ -1,0 +1,186 @@
+const User = require('../models/User');
+const crypto = require('crypto');
+const sendEmail = require('./sendMail');
+
+// Generate OTP
+const generateOTP = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
+};
+
+// Send email verification OTP
+const sendEmailVerification = async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+    
+    if (user.isEmailVerified) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email is already verified'
+      });
+    }
+    
+    // Generate OTP and set expiration (10 minutes)
+    const otp = generateOTP();
+    user.emailVerificationToken = otp;
+    user.emailVerificationExpire = Date.now() + 10 * 60 * 1000; // 10 minutes
+    await user.save();
+    
+    // Send OTP email
+    const emailSubject = 'Verify Your Email - ByteRunners';
+    const emailText = `Your verification code is: ${otp}. This code will expire in 10 minutes.`;
+    const emailHtml = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #22c55e;">Email Verification - ByteRunners</h2>
+        <p>Hello ${user.name},</p>
+        <p>Thank you for signing up! Please use the following verification code to complete your registration:</p>
+        <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0;">
+          <h1 style="color: #22c55e; font-size: 32px; margin: 0; letter-spacing: 4px;">${otp}</h1>
+        </div>
+        <p>This code will expire in 10 minutes.</p>
+        <p>If you didn't request this verification, please ignore this email.</p>
+        <hr style="border: 1px solid #e5e7eb; margin: 30px 0;">
+        <p style="color: #6b7280; font-size: 14px;">
+          Best regards,<br>
+          The ByteRunners Team
+        </p>
+      </div>
+    `;
+    
+    await sendEmail(email, emailSubject, emailText, emailHtml);
+    
+    res.status(200).json({
+      success: true,
+      message: 'Verification code sent to your email'
+    });
+    
+  } catch (error) {
+    console.error('Send email verification error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to send verification email'
+    });
+  }
+};
+
+// Verify email with OTP
+const verifyEmail = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    
+    const user = await User.findOne({
+      email,
+      emailVerificationToken: otp,
+      emailVerificationExpire: { $gt: Date.now() }
+    });
+    
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid or expired verification code'
+      });
+    }
+    
+    // Mark email as verified
+    user.isEmailVerified = true;
+    user.emailVerificationToken = undefined;
+    user.emailVerificationExpire = undefined;
+    await user.save();
+    
+    res.status(200).json({
+      success: true,
+      message: 'Email verified successfully!'
+    });
+    
+  } catch (error) {
+    console.error('Email verification error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Email verification failed'
+    });
+  }
+};
+
+// Resend verification email
+const resendVerification = async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+    
+    if (user.isEmailVerified) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email is already verified'
+      });
+    }
+    
+    // Check if we can resend (rate limiting - 1 minute between requests)
+    if (user.emailVerificationExpire && (Date.now() - (user.emailVerificationExpire - 10 * 60 * 1000)) < 60 * 1000) {
+      return res.status(429).json({
+        success: false,
+        message: 'Please wait before requesting another verification code'
+      });
+    }
+    
+    // Generate new OTP
+    const otp = generateOTP();
+    user.emailVerificationToken = otp;
+    user.emailVerificationExpire = Date.now() + 10 * 60 * 1000; // 10 minutes
+    await user.save();
+    
+    // Send OTP email
+    const emailSubject = 'Verify Your Email - ByteRunners';
+    const emailText = `Your verification code is: ${otp}. This code will expire in 10 minutes.`;
+    const emailHtml = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #22c55e;">Email Verification - ByteRunners</h2>
+        <p>Hello ${user.name},</p>
+        <p>Here's your new verification code:</p>
+        <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0;">
+          <h1 style="color: #22c55e; font-size: 32px; margin: 0; letter-spacing: 4px;">${otp}</h1>
+        </div>
+        <p>This code will expire in 10 minutes.</p>
+        <p>If you didn't request this verification, please ignore this email.</p>
+        <hr style="border: 1px solid #e5e7eb; margin: 30px 0;">
+        <p style="color: #6b7280; font-size: 14px;">
+          Best regards,<br>
+          The ByteRunners Team
+        </p>
+      </div>
+    `;
+    
+    await sendEmail(email, emailSubject, emailText, emailHtml);
+    
+    res.status(200).json({
+      success: true,
+      message: 'New verification code sent to your email'
+    });
+    
+  } catch (error) {
+    console.error('Resend verification error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to resend verification email'
+    });
+  }
+};
+
+module.exports = {
+  sendEmailVerification,
+  verifyEmail,
+  resendVerification
+};

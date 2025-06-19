@@ -190,8 +190,15 @@ const userSchema = new mongoose.Schema({
     lastTestDate: Date,
     improvementTrend: Number, // percentage improvement over time
     timeSpentLearning: { type: Number, default: 0 } // in minutes
-  }
-  
+  },
+  // OAuth-related fields
+  oauthProviders: {
+    google: String,
+    github: String
+  },
+  isEmailVerified: { type: Boolean, default: false },
+  emailVerificationToken: String,
+  emailVerificationExpire: Date
 }, {
   timestamps: true
 });
