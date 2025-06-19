@@ -129,15 +129,15 @@ const userSchema = new mongoose.Schema({
     skillAssessment: {
       score: { type: Number, default: 0 },
       totalQuestions: { type: Number, default: 0 },
-      correctAnswers: { type: Number, default: 0 },
-      answers: [{
+      correctAnswers: { type: Number, default: 0 },      answers: [{
         questionId: String,
         question: String,
-        selectedAnswer: Number,
-        correctAnswer: Number,
+        selectedAnswer: String, // Store the actual answer text
+        correctAnswer: String,  // Store the actual correct answer text
         isCorrect: Boolean,
         timeSpent: Number, // in seconds
-        answeredAt: { type: Date, default: Date.now }
+        answeredAt: { type: Date, default: Date.now },
+        explanation: String // Add explanation field too
       }],
       completedAt: Date
     },
