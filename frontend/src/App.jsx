@@ -43,13 +43,16 @@ function App() {
   const { isInitialized } = useSelector((state) => state.auth);  // Check user authentication status when the app loads
   // Admin auth will be checked separately in admin routes
   useEffect(() => {
-    // Check if this is an OAuth redirect to avoid double auth check
+    // Check if this is an OAuth redirect
     const params = new URLSearchParams(window.location.search);
     const isOAuthCallback = params.get('oauth') === 'success';
     
-    if (!isOAuthCallback) {
-      dispatch(checkAuthStatus());
+    // Always check auth status, but mark OAuth callbacks for special handling
+    if (isOAuthCallback) {
+      console.log('OAuth callback detected, checking auth status...');
     }
+    
+    dispatch(checkAuthStatus());
   }, [dispatch]);
 
   // Show loading screen while auth is being checked

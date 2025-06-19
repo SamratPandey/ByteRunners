@@ -5,19 +5,32 @@ const aiService = require('../utils/aiService');
 const saveOnboardingData = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { experienceLevel, interests, languages, skillAssessment } = req.body;    // Validate required fields
-    if (!experienceLevel || !interests || !languages || !skillAssessment) {
+    const { experienceLevel, interests, languages, skillAssessment } = req.body;    // Validate required fields with detailed error messages
+    if (!experienceLevel) {
       return res.status(400).json({
         success: false,
-        message: 'Please complete all onboarding steps including experience level, interests, preferred languages, and skill assessment.'
+        message: 'Experience level is required. Please select your coding experience level.'
       });
     }
-
-    // Validate skillAssessment is an array
-    if (!Array.isArray(skillAssessment)) {
+    
+    if (!interests || !Array.isArray(interests) || interests.length === 0) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid skill assessment data format.'
+        message: 'At least one interest must be selected. Please choose your coding interests.'
+      });
+    }
+    
+    if (!languages || !Array.isArray(languages) || languages.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'At least one programming language must be selected.'
+      });
+    }
+    
+    if (!skillAssessment || !Array.isArray(skillAssessment)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Skill assessment data is required. Please complete the skill assessment.'
       });
     }
 
@@ -25,7 +38,14 @@ const saveOnboardingData = async (req, res) => {
     if (skillAssessment.length === 0) {
       return res.status(400).json({
         success: false,
-        message: 'Skill assessment must contain at least one question.'
+        message: 'Skill assessment must contain at least one question. Please complete the assessment.'
+      });
+    }    // Validate experience level against enum values
+    const validExperienceLevels = ['beginner', 'intermediate', 'advanced', 'expert'];
+    if (!validExperienceLevels.includes(experienceLevel)) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid experience level. Must be one of: ${validExperienceLevels.join(', ')}`
       });
     }
 
@@ -62,19 +82,32 @@ const saveOnboardingData = async (req, res) => {
       },
       completedAt: new Date(),
       isCompleted: true
-    };
+    };    // Update user with onboarding data
+    let updatedUser;
+    try {      updatedUser = await User.findByIdAndUpdate(
+        userId,
+        {
+          onboardingData,
+          level: initialLevel,
+          experience: initialExperience
+        },
+        { new: true, runValidators: true }
+      ).select('-password');
 
-    // Update user with onboarding data
-    const updatedUser = await User.findByIdAndUpdate(
-      userId,
-      {
-        onboardingData,
-        level: initialLevel,
-        experience: initialExperience,
-        'analytics.onboardingCompletedAt': new Date()
-      },
-      { new: true }
-    ).select('-password');
+      if (!updatedUser) {
+        return res.status(404).json({
+          success: false,
+          message: 'User account not found. Please log in again.'
+        });
+      }
+    } catch (dbError) {
+      console.error('Database update error:', dbError);
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to save profile data to database. Please try again.',
+        error: process.env.NODE_ENV === 'development' ? dbError.message : undefined
+      });
+    }
 
     // Generate initial personalized recommendations
     try {

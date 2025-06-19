@@ -278,7 +278,14 @@ const Onboarding = () => {
         duration: 3000
       });
       navigate('/');    } catch (error) {
-      toast.error('We encountered an issue saving your profile. Please try again, or contact support if the problem persists.', {
+      console.error('Onboarding save error:', error);
+      
+      // Show specific error message if available
+      const errorMessage = error.response?.data?.message || 
+                          error.message || 
+                          'We encountered an issue saving your profile. Please try again, or contact support if the problem persists.';
+      
+      toast.error(errorMessage, {
         style: {
           background: '#ef4444',
           color: 'white',
