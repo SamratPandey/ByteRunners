@@ -49,8 +49,10 @@ const protect = (req, res, next) => {
   else if (req.headers.authorization?.startsWith('Bearer ')) {
     token = req.headers.authorization.split(' ')[1]; 
   }  
+  
   // Special handling for check-auth endpoint
   if (!token && req.originalUrl.includes('/check-auth')) {
+    console.log('No token found for check-auth endpoint');
     return res.status(401).json({ 
       success: false,
       message: 'Not authenticated'
@@ -58,12 +60,17 @@ const protect = (req, res, next) => {
   }
   
   if (!token) {
-    return res.status(401).json({ message: 'Not authorized, no token' });  }try {
+    console.log('No token found for protected route:', req.originalUrl);
+    return res.status(401).json({ message: 'Not authorized, no token' });
+  }
+
+  try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
     // If verification succeeds but token is expired (shouldn't happen with jwt.verify, but just in case)
     const currentTime = Math.floor(Date.now() / 1000);
     if (decoded.exp && decoded.exp < currentTime) {
+      console.log('Token expired for:', req.originalUrl);
       return res.status(401).json({ 
         success: false,
         message: 'Session expired'
@@ -71,10 +78,14 @@ const protect = (req, res, next) => {
     }
 
     req.user = decoded;
+    if (req.originalUrl.includes('/check-auth')) {
+      console.log('Successfully authenticated user for check-auth:', decoded.id);
+    }
     next(); 
   } catch (error) {
     console.error('Auth middleware error:', error.message);
     console.error('Token verification failed for URL:', req.originalUrl);
+    console.error('Cookies:', req.cookies);
     
     if (req.originalUrl.includes('/check-auth')) {
       return res.status(401).json({ 

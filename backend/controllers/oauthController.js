@@ -37,11 +37,11 @@ const googleCallback = async (req, res) => {
         }, 
         process.env.JWT_SECRET, 
         { expiresIn: '7d' }      );
-      
-      // Set cookie with the token
+        // Set cookie with the token
       res.cookie('userToken', token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',        sameSite: 'strict',
+        secure: process.env.NODE_ENV === 'production',        
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
       });
       
@@ -59,9 +59,9 @@ const googleCallback = async (req, res) => {
       // Redirect to onboarding for new users or home for existing users
       // Check if user was just created (within last minute) or doesn't have onboarding completed
       const isNewUser = user.createdAt && (Date.now() - user.createdAt.getTime()) < 60000;
-      const needsOnboarding = !user.onboardingData?.isCompleted;        const redirectUrl = (isNewUser || needsOnboarding)
-        ? `${process.env.FRONTEND_URL}/onboarding`
-        : `${process.env.FRONTEND_URL}/`;
+      const needsOnboarding = !user.onboardingData?.isCompleted;      const redirectUrl = (isNewUser || needsOnboarding)
+        ? `${process.env.FRONTEND_URL}/onboarding?oauth=success`
+        : `${process.env.FRONTEND_URL}/?oauth=success`;
       
       res.redirect(redirectUrl);
     } catch (error) {
@@ -94,12 +94,11 @@ const githubCallback = async (req, res) => {
         process.env.JWT_SECRET, 
         { expiresIn: '7d' }
       );
-      
-      // Set cookie with the token
+        // Set cookie with the token
       res.cookie('userToken', token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
       });
       
@@ -117,10 +116,9 @@ const githubCallback = async (req, res) => {
       // Check if user was just created (within last minute) or doesn't have onboarding completed
       const isNewUser = user.createdAt && (Date.now() - user.createdAt.getTime()) < 60000;
       const needsOnboarding = !user.onboardingData?.isCompleted;
-      
-      const redirectUrl = (isNewUser || needsOnboarding)
-        ? `${process.env.FRONTEND_URL}/onboarding`
-        : `${process.env.FRONTEND_URL}/`;
+        const redirectUrl = (isNewUser || needsOnboarding)
+        ? `${process.env.FRONTEND_URL}/onboarding?oauth=success`
+        : `${process.env.FRONTEND_URL}/?oauth=success`;
         
       res.redirect(redirectUrl);
     } catch (error) {

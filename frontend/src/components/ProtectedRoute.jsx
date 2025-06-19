@@ -14,15 +14,24 @@ const ProtectedRoute = ({ children }) => {
   useEffect(() => {
     const checkAuth = async () => {
       const params = new URLSearchParams(location.search);
-      if (params.get('oauth') === 'success' || !isInitialized) {
+      const isOAuthSuccess = params.get('oauth') === 'success';
+      
+      // If user is already authenticated and this isn't an OAuth callback, skip additional check
+      if (isAuthenticated && isInitialized && !isOAuthSuccess) {
+        setAuthCheckComplete(true);
+        return;
+      }
+      
+      if (isOAuthSuccess || !isInitialized) {
         // Force auth check for OAuth redirects or when not initialized
+        console.log('Checking auth status for OAuth redirect or uninitialized state');
         await dispatch(checkAuthStatus());
       }
       setAuthCheckComplete(true);
     };
     
     checkAuth();
-  }, [location.search, dispatch, isInitialized]);
+  }, [location.search, dispatch, isInitialized, isAuthenticated]);
 
   // Show loading while checking authentication status
   if (!isInitialized || !authCheckComplete) {

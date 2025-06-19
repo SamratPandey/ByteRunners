@@ -40,11 +40,16 @@ import ErrorBoundary from './components/ErrorBoundary';
 
 function App() {
   const dispatch = useDispatch();
-  const { isInitialized } = useSelector((state) => state.auth);
-  // Check user authentication status when the app loads
+  const { isInitialized } = useSelector((state) => state.auth);  // Check user authentication status when the app loads
   // Admin auth will be checked separately in admin routes
   useEffect(() => {
-    dispatch(checkAuthStatus());
+    // Check if this is an OAuth redirect to avoid double auth check
+    const params = new URLSearchParams(window.location.search);
+    const isOAuthCallback = params.get('oauth') === 'success';
+    
+    if (!isOAuthCallback) {
+      dispatch(checkAuthStatus());
+    }
   }, [dispatch]);
 
   // Show loading screen while auth is being checked

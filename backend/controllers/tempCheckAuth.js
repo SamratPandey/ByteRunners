@@ -17,10 +17,11 @@ exports.checkAuth = async (req, res) => {
       name: user.name,
       email: user.email,
       isPremium: user.isPremium,
-      accountType: user.accountType
+      accountType: user.accountType,
+      onboardingData: user.onboardingData // Include onboarding data
     }});
   } catch (error) {
-    console.error(error);
+    console.error('Check auth error:', error);
     res.status(500).json({ success: false, message: 'Server Error' });
   }
 };

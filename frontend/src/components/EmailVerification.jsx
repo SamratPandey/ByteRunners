@@ -103,14 +103,13 @@ const EmailVerification = () => {
             fontWeight: '500'
           }
         });
-        
-        // Check authentication status to update Redux state
-        await dispatch(checkAuthStatus());
-        
-        // Redirect to onboarding after successful verification
-        setTimeout(() => {
+          // Check authentication status to update Redux state (with small delay for cookie to be set)
+        setTimeout(async () => {
+          await dispatch(checkAuthStatus());
+          
+          // Redirect to onboarding after successful verification
           navigate('/onboarding');
-        }, 2000);
+        }, 1000);
       }
     } catch (error) {
       const errorMessage = error.response?.data?.message || 'Verification failed. Please try again.';
