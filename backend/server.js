@@ -4,6 +4,7 @@ const cors = require('cors');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
+const MongoStore = require('connect-mongo');
 const passport = require('./config/passport');
 const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
@@ -59,9 +60,15 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'byterunners-oauth-secret-key',
   resave: false,
   saveUninitialized: false,
+  store: MongoStore.create({
+    mongoUrl: process.env.MONGO_URI || 'mongodb://localhost:27017/byterunners',
+    touchAfter: 24 * 3600, // lazy session update
+    ttl: 7 * 24 * 60 * 60 // session TTL in seconds (7 days)
+  }),
   cookie: {
     secure: process.env.NODE_ENV === 'production',
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    httpOnly: true,
+    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days in milliseconds
   }
 }));
 
