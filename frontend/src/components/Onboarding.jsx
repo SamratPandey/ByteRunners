@@ -151,6 +151,10 @@ const Onboarding = () => {
       setSkillAssessmentResults(validationResponse.data);
       
       return validationResponse.data;    } catch (error) {
+      console.error('Skill assessment validation error:', error);
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+      
       toast.error('We couldn\'t validate your assessment right now, but we\'ve calculated a preliminary score for you!', {
         style: {
           background: '#f59e0b',

@@ -290,12 +290,25 @@ const getSkillAssessmentQuestions = async (req, res) => {
 // Validate skill assessment answers
 const validateSkillAssessment = async (req, res) => {
   try {
+    console.log('=== Skill Assessment Validation ===');
+    console.log('User ID:', req.user?.id);
+    console.log('Request body:', JSON.stringify(req.body, null, 2));
+    
     const { answers } = req.body;
 
     if (!answers || !Array.isArray(answers)) {
+      console.log('Invalid answers format:', answers);
       return res.status(400).json({
         success: false,
         message: 'Valid answers array is required'
+      });
+    }
+
+    if (answers.length === 0) {
+      console.log('Empty answers array');
+      return res.status(400).json({
+        success: false,
+        message: 'At least one answer is required'
       });
     }
 
@@ -412,10 +425,10 @@ const validateSkillAssessment = async (req, res) => {
         question: question.question,
         explanation: question.explanation
       };
-    });
-
-    const correctCount = validatedAnswers.filter(a => a.isCorrect).length;
+    });    const correctCount = validatedAnswers.filter(a => a.isCorrect).length;
     const score = answers.length > 0 ? (correctCount / answers.length) * 100 : 0;
+
+    console.log(`Validation complete: ${correctCount}/${answers.length} correct (${score.toFixed(1)}%)`);
 
     res.status(200).json({
       success: true,
@@ -426,7 +439,7 @@ const validateSkillAssessment = async (req, res) => {
         correctAnswers: correctCount,
         totalQuestions: answers.length
       }
-    });  } catch (error) {
+    });} catch (error) {
     console.error('Error validating skill assessment:', error);
     console.error('Request body:', req.body);
     res.status(500).json({
