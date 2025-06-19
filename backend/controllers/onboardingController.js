@@ -122,29 +122,29 @@ const saveOnboardingData = async (req, res) => {
           'onboardingData.initialRecommendations': initialRecommendations
         }
       });      res.status(200).json({
-        success: true,
-        message: 'Welcome to ByteRunners! Your personalized coding journey has been set up successfully.',
+        success: true,        message: 'Welcome to ByteRunners! Your personalized coding journey has been set up successfully.',
         data: {
           user: updatedUser,
           initialRecommendations,
           levelInfo: {
             level: initialLevel,
             experience: initialExperience,
-            nextLevelAt: (initialLevel * 100) + 100
+            nextLevelAt: (initialLevel * 100) + 100,
+            assessmentScore: assessmentScore
           }
         }
       });
     } catch (aiError) {
       console.warn('AI recommendations failed during onboarding, continuing without them:', aiError);        res.status(200).json({
-        success: true,
-        message: 'Welcome to ByteRunners! Your profile has been created successfully.',
+        success: true,        message: 'Welcome to ByteRunners! Your profile has been created successfully.',
         data: {
           user: updatedUser,
           initialRecommendations: createFallbackRecommendations(onboardingData),
           levelInfo: {
             level: initialLevel,
             experience: initialExperience,
-            nextLevelAt: (initialLevel * 100) + 100
+            nextLevelAt: (initialLevel * 100) + 100,
+            assessmentScore: assessmentScore
           }
         }
       });
